@@ -17,11 +17,24 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="flex flex-col h-full fixed inset-0 bg-gray-50 dark:bg-black">
-      {/* Header — закреплён, учитывает safe area сверху */}
+    <div
+      className="flex flex-col bg-gray-50 dark:bg-black overflow-hidden touch-none"
+      style={{
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        right: '0',
+        bottom: '0',
+        height: '100%',
+      }}
+    >
+      {/* Header */}
       <header
-        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+        className="shrink-0 grow-0 flex items-center justify-between px-4 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+          paddingBottom: '0.75rem',
+        }}
       >
         <div className="flex items-baseline gap-2">
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
@@ -36,17 +49,20 @@ export function MainLayout() {
         <SyncIndicator />
       </header>
 
-      <main className="flex-1 overflow-hidden">
+      {/* Content — единственный скроллируемый элемент */}
+      <main className="flex-1 min-h-0 overflow-hidden touch-auto">
         <Outlet />
       </main>
 
       {/* Баннер обновления */}
       <UpdateBanner sw={sw} />
 
-      {/* Bottom Navigation — закреплена, учитывает safe area снизу */}
+      {/* Bottom Navigation */}
       <nav
-        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="shrink-0 grow-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
