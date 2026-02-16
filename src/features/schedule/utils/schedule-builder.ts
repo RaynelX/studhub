@@ -7,7 +7,8 @@ import type {
     SemesterConfigDoc,
     EntryType,
     EventType,
-    TargetSubgroup,
+    TargetEngSubgroup,
+    TargetOitSubgroup,
     TargetLanguage,
     WeekParity,
   } from '../../../database/types';
@@ -74,14 +75,26 @@ import type {
   // ============================================================
   
   function isForStudent(
-    item: { target_subgroup: TargetSubgroup; target_language: TargetLanguage },
+    item: {
+      target_language: TargetLanguage;
+      target_eng_subgroup: TargetEngSubgroup;
+      target_oit_subgroup: TargetOitSubgroup;
+    },
     settings: StudentSettings,
   ): boolean {
-    const subgroupOk =
-      item.target_subgroup === 'all' || item.target_subgroup === settings.subgroup;
     const languageOk =
       item.target_language === 'all' || item.target_language === settings.language;
-    return subgroupOk && languageOk;
+  
+    const engSubgroupOk =
+      item.target_eng_subgroup === 'all' ||
+      settings.language !== 'en' ||
+      item.target_eng_subgroup === settings.eng_subgroup;
+  
+    const oitSubgroupOk =
+      item.target_oit_subgroup === 'all' ||
+      item.target_oit_subgroup === settings.oit_subgroup;
+  
+    return languageOk && engSubgroupOk && oitSubgroupOk;
   }
   
   // ============================================================

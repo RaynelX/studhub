@@ -83,13 +83,17 @@ const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
     },
     teacher_id: { type: 'string' },
     room: { type: 'string' },
-    target_subgroup: {
+    target_language: {
+      type: 'string',
+      enum: ['all', 'en', 'de', 'fr', 'es'],
+    },
+    target_eng_subgroup: {
       type: 'string',
       enum: ['all', 'a', 'b'],
     },
-    target_language: {
+    target_oit_subgroup: {
       type: 'string',
-      enum: ['all', 'en', 'de'],
+      enum: ['all', 'a', 'b'],
     },
     date_from: { type: 'string' },
     date_to: { type: 'string' },
@@ -103,7 +107,7 @@ const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
   },
   required: [
     'id', 'day_of_week', 'pair_number', 'subject_id', 'entry_type',
-    'teacher_id', 'room', 'target_subgroup', 'target_language',
+    'teacher_id', 'room', 'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
     'date_from', 'date_to', 'week_parity',
     'created_at', 'updated_at', 'is_deleted',
   ],
@@ -125,13 +129,17 @@ const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
       type: 'string',
       enum: ['cancel', 'replace', 'add'],
     },
-    target_subgroup: {
+    target_language: {
+      type: 'string',
+      enum: ['all', 'en', 'de', 'fr', 'es'],
+    },
+    target_eng_subgroup: {
       type: 'string',
       enum: ['all', 'a', 'b'],
     },
-    target_language: {
+    target_oit_subgroup: {
       type: 'string',
-      enum: ['all', 'en', 'de'],
+      enum: ['all', 'a', 'b'],
     },
     subject_id: { type: 'string' },
     entry_type: {
@@ -147,7 +155,7 @@ const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
   },
   required: [
     'id', 'date', 'pair_number', 'override_type',
-    'target_subgroup', 'target_language',
+    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
     'created_at', 'updated_at', 'is_deleted',
   ],
 };
@@ -177,13 +185,17 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
     pair_number: { type: 'integer', minimum: 1, maximum: 5 },
     event_time: { type: 'string' },
     room: { type: 'string' },
-    target_subgroup: {
+    target_language: {
+      type: 'string',
+      enum: ['all', 'en', 'de', 'fr', 'es'],
+    },
+    target_eng_subgroup: {
       type: 'string',
       enum: ['all', 'a', 'b'],
     },
-    target_language: {
+    target_oit_subgroup: {
       type: 'string',
-      enum: ['all', 'en', 'de'],
+      enum: ['all', 'a', 'b'],
     },
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
@@ -191,7 +203,7 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
   },
   required: [
     'id', 'title', 'event_type', 'date',
-    'target_subgroup', 'target_language',
+    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
     'created_at', 'updated_at', 'is_deleted',
   ],
 };
@@ -207,19 +219,23 @@ const studentsSchema: RxJsonSchema<StudentDoc> = {
   properties: {
     id: { type: 'string', maxLength: 36 },
     full_name: { type: 'string' },
-    subgroup: {
+    language: {
+      type: 'string',
+      enum: ['en', 'de', 'fr', 'es'],
+    },
+    eng_subgroup: {
       type: 'string',
       enum: ['a', 'b'],
     },
-    language: {
+    oit_subgroup: {
       type: 'string',
-      enum: ['en', 'de'],
+      enum: ['a', 'b'],
     },
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
     is_deleted: { type: 'boolean' },
   },
-  required: ['id', 'full_name', 'subgroup', 'language', 'created_at', 'updated_at', 'is_deleted'],
+  required: ['id', 'full_name', 'oit_subgroup', 'language', 'created_at', 'updated_at', 'is_deleted'],
 };
 
 // ============================================================

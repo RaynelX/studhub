@@ -25,7 +25,7 @@ async function createDatabase(): Promise<AppDatabase> {
   }
 
   const db = await createRxDatabase<AppDatabase>({
-    name: 'studenthub',
+    name: 'studhub',
     storage,
   });
 

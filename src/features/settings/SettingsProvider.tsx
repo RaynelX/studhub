@@ -12,8 +12,9 @@ import {
   // ============================================================
   
   export interface StudentSettings {
-    subgroup: 'a' | 'b';
-    language: 'en' | 'de';
+    language: 'en' | 'de' | 'fr' | 'es';
+    eng_subgroup: 'a' | 'b' | null;
+    oit_subgroup: 'a' | 'b';
   }
   
   interface SettingsContextValue {
@@ -26,7 +27,7 @@ import {
   // Константы
   // ============================================================
   
-  const STORAGE_KEY = 'student_hub_settings';
+  const STORAGE_KEY = 'student_hub_settings-01';
   const SettingsContext = createContext<SettingsContextValue | null>(null);
   
   // ============================================================
@@ -42,10 +43,10 @@ import {
       if (
         typeof parsed === 'object' &&
         parsed !== null &&
-        'subgroup' in parsed &&
         'language' in parsed &&
-        (parsed.subgroup === 'a' || parsed.subgroup === 'b') &&
-        (parsed.language === 'en' || parsed.language === 'de')
+        'oit_subgroup' in parsed &&
+        ['en', 'de', 'fr', 'es'].includes((parsed as any).language) &&
+        ['a', 'b'].includes((parsed as any).oit_subgroup)
       ) {
         return parsed as StudentSettings;
       }

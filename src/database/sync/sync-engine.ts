@@ -35,7 +35,7 @@ const SYNC_CONFIGS: CollectionSyncConfig[] = [
   { rxdbName: 'events',    supabaseTable: 'events',             hasIsDeleted: true },
 ];
 
-const LAST_SYNC_KEY = 'student_hub_last_sync';
+const LAST_SYNC_KEY = 'student_hub_last_sync-01';
 
 // ============================================================
 // Утилиты

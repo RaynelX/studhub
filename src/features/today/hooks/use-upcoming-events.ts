@@ -37,9 +37,16 @@ export function useUpcomingEvents(): {
 
     const filtered = events.filter((e) => {
       if (e.date < todayStr || e.date > endStr) return false;
-      const subOk = e.target_subgroup === 'all' || e.target_subgroup === settings.subgroup;
-      const langOk = e.target_language === 'all' || e.target_language === settings.language;
-      return subOk && langOk;
+      const langOk =
+        e.target_language === 'all' || e.target_language === settings.language;
+      const engOk =
+        e.target_eng_subgroup === 'all' ||
+        settings.language !== 'en' ||
+        e.target_eng_subgroup === settings.eng_subgroup;
+      const oitOk =
+        e.target_oit_subgroup === 'all' ||
+        e.target_oit_subgroup === settings.oit_subgroup;
+      return langOk && engOk && oitOk;
     });
 
     if (filtered.length === 0) return { events: [], loading: false };

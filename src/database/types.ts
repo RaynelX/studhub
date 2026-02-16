@@ -5,8 +5,9 @@ import type { RxCollection, RxDatabase } from 'rxdb';
 // ============================================================
 
 export type EntryType = 'lecture' | 'seminar' | 'practice' | 'other';
-export type TargetSubgroup = 'all' | 'a' | 'b';
-export type TargetLanguage = 'all' | 'en' | 'de';
+export type TargetLanguage = 'all' | 'en' | 'de' | 'fr' | 'es';
+export type TargetEngSubgroup = 'all' | 'a' | 'b';
+export type TargetOitSubgroup = 'all' | 'a' | 'b';
 export type WeekParity = 'all' | 'odd' | 'even';
 export type OverrideType = 'cancel' | 'replace' | 'add';
 export type EventType =
@@ -61,8 +62,9 @@ export interface ScheduleEntryDoc {
   entry_type: EntryType;
   teacher_id: string;
   room: string;
-  target_subgroup: TargetSubgroup;
   target_language: TargetLanguage;
+  target_eng_subgroup: TargetEngSubgroup;
+  target_oit_subgroup: TargetOitSubgroup;
   date_from: string;
   date_to: string;
   week_parity: WeekParity;
@@ -76,8 +78,9 @@ export interface ScheduleOverrideDoc {
   date: string;
   pair_number: number;
   override_type: OverrideType;
-  target_subgroup: TargetSubgroup;
   target_language: TargetLanguage;
+  target_eng_subgroup: TargetEngSubgroup;
+  target_oit_subgroup: TargetOitSubgroup;
   subject_id?: string;
   entry_type?: EntryType;
   teacher_id?: string;
@@ -99,8 +102,9 @@ export interface EventDoc {
   pair_number?: number;
   event_time?: string;
   room?: string;
-  target_subgroup: TargetSubgroup;
   target_language: TargetLanguage;
+  target_eng_subgroup: TargetEngSubgroup;
+  target_oit_subgroup: TargetOitSubgroup;
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -109,8 +113,9 @@ export interface EventDoc {
 export interface StudentDoc {
   id: string;
   full_name: string;
-  subgroup: 'a' | 'b';
-  language: 'en' | 'de';
+  language: 'en' | 'de' | 'fr' | 'es';
+  eng_subgroup?: 'a' | 'b';
+  oit_subgroup: 'a' | 'b';
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -148,6 +153,7 @@ export type AppDatabase = RxDatabase<DatabaseCollections>;
 
 export interface StudentSettings {
   studentId?: string;
-  subgroup: 'a' | 'b';
-  language: 'en' | 'de';
+  language: 'en' | 'de' | 'fr' | 'es';
+  eng_subgroup: 'a' | 'b' | null;
+  oit_subgroup: 'a' | 'b';
 }
