@@ -46,7 +46,7 @@ export function SchedulePage() {
   useSetPageHeader({title: 'Расписание'});
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-x-hidden">
       {/* Навигация по неделям */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800">
         <button
@@ -111,7 +111,7 @@ export function SchedulePage() {
       </div>
 
       {/* Содержимое дня */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-4">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>

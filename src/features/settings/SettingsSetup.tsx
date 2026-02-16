@@ -18,7 +18,13 @@ export function SettingsSetup({ onComplete }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-black">
+    <div
+      className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-black"
+      style={{
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1.5rem)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1.5rem)',
+      }}
+    >
       <div className="w-full max-w-sm space-y-8">
         {/* Заголовок */}
         <div className="text-center">

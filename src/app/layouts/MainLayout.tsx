@@ -18,9 +18,12 @@ export function MainLayout() {
 
   return (
     <div className="flex flex-col h-full fixed inset-0 bg-gray-50 dark:bg-black">
-      {/* Header */}
-      <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
-        <div className='flex items-baseline gap-2'>
+      {/* Header — закреплён, учитывает safe area сверху */}
+      <header
+        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+      >
+        <div className="flex items-baseline gap-2">
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             {header.title}
           </h1>
@@ -33,16 +36,18 @@ export function MainLayout() {
         <SyncIndicator />
       </header>
 
-      {/* Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-hidden">
         <Outlet />
       </main>
 
       {/* Баннер обновления */}
       <UpdateBanner sw={sw} />
 
-      {/* Bottom Navigation */}
-      <nav className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 pb-[env(safe-area-inset-bottom)]">
+      {/* Bottom Navigation — закреплена, учитывает safe area снизу */}
+      <nav
+        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -52,7 +57,7 @@ export function MainLayout() {
               `flex flex-1 flex-col items-center gap-1 py-3 text-xs transition-colors ${
                 isActive
                   ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-400 dark:text-neutral-500 active:text-gray-600'
+                  : 'text-gray-400 dark:text-gray-500 active:text-gray-600'
               }`
             }
           >
