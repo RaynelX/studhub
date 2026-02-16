@@ -42,7 +42,8 @@ export function MainLayout() {
       <UpdateBanner sw={sw} />
 
       {/* Bottom Navigation */}
-      <nav className="layout-nav flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
+      {/*<nav className="layout-nav flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">*/}
+      <nav className="layout-nav flex border-t-4 border-red-500 bg-red-200 dark:bg-red-900">
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -61,6 +62,7 @@ export function MainLayout() {
           </NavLink>
         ))}
       </nav>
+      <div style={{ background: 'lime', height: '20px', flexShrink: 0 }}>BOTTOM EDGE</div> {/* <--- DEBUG */}
     </div>
   );
 }
