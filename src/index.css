@@ -1,2 +1,35 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+.layout-root {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100%;
+  overflow: hidden;
+  background: var(--tw-gray-50);
+}
+
+:is(.dark) .layout-root {
+  background: black;
+}
+
+.layout-header {
+  padding-top: calc(var(--sat) + 12px);
+  padding-bottom: 12px;
+}
+
+.layout-content {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.layout-nav {
+  padding-bottom: var(--sab);
+}
+
+/* Фолбэк: если safe-area-inset-bottom слишком большой (iOS 26 баг) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .layout-nav {
+    padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
+  }
+}

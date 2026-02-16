@@ -20,6 +20,10 @@
 
     <!-- Стили CSS -->
     <style>
+      :root {
+        --sat: env(safe-area-inset-top, 0px);
+        --sab: env(safe-area-inset-bottom, 0px);
+      }
       html {
         background: #ffffff;
       }
@@ -41,10 +45,15 @@
       a, button {
         -webkit-touch-callout: none;
       }
-      html, body, #root {
-        height: 100%;
+      html, body {
         margin: 0;
         padding: 0;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
+      }
+      #root {
+        height: 100%;
         overflow: hidden;
       }
     </style>
