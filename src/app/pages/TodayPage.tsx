@@ -31,7 +31,7 @@ export function TodayPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden overscroll-y-contain p-4 space-y-5">
+    <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-5">
       <TodayPairsBlock data={todaySchedule} />
       <UpcomingEventsBlock events={upcomingEvents.events} />
       <SemesterBlock data={semesterProgress} />

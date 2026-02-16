@@ -18,19 +18,12 @@ export function MainLayout() {
 
   return (
     <div
-      className="flex flex-col bg-gray-50 dark:bg-black overflow-hidden touch-none"
-      style={{
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        right: '0',
-        bottom: '0',
-        height: '100%',
-      }}
+      className="flex flex-col overflow-hidden bg-gray-50 dark:bg-black"
+      style={{ height: '100dvh' }}
     >
       {/* Header */}
       <header
-        className="shrink-0 grow-0 flex items-center justify-between px-4 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        className="shrink-0 flex items-center justify-between px-4 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
         style={{
           paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
           paddingBottom: '0.75rem',
@@ -49,8 +42,8 @@ export function MainLayout() {
         <SyncIndicator />
       </header>
 
-      {/* Content — единственный скроллируемый элемент */}
-      <main className="flex-1 min-h-0 overflow-hidden touch-auto">
+      {/* Content */}
+      <main className="flex-1 min-h-0">
         <Outlet />
       </main>
 
@@ -59,10 +52,8 @@ export function MainLayout() {
 
       {/* Bottom Navigation */}
       <nav
-        className="shrink-0 grow-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
-        style={{
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        }}
+        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
