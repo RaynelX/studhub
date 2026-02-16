@@ -78,13 +78,11 @@ export class SyncEngine {
   // ----------------------------------------------------------
 
   async sync(): Promise<void> {
-    // Защита от повторного запуска
     if (this.isSyncing) {
       console.log('[Sync] Already syncing, skipping');
       return;
     }
 
-    // Проверка сети
     if (!navigator.onLine) {
       this.status$.next({
         state: 'offline',
@@ -92,6 +90,17 @@ export class SyncEngine {
       });
       return;
     }
+
+    this.isSyncing = true;
+    this.status$.next({
+      state: 'syncing',
+      lastSyncAt: this.getLastSyncAt(),
+    });
+
+    // Таймаут — если сеть есть, но сервер не отвечает
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Sync timeout')), 10_000),
+    );
 
     this.isSyncing = true;
     this.status$.next({
@@ -109,7 +118,7 @@ export class SyncEngine {
         console.log('[Sync] Initial sync (first launch)');
       }
 
-      await this.syncAllCollections(since);
+      await Promise.race([this.syncAllCollections(since), timeout]);
 
       this.setLastSyncAt(syncTimestamp);
       this.status$.next({

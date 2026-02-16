@@ -17,7 +17,7 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-black">
+    <div className="flex flex-col h-full fixed inset-0 bg-gray-50 dark:bg-black">
       {/* Header */}
       <header className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
         <div className='flex items-baseline gap-2'>

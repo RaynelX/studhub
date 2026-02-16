@@ -59,6 +59,18 @@ import {
       };
       window.addEventListener('online', handleOnline);
   
+      // Периодическая проверка состояния сети (iOS не всегда шлёт события)
+      const networkCheck = setInterval(() => {
+        if (!navigator.onLine) {
+          setStatus(prev => {
+            if (prev.state !== 'offline') {
+              return { ...prev, state: 'offline' };
+            }
+            return prev;
+          });
+        }
+      }, 5_000);
+      
       // Обновление статуса при потере сети
       const handleOffline = () => {
         setStatus(prev => ({ ...prev, state: 'offline' }));
@@ -70,6 +82,7 @@ import {
         document.removeEventListener('visibilitychange', handleVisibility);
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+        clearInterval(networkCheck);
       };
     }, [db]);
   
