@@ -21,14 +21,6 @@
         --sat: env(safe-area-inset-top, 0px);
         --sab: env(safe-area-inset-bottom, 0px);
       }
-      html, body, #root {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        overscroll-behavior: none;
-        -webkit-overflow-scrolling: touch;
-      }
       html {
         background: #ffffff;
       }
@@ -41,6 +33,7 @@
         -webkit-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+        box-sizing: border-box;
       }
       input, textarea {
         -webkit-user-select: text;
@@ -48,6 +41,28 @@
       }
       a, button {
         -webkit-touch-callout: none;
+      }
+      html {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100vh;
+        height: 100dvh;
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        height: 100%;
+        width: 100%;
+      }
+      #root {
+        height: 100%;
+        overflow: hidden;
       }
     </style>
   </head>

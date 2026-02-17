@@ -6,7 +6,6 @@
   grid-template-rows: auto 1fr auto;
   height: 100%;
   overflow: hidden;
-  background: var(--tw-gray-50);
 }
 
 :is(.dark) .layout-root {
@@ -24,12 +23,5 @@
 }
 
 .layout-nav {
-  padding-bottom: var(--sab);
-}
-
-/* Фолбэк: если safe-area-inset-bottom слишком большой (iOS 26 баг) */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .layout-nav {
-    padding-bottom: min(env(safe-area-inset-bottom, 0px), 34px);
-  }
+  padding-bottom: 0px;
 }
