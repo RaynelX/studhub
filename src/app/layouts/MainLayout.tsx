@@ -67,7 +67,6 @@ export function MainLayout() {
           </NavLink>
         ))}
       </nav>
-      <div style={{ background: 'lime', height: '20px', flexShrink: 0 }}>BOTTOM EDGE</div> {/* <--- DEBUG */}
     </div>
   );
 }
