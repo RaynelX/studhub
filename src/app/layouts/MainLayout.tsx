@@ -17,9 +17,12 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="layout-root">
+    <div className="flex flex-col h-full fixed inset-0 bg-gray-50 dark:bg-black" style={{ height: '100dvh' }}>
       {/* Header */}
-      <header className="layout-header flex items-center justify-between px-4 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
+      <header
+        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+      >
         <div className="flex items-baseline gap-2">
           <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
             {header.title}
@@ -34,7 +37,7 @@ export function MainLayout() {
       </header>
 
       {/* Content */}
-      <main className="layout-content">
+      <main className="flex-1 min-h-0 overflow-hidden touch-auto">
         <Outlet />
       </main>
 
@@ -42,8 +45,10 @@ export function MainLayout() {
       <UpdateBanner sw={sw} />
 
       {/* Bottom Navigation */}
-      {/*<nav className="layout-nav flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">*/}
-      <nav className="layout-nav flex border-t-4 border-red-500 bg-red-200 dark:bg-red-900">
+      <nav
+        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
