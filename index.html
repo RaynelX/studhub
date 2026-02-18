@@ -22,7 +22,7 @@
         padding: 0;
         height: 100dvh; 
         width: 100vw;
-        /*overscroll-behavior: none;*/
+        overflow: hidden;
       }
       html {
         background: #ffffff;
@@ -36,6 +36,7 @@
         -webkit-user-select: none;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+        box-sizing: border-box;
       }
       input, textarea {
         -webkit-user-select: text;
