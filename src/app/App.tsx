@@ -9,6 +9,7 @@ import { SubjectsPage } from './pages/SubjectsPage';
 import { MorePage } from './pages/MorePage';
 import { ThemeProvider } from '../features/settings/ThemeProvider';
 import { PageHeaderProvider } from './providers/PageHeaderProvider';
+import { AdminProvider } from '../features/admin/AdminProvider';
 
 export function App() {
   return (
@@ -16,18 +17,20 @@ export function App() {
       <DatabaseProvider>
         <SyncProvider>
           <SettingsProvider>
-            <PageHeaderProvider>
-              <BrowserRouter>
-                <Routes>
-                  <Route element={<MainLayout />}>
-                    <Route index element={<TodayPage />} />
-                    <Route path="schedule" element={<SchedulePage />} />
-                    <Route path="subjects" element={<SubjectsPage />} />
-                    <Route path="more" element={<MorePage />} />
-                  </Route>
-                </Routes>
-              </BrowserRouter>
-            </PageHeaderProvider>
+            <AdminProvider>
+              <PageHeaderProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route element={<MainLayout />}>
+                      <Route index element={<TodayPage />} />
+                      <Route path="schedule" element={<SchedulePage />} />
+                      <Route path="subjects" element={<SubjectsPage />} />
+                      <Route path="more" element={<MorePage />} />
+                    </Route>
+                  </Routes>
+                </BrowserRouter>
+              </PageHeaderProvider>
+            </AdminProvider>
           </SettingsProvider>
         </SyncProvider>
       </DatabaseProvider>
