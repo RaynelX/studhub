@@ -46,8 +46,9 @@ export function MainLayout() {
 
       {/* Bottom Navigation */}
       <nav
-        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        /*className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}*/
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-900 backdrop-blur-md border-t border-gray-200 dark:border-neutral-800 pb-[env(safe-area-inset-bottom)]"
       >
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
