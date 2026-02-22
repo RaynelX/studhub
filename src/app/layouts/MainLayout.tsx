@@ -46,7 +46,7 @@ export function MainLayout() {
 
       {/* Bottom Navigation */}
       <nav
-        className="shrink-0 flex fixed border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
