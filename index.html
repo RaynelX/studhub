@@ -17,16 +17,22 @@
     <title>StudHub</title>
 
     <style>
-      html, body, #root {
+      html {
         margin: 0;
         padding: 0;
-        height: 100dvh; 
-        width: 100vw;
-        overflow: auto;
-      }
-      html {
+        height: 100%;
+        height: -webkit-fill-available;
+        width: 100%;
+        overflow: hidden;
         background: #ffffff;
         overscroll-behavior: none;
+      }
+      body, #root {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
       }
       @media (prefers-color-scheme: dark) {
         html {
