@@ -17,31 +17,19 @@
     <title>StudHub</title>
 
     <style>
-      html {
+      :root {
+        --app-height: 100vh;
+      }
+      html, body, #root {
         margin: 0;
         padding: 0;
-        height: 100%;
-        min-height: 100vh;
-        min-height: -webkit-fill-available;
         width: 100%;
+        height: var(--app-height);
         overflow: hidden;
+      }
+      html {
         background: #ffffff;
         overscroll-behavior: none;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        min-height: -webkit-fill-available;
-        width: 100%;
-        overflow: hidden;
-      }
-      #root {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
       }
       @media (prefers-color-scheme: dark) {
         html {
@@ -65,6 +53,13 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      function setAppHeight() {
+        document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+      }
+      setAppHeight();
+      window.addEventListener('resize', setAppHeight);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
