@@ -17,7 +17,7 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-gray-100 dark:bg-black">
+    <div className="flex flex-col h-full fixed inset-0 bg-gray-100 dark:bg-black"/* style={{ height: '100dvh' }}*/>
       {/* Header */}
       <header
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
@@ -46,7 +46,7 @@ export function MainLayout() {
 
       {/* Bottom Navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md"
+        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
