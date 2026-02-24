@@ -17,10 +17,10 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-black">
+    <div className="flex flex-col h-full overflow-hidden bg-gray-100 dark:bg-black">
       {/* Header */}
       <header
-        className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
       >
         <div className="flex items-baseline gap-2">
@@ -37,7 +37,7 @@ export function MainLayout() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto">
+      <main className="flex-1 min-h-0 overflow-y-auto touch-auto">
         <Outlet />
       </main>
 
