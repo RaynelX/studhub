@@ -37,7 +37,7 @@ export function MainLayout() {
       </header>
 
       {/* Content */}
-      <main className="pb-20">
+      <main className="flex-1 min-h-0 overflow-y-auto">
         <Outlet />
       </main>
 
