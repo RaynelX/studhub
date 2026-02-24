@@ -17,10 +17,10 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-black">
+    <div className="flex flex-col h-full fixed inset-0 bg-gray-100 dark:bg-black"/* style={{ height: '100dvh' }}*/>
       {/* Header */}
       <header
-        className="sticky top-0 z-40 shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
       >
         <div className="flex items-baseline gap-2">
@@ -36,11 +36,8 @@ export function MainLayout() {
         <SyncIndicator />
       </header>
 
-      {/* Content — padding-bottom clears the fixed nav */}
-      <main
-        className="flex-1"
-        style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
-      >
+      {/* Content */}
+      <main className="flex-1 min-h-0 overflow-y-auto touch-auto">
         <Outlet />
       </main>
 
@@ -49,8 +46,7 @@ export function MainLayout() {
 
       {/* Bottom Navigation */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="shrink-0 flex fixed sticky bottom-0 left-0 right-0 border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
       >
         {navItems.map(({ to, icon: Icon, label }) => (
           <NavLink
