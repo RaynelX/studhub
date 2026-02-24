@@ -17,10 +17,10 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-gray-100 dark:bg-black">
+    <div className="min-h-screen bg-gray-100 dark:bg-black">
       {/* Header */}
       <header
-        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
+        className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
       >
         <div className="flex items-baseline gap-2">
@@ -37,7 +37,7 @@ export function MainLayout() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto touch-auto">
+      <main className="pb-20">
         <Outlet />
       </main>
 
@@ -46,7 +46,7 @@ export function MainLayout() {
 
       {/* Bottom Navigation */}
       <nav
-        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-md"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (

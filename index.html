@@ -17,15 +17,11 @@
     <title>StudHub</title>
 
     <style>
-      :root {
-        --app-height: 100vh;
-      }
       html, body, #root {
         margin: 0;
         padding: 0;
         width: 100%;
-        height: var(--app-height);
-        overflow: hidden;
+        height: 100%;
       }
       html {
         background: #ffffff;
@@ -53,13 +49,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      function setAppHeight() {
-        document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
-      }
-      setAppHeight();
-      window.addEventListener('resize', setAppHeight);
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
