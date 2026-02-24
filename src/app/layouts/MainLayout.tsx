@@ -36,22 +36,18 @@ export function MainLayout() {
         <SyncIndicator />
       </header>
 
-      {/* Content */}
-      <main className="flex-1">
+      {/* Content — padding-bottom clears the fixed nav */}
+      <main
+        className="flex-1"
+        style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         <Outlet />
       </main>
 
       {/* Баннер обновления */}
       <UpdateBanner sw={sw} />
 
-      {/* Invisible spacer — same height as nav, reserves space in document flow */}
-      <div
-        className="shrink-0"
-        style={{ height: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
-        aria-hidden="true"
-      />
-
-      {/* Bottom Navigation — fixed to true screen bottom, floats over spacer */}
+      {/* Bottom Navigation */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
