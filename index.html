@@ -21,7 +21,8 @@
         margin: 0;
         padding: 0;
         height: 100vh; /* fallback */
-        height: 100svh; /* smallest viewport — учитывает адресную строку Safari */
+        height: 100svh;
+        height: -webkit-fill-available; /* iOS Safari — реальная доступная высота */
         width: 100vw;
         overflow: hidden;
       }
