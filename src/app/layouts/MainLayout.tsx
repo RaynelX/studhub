@@ -19,7 +19,7 @@ export function MainLayout() {
   return (
     <div
       className="fixed top-0 left-0 right-0 flex flex-col bg-gray-100 dark:bg-black overflow-hidden"
-      style={{ height: 'calc(100svh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))' }}
+      style={{ height: 'calc(100svh + env(safe-area-inset-bottom, 0px))' }}
     >
       {/* Header */}
       <header
