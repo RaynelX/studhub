@@ -51,6 +51,23 @@
   </head>
   <body>
     <div id="root"></div>
+    <div id="dbg" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:white;font:bold 11px monospace;padding:4px 8px;pointer-events:none;text-align:center;"></div>
+    <script>
+      function dbg(){
+        var vv = window.visualViewport;
+        var h1 = vv ? vv.height : '-';
+        var h2 = window.innerHeight;
+        var h3 = document.documentElement.clientHeight;
+        var r = document.getElementById('root');
+        var h4 = r ? r.offsetHeight : '-';
+        document.getElementById('dbg').textContent =
+          'vv:'+h1+' inner:'+h2+' client:'+h3+' root:'+h4;
+      }
+      dbg();
+      setInterval(dbg, 1000);
+      if(window.visualViewport) window.visualViewport.addEventListener('resize', dbg);
+      window.addEventListener('resize', dbg);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
