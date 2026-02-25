@@ -3,6 +3,7 @@ import { LayoutDashboard, Calendar, BookOpen, Menu } from 'lucide-react';
 import { useSync } from '../../database/sync/SyncProvider';
 import { usePageHeader } from '../providers/PageHeaderProvider';
 import { useSwUpdate } from '../hooks/use-sw-update';
+import { useViewportHeight } from '../hooks/use-viewport-height';
 import { UpdateBanner } from '../components/UpdateBanner';
 
 const navItems = [
@@ -15,9 +16,13 @@ const navItems = [
 export function MainLayout() {
   const header = usePageHeader();
   const sw = useSwUpdate();
+  useViewportHeight();
 
   return (
-    <div className="flex flex-col h-full bg-gray-100 dark:bg-black overflow-hidden">
+    <div
+      className="flex flex-col bg-gray-100 dark:bg-black overflow-hidden"
+      style={{ height: 'var(--app-height, 100svh)' }}
+    >
       {/* Header */}
       <header
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
@@ -70,6 +75,8 @@ export function MainLayout() {
     </div>
   );
 }
+
+// ...existing code...
 
 function SyncIndicator() {
   const { status, triggerSync } = useSync();

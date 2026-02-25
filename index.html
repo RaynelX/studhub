@@ -20,7 +20,8 @@
       html, body, #root {
         margin: 0;
         padding: 0;
-        height: 100dvh;
+        height: 100vh; /* fallback */
+        height: 100svh; /* smallest viewport — учитывает адресную строку Safari */
         width: 100vw;
         overflow: hidden;
       }
