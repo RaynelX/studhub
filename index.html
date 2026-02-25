@@ -17,12 +17,20 @@
     <title>StudHub</title>
 
     <style>
-      html, body, #root {
+      html, body {
         margin: 0;
         padding: 0;
+        width: 100vw;
+        overflow: hidden;
+      }
+      #root {
+        /*
+         * viewport-fit=cover расширяет область рендера за safe area,
+         * но CSS viewport units (vh/svh/dvh) НЕ включают эту область.
+         * Поэтому высота = viewport + safe-area-inset-bottom.
+         */
         height: 100vh; /* fallback */
-        height: 100svh;
-        height: -webkit-fill-available; /* iOS Safari — реальная доступная высота */
+        height: calc(100svh + env(safe-area-inset-bottom, 0px));
         width: 100vw;
         overflow: hidden;
       }
@@ -58,11 +66,11 @@
         var vv = window.visualViewport;
         var h1 = vv ? vv.height : '-';
         var h2 = window.innerHeight;
-        var h3 = document.documentElement.clientHeight;
         var r = document.getElementById('root');
-        var h4 = r ? r.offsetHeight : '-';
+        var h3 = r ? r.offsetHeight : '-';
+        var h4 = window.screen.height;
         document.getElementById('dbg').textContent =
-          'vv:'+h1+' inner:'+h2+' client:'+h3+' root:'+h4;
+          'vv:'+h1+' inner:'+h2+' root:'+h3+' screen:'+h4;
       }
       dbg();
       setInterval(dbg, 1000);
