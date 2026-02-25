@@ -1,4 +1,3 @@
-import { useRef, useState, useEffect } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Calendar, BookOpen, Menu } from 'lucide-react';
 import { useSync } from '../../database/sync/SyncProvider';
@@ -16,22 +15,9 @@ const navItems = [
 export function MainLayout() {
   const header = usePageHeader();
   const sw = useSwUpdate();
-  const navRef = useRef<HTMLElement>(null);
-  const [navHeight, setNavHeight] = useState(0);
-
-  useEffect(() => {
-    const el = navRef.current;
-    if (!el) return;
-
-    const ro = new ResizeObserver(([entry]) => {
-      setNavHeight(entry.target.getBoundingClientRect().height);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-100 dark:bg-black overflow-hidden">
+    <div className="flex flex-col h-full bg-gray-100 dark:bg-black overflow-hidden">
       {/* Header */}
       <header
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
@@ -50,21 +36,17 @@ export function MainLayout() {
         <SyncIndicator />
       </header>
 
-      {/* Content — padding-bottom компенсирует fixed-навигацию */}
-      <main
-        className="flex-1 min-h-0 overflow-y-auto touch-auto overscroll-none"
-        style={{ paddingBottom: navHeight }}
-      >
+      {/* Content */}
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-none">
         <Outlet />
       </main>
 
       {/* Баннер обновления */}
       <UpdateBanner sw={sw} />
 
-      {/* Bottom Navigation — fixed для корректного позиционирования на iOS Safari */}
+      {/* Bottom Navigation */}
       <nav
-        ref={navRef}
-        className="fixed bottom-0 left-0 right-0 z-50 flex border-t-2 border-red-500 bg-white dark:bg-neutral-900"
+        className="shrink-0 flex border-t-2 border-red-500 bg-white dark:bg-neutral-900"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
