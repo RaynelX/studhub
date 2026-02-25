@@ -27,10 +27,10 @@
         /*
          * viewport-fit=cover расширяет область рендера за safe area,
          * но CSS viewport units (vh/svh/dvh) НЕ включают эту область.
-         * Поэтому высота = viewport + safe-area-inset-bottom.
+         * Поэтому высота = viewport + оба safe-area инсета.
          */
         height: 100vh; /* fallback */
-        height: calc(100svh + env(safe-area-inset-bottom, 0px));
+        height: calc(100svh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
         width: 100vw;
         overflow: hidden;
       }
