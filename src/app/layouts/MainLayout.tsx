@@ -64,7 +64,7 @@ export function MainLayout() {
       {/* Bottom Navigation — fixed для корректного позиционирования на iOS Safari */}
       <nav
         ref={navRef}
-        className="fixed bottom-0 left-0 right-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
+        className="fixed bottom-0 left-0 right-0 z-50 flex border-t-2 border-red-500 bg-white dark:bg-neutral-900"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
