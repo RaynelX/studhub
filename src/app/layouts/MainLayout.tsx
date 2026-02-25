@@ -17,7 +17,10 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-100 dark:bg-black overflow-hidden">
+    <div
+      className="fixed top-0 left-0 right-0 flex flex-col bg-gray-100 dark:bg-black overflow-hidden"
+      style={{ height: 'calc(100svh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))' }}
+    >
       {/* Header */}
       <header
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
