@@ -36,11 +36,22 @@ export function SchedulePage() {
     ? getWeekNumber(selectedDate, semesterConfig.start_date)
     : null;
 
+  // Границы навигации по неделям (на основе дат семестра)
+  const semesterStartMonday = semesterConfig
+    ? getMonday(new Date(semesterConfig.start_date))
+    : null;
+  const semesterEndMonday = semesterConfig
+    ? getMonday(new Date(semesterConfig.end_date))
+    : null;
+
+  const canGoPrev = !semesterStartMonday || monday.getTime() > semesterStartMonday.getTime();
+  const canGoNext = !semesterEndMonday || monday.getTime() < semesterEndMonday.getTime();
+
   const { schedule, loading } = useDaySchedule(selectedDate);
 
   // Навигация по неделям
-  const goToPrevWeek = () => setSelectedDate((d) => addDays(d, -7));
-  const goToNextWeek = () => setSelectedDate((d) => addDays(d, 7));
+  const goToPrevWeek = () => { if (canGoPrev) setSelectedDate((d) => addDays(d, -7)); };
+  const goToNextWeek = () => { if (canGoNext) setSelectedDate((d) => addDays(d, 7)); };
   const goToDay = (dayOffset: number) => setSelectedDate(addDays(monday, dayOffset));
 
   useSetPageHeader({title: 'Расписание'});
@@ -51,7 +62,8 @@ export function SchedulePage() {
       <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800">
         <button
           onClick={goToPrevWeek}
-          className="p-2.5 -m-1 rounded-xl text-gray-500 dark:text-neutral-400 active:bg-gray-100 dark:active:bg-neutral-800"
+          disabled={!canGoPrev}
+          className={`p-2.5 -m-1 rounded-xl ${canGoPrev ? 'text-gray-500 dark:text-neutral-400 active:bg-gray-100 dark:active:bg-neutral-800' : 'text-gray-200 dark:text-neutral-700 cursor-default'}`}
         >
           <ChevronLeft size={22} />
         </button>
@@ -65,7 +77,8 @@ export function SchedulePage() {
 
         <button
           onClick={goToNextWeek}
-          className="p-2.5 -m-1 rounded-xl text-gray-500 dark:text-neutral-400 active:bg-gray-100 dark:active:bg-neutral-800"
+          disabled={!canGoNext}
+          className={`p-2.5 -m-1 rounded-xl ${canGoNext ? 'text-gray-500 dark:text-neutral-400 active:bg-gray-100 dark:active:bg-neutral-800' : 'text-gray-200 dark:text-neutral-700 cursor-default'}`}
         >
           <ChevronRight size={22} />
         </button>
