@@ -161,6 +161,10 @@ export function WindowCard({ pairNumber, startTime, endTime }: WindowCardProps) 
   );
 }
 
+// ============================================================
+// Компонент: карточка события дня (непривязанного к конкретной паре)
+// ============================================================
+
 interface FloatingEventCardProps {
   description?: string;
   eventType: string;

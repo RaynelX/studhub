@@ -242,7 +242,7 @@ import type {
           subjectName: subject?.name,
           teacherName: teacher?.full_name,
           room: e.room ?? undefined,
-          eventTime: e.event_time ?? undefined,
+          eventTime: e.event_time?.slice(0, 5) ?? undefined,
         };
       });
 
