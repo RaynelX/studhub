@@ -20,8 +20,8 @@
       html, body, #root {
         margin: 0;
         padding: 0;
-        width: 100%;
-        height: 100%;
+        height: 100dvh;
+        width: 100vw;
         overflow: hidden;
       }
       html {
@@ -57,23 +57,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <div id="dbg" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:red;color:white;font:bold 11px monospace;padding:4px 8px;pointer-events:none;text-align:center;"></div>
-    <script>
-      function dbg(){
-        var vv = window.visualViewport;
-        var h1 = vv ? vv.height : '-';
-        var h2 = window.innerHeight;
-        var r = document.getElementById('root');
-        var h3 = r ? r.offsetHeight : '-';
-        var h4 = window.screen.height;
-        document.getElementById('dbg').textContent =
-          'vv:'+h1+' inner:'+h2+' root:'+h3+' screen:'+h4;
-      }
-      dbg();
-      setInterval(dbg, 1000);
-      if(window.visualViewport) window.visualViewport.addEventListener('resize', dbg);
-      window.addEventListener('resize', dbg);
-    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -17,10 +17,7 @@ export function MainLayout() {
   const sw = useSwUpdate();
 
   return (
-    <div
-      className="fixed top-0 left-0 right-0 flex flex-col bg-gray-100 dark:bg-black overflow-hidden"
-      style={{ height: 'calc(100svh + env(safe-area-inset-bottom, 0px))' }}
-    >
+    <div className="flex flex-col h-full bg-gray-100 dark:bg-black overflow-hidden">
       {/* Header */}
       <header
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
@@ -40,16 +37,16 @@ export function MainLayout() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-none">
+      <main className="flex-1 min-h-0 overflow-y-auto touch-auto overscroll-none">
         <Outlet />
       </main>
 
       {/* Баннер обновления */}
       <UpdateBanner sw={sw} />
 
-      {/* Bottom Navigation — paddingBottom заполняет зазор от viewport-fit=cover */}
+      {/* Bottom Navigation */}
       <nav
-        className="shrink-0 flex border-t-2 border-red-500 bg-white dark:bg-neutral-900"
+        className="shrink-0 flex border-t border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         {navItems.map(({ to, icon: Icon, label }) => (
@@ -73,8 +70,6 @@ export function MainLayout() {
     </div>
   );
 }
-
-// ...existing code...
 
 function SyncIndicator() {
   const { status, triggerSync } = useSync();
