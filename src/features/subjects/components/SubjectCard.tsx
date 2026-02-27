@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Link, StickyNote } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { EXPAND_VARIANTS, SPRING_SNAPPY, SPRING_GENTLE } from '../../../shared/constants/motion';
 import type { SubjectDetails } from '../hooks/use-subject-details';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -41,12 +43,16 @@ export function SubjectCard({ data }: Props) {
           </div>
 
           {hasExpandedContent && (
-            <ChevronDown
-              size={18}
-              className={`text-neutral-400 dark:text-neutral-500 transition-transform duration-200 mt-1 shrink-0 ${
-                expanded ? 'rotate-180' : ''
-              }`}
-            />
+            <motion.div
+              animate={{ rotate: expanded ? 180 : 0 }}
+              transition={SPRING_SNAPPY}
+              className="mt-1 shrink-0"
+            >
+              <ChevronDown
+                size={18}
+                className="text-neutral-400 dark:text-neutral-500"
+              />
+            </motion.div>
           )}
         </div>
 
@@ -71,9 +77,11 @@ export function SubjectCard({ data }: Props) {
           <div className="mt-3">
             <div className="flex items-center gap-3">
               <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 dark:bg-blue-400 rounded-full transition-all duration-500"
-                  style={{ width: `${progress.percent}%` }}
+                <motion.div
+                  className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress.percent}%` }}
+                  transition={SPRING_GENTLE}
                 />
               </div>
               <span className="text-xs text-neutral-400 dark:text-neutral-500 tabular-nums shrink-0">
@@ -85,8 +93,17 @@ export function SubjectCard({ data }: Props) {
       </button>
 
       {/* Раскрывающийся контент */}
-      {expanded && hasExpandedContent && (
-        <div className="px-4 py-4 border-t border-gray-100 dark:border-neutral-800 space-y-3">
+      <AnimatePresence initial={false}>
+        {expanded && hasExpandedContent && (
+          <motion.div
+            variants={EXPAND_VARIANTS}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={SPRING_SNAPPY}
+            className="overflow-hidden"
+          >
+            <div className="px-4 py-4 border-t border-gray-100 dark:border-neutral-800 space-y-3">
           {/* Ссылки */}
           {subject.sdo_url && (
             <a
@@ -124,8 +141,10 @@ export function SubjectCard({ data }: Props) {
               </p>
             </div>
           )}
-        </div>
-      )}
+          </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

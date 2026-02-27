@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
 import {
@@ -14,6 +15,7 @@ import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { DAY_NAMES_SHORT } from '../../shared/constants/days';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
+import { FADE_SLIDE_VARIANTS, TWEEN_FAST, SPRING_SNAPPY } from '../../shared/constants/motion';
 
 // ============================================================
 // Компонент страницы
@@ -48,6 +50,12 @@ export function SchedulePage() {
   const canGoNext = !semesterEndMonday || monday.getTime() < semesterEndMonday.getTime();
 
   const { schedule, loading } = useDaySchedule(selectedDate);
+
+  // Направление анимации при смене дня
+  const dayRef = useRef(getDayOfWeek(selectedDate));
+  const currentDay = getDayOfWeek(selectedDate);
+  const dayDirection = currentDay >= dayRef.current ? 1 : -1;
+  dayRef.current = currentDay;
 
   // Навигация по неделям
   const goToPrevWeek = () => { if (canGoPrev) setSelectedDate((d) => addDays(d, -7)); };
@@ -101,7 +109,7 @@ export function SchedulePage() {
               key={offset}
               onClick={() => !isSunday && goToDay(offset)}
               disabled={isSunday}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
+              className={`relative flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
                 isSunday
                   ? 'text-gray-300 dark:text-neutral-600 cursor-default'
                   : isSelected
@@ -113,15 +121,22 @@ export function SchedulePage() {
                 {DAY_NAMES_SHORT[dayNum]}
               </span>
               <span
-                className={`text-sm w-8 h-8 flex items-center justify-center rounded-full font-medium ${
+                className={`relative z-10 text-sm w-8 h-8 flex items-center justify-center rounded-full font-medium ${
                   isSelected
-                    ? 'bg-blue-600 text-white dark:bg-blue-500'
+                    ? 'text-white'
                     : isTodayDate && !isSunday
                       ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
                       : ''
                 }`}
               >
-                {date.getDate()}
+                {isSelected && (
+                  <motion.div
+                    layoutId="active-day"
+                    className="absolute inset-0 bg-blue-600 dark:bg-blue-500 rounded-full"
+                    transition={SPRING_SNAPPY}
+                  />
+                )}
+                <span className="relative z-10">{date.getDate()}</span>
               </span>
             </button>
           );
@@ -130,17 +145,35 @@ export function SchedulePage() {
 
       {/* Содержимое дня */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
-          </div>
-        ) : (
-          <DaySchedule
-            slots={schedule.slots}
-            floatingEvents={schedule.floatingEvents}
-            date={selectedDate}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="loading"
+              className="flex items-center justify-center py-16"
+              variants={FADE_SLIDE_VARIANTS}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={TWEEN_FAST}
+            >
+              <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`day-${selectedDate.toISOString()}`}
+              initial={{ x: dayDirection * 20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: dayDirection * -20, opacity: 0 }}
+              transition={TWEEN_FAST}
+            >
+              <DaySchedule
+                slots={schedule.slots}
+                floatingEvents={schedule.floatingEvents}
+                date={selectedDate}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

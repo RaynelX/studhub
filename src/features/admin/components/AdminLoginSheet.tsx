@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { BottomSheet } from '../../../shared/ui/BottomSheet';
 import { useAdmin } from '../AdminProvider';
+import { FADE_SLIDE_VARIANTS, TWEEN_FAST } from '../../../shared/constants/motion';
 
 interface Props {
   open: boolean;
@@ -55,9 +57,20 @@ export function AdminLoginSheet({ open, onClose }: Props) {
           />
         </div>
 
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              className="text-sm text-red-600 dark:text-red-400"
+              variants={FADE_SLIDE_VARIANTS}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={TWEEN_FAST}
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         <button
           onClick={handleSubmit}

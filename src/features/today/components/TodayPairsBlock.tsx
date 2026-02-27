@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import type { TodayScheduleData } from '../hooks/use-today-schedule';
 import type { DaySlot } from '../../schedule/utils/schedule-builder';
 import { useCurrentMinutes } from '../hooks/use-current-time';
+import { SPRING_GENTLE } from '../../../shared/constants/motion';
 
 interface Props {
   data: TodayScheduleData;
@@ -142,9 +144,11 @@ function PairsCard({
 
           {/* Прогресс-бар */}
           <div className="mt-2 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 dark:bg-blue-400 rounded-full transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
+            <motion.div
+              className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={SPRING_GENTLE}
             />
           </div>
 

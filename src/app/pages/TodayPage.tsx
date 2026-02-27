@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useTodaySchedule } from '../../features/today/hooks/use-today-schedule';
 import { useUpcomingEvents } from '../../features/today/hooks/use-upcoming-events';
@@ -5,6 +6,7 @@ import { useSemesterProgress } from '../../features/today/hooks/use-semester-pro
 import { TodayPairsBlock } from '../../features/today/components/TodayPairsBlock';
 import { UpcomingEventsBlock } from '../../features/today/components/UpcomingEventsBlock';
 import { SemesterBlock } from '../../features/today/components/SemesterBlock';
+import { FADE_SLIDE_VARIANTS, TWEEN_FAST } from '../../shared/constants/motion';
 
 export function TodayPage() {
   const todaySchedule = useTodaySchedule();
@@ -24,17 +26,37 @@ export function TodayPage() {
 
   if (todaySchedule.loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-neutral-400">Загрузка...</p>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="loading"
+          className="flex items-center justify-center h-full"
+          variants={FADE_SLIDE_VARIANTS}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={TWEEN_FAST}
+        >
+          <p className="text-neutral-400">Загрузка...</p>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-5">
-      <TodayPairsBlock data={todaySchedule} />
-      <UpcomingEventsBlock events={upcomingEvents.events} />
-      <SemesterBlock data={semesterProgress} />
-    </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="content"
+        className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-5"
+        variants={FADE_SLIDE_VARIANTS}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={TWEEN_FAST}
+      >
+        <TodayPairsBlock data={todaySchedule} />
+        <UpcomingEventsBlock events={upcomingEvents.events} />
+        <SemesterBlock data={semesterProgress} />
+      </motion.div>
+    </AnimatePresence>
   );
 }

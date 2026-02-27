@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { ChevronDown, Mail, Phone, Send, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useDatabase } from '../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { Section } from '../../shared/ui/Section';
+import { STAGGER_CONTAINER, STAGGER_ITEM, EXPAND_VARIANTS, SPRING_SNAPPY } from '../../shared/constants/motion';
 import type { TeacherDoc } from '../../database/types';
 
 // ID преподавателей кафедры — захардкожены
@@ -48,9 +50,13 @@ export function DepartmentSection() {
         {/* Список преподавателей */}
         {!loading && sorted.length > 0 && (
           <div className="border-t border-gray-100 dark:border-neutral-800 pt-2">
-            {sorted.map((teacher) => (
-              <TeacherRow key={teacher.id} teacher={teacher} />
-            ))}
+            <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate">
+              {sorted.map((teacher) => (
+                <motion.div key={teacher.id} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
+                  <TeacherRow teacher={teacher} />
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         )}
       </div>
@@ -85,17 +91,30 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
             )}
           </div>
           {hasContacts && (
-            <ChevronDown
-              size={16}
-              className={`text-neutral-400 dark:text-neutral-500 shrink-0 transition-transform duration-200 ${
-                expanded ? 'rotate-180' : ''
-              }`}
-            />
+            <motion.div
+              animate={{ rotate: expanded ? 180 : 0 }}
+              transition={SPRING_SNAPPY}
+              className="shrink-0"
+            >
+              <ChevronDown
+                size={16}
+                className="text-neutral-400 dark:text-neutral-500"
+              />
+            </motion.div>
           )}
         </button>
   
-        {expanded && hasContacts && (
-          <div className="px-3 pb-3 space-y-2">
+        <AnimatePresence initial={false}>
+          {expanded && hasContacts && (
+            <motion.div
+              variants={EXPAND_VARIANTS}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={SPRING_SNAPPY}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 space-y-2">
             {teacher.email && (
               <a
                 href={`mailto:${teacher.email}`}
@@ -131,8 +150,10 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
                 <span>{teacher.consultation_info}</span>
               </div>
             )}
-          </div>
-        )}
+            </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
 }
