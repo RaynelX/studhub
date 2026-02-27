@@ -15,7 +15,7 @@ export function SemesterBlock({ data }: Props) {
         Семестр
       </h3>
 
-      <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent">
+      <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent transform-gpu active:scale-[0.98] transition-transform duration-75">
         <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
           {data.name}
         </p>

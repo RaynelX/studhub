@@ -13,8 +13,6 @@ export function useRxCollection<T>(
   const queryKey = JSON.stringify(query);
 
   useEffect(() => {
-    setLoading(true);
-
     const rxQuery = query
       ? collection.find(query)
       : collection.find();

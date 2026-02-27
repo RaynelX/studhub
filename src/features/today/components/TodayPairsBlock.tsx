@@ -110,7 +110,7 @@ function PairsCard({
   return (
     <div
       className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden cursor-pointer
-                 active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors"
+                 transform-gpu active:scale-[0.98] transition-transform duration-75"
       onClick={() => navigate('/schedule')}
     >
       {/* Текущая пара — крупный блок */}

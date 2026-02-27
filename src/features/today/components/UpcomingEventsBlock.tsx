@@ -1,6 +1,4 @@
-import { motion } from 'motion/react';
 import type { UpcomingEvent } from '../hooks/use-upcoming-events';
-import { STAGGER_CONTAINER, STAGGER_ITEM, SPRING_SNAPPY } from '../../../shared/constants/motion';
 
 const EVENT_BADGE: Record<string, { label: string; className: string }> = {
   usr:           { label: 'УСР',    className: 'bg-violet-100 text-violet-700 dark:bg-violet-500/40 dark:text-violet-300' },
@@ -32,14 +30,12 @@ export function UpcomingEventsBlock({ events }: Props) {
       </div>
 
       {/* Карточка */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors">
-        <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 transform-gpu active:scale-[0.98] transition-transform duration-75">
+        <div>
           {events.map((event) => (
-            <motion.div key={event.id} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
-              <EventRow event={event} />
-            </motion.div>
+            <EventRow key={event.id} event={event} />
           ))}
-        </motion.div>
+        </div>
       </div>
     </div>
   );

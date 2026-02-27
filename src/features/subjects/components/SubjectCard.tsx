@@ -27,7 +27,7 @@ export function SubjectCard({ data }: Props) {
     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden">
       <button
         onClick={() => hasExpandedContent && setExpanded((v) => !v)}
-        className="w-full text-left p-4 active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors"
+        className="w-full text-left p-4 transform-gpu active:scale-[0.98] transition-transform duration-75"
       >
         {/* Название */}
         <div className="flex items-start justify-between gap-2">

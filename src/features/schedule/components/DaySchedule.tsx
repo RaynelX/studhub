@@ -1,7 +1,5 @@
-import { motion } from 'motion/react';
 import type { DaySlot, FloatingEvent } from '../utils/schedule-builder';
 import { PairCard, WindowCard, FloatingEventCard } from './PairCard';
-import { STAGGER_CONTAINER, STAGGER_ITEM, SPRING_SNAPPY } from '../../../shared/constants/motion';
 
 interface Props {
   slots: DaySlot[];
@@ -43,35 +41,28 @@ export function DaySchedule({ slots, floatingEvents, date }: Props) {
   const visibleSlots = slots.slice(firstIdx, lastIdx + 1);
 
   return (
-    <motion.div
-      className="space-y-2.5"
-      variants={STAGGER_CONTAINER}
-      initial="initial"
-      animate="animate"
-    >
+    <div className="space-y-2.5">
       {visibleSlots.map((slot) =>
         slot.pair ? (
-          <motion.div key={slot.pairNumber} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
-            <PairCard
-              pair={slot.pair}
-              startTime={slot.startTime}
-              endTime={slot.endTime}
-              date={date}
-            />
-          </motion.div>
+          <PairCard
+            key={slot.pairNumber}
+            pair={slot.pair}
+            startTime={slot.startTime}
+            endTime={slot.endTime}
+            date={date}
+          />
         ) : (
-          <motion.div key={slot.pairNumber} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
-            <WindowCard
-              pairNumber={slot.pairNumber}
-              startTime={slot.startTime}
-              endTime={slot.endTime}
-            />
-          </motion.div>
+          <WindowCard
+            key={slot.pairNumber}
+            pairNumber={slot.pairNumber}
+            startTime={slot.startTime}
+            endTime={slot.endTime}
+          />
         ),
       )}
 
       {floatingEvents.length > 0 && (
-        <motion.div className="mt-6" variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
+        <div className="mt-6">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2.5">
             События дня
           </p>
@@ -80,9 +71,9 @@ export function DaySchedule({ slots, floatingEvents, date }: Props) {
               <FloatingEventCard key={i} {...event} />
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 

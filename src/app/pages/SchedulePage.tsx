@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
 import {
@@ -15,7 +15,7 @@ import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { DAY_NAMES_SHORT } from '../../shared/constants/days';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
-import { TWEEN_FAST, SPRING_SNAPPY } from '../../shared/constants/motion';
+import { SPRING_SNAPPY } from '../../shared/constants/motion';
 
 // ============================================================
 // Компонент страницы
@@ -148,48 +148,24 @@ export function SchedulePage() {
 
       {/* Содержимое дня */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4">
-        <AnimatePresence mode="wait" initial={false}>
-          {loading ? (
-            <motion.div
-              key="loading"
-              className="flex items-center justify-center py-16"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={TWEEN_FAST}
-            >
-              <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
-            </motion.div>
-          ) : isWeekChange ? (
-            <motion.div
-              key={`week-${monday.toISOString()}-${currentDay}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={TWEEN_FAST}
-            >
-              <DaySchedule
-                slots={schedule.slots}
-                floatingEvents={schedule.floatingEvents}
-                date={selectedDate}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key={`day-${selectedDate.toISOString()}`}
-              initial={{ x: dayDirection * 40, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: dayDirection * -40, opacity: 0 }}
-              transition={{ type: 'tween', duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <DaySchedule
-                slots={schedule.slots}
-                floatingEvents={schedule.floatingEvents}
-                date={selectedDate}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
+          </div>
+        ) : (
+          <motion.div
+            key={selectedDate.toISOString()}
+            initial={{ opacity: 0, x: isWeekChange ? 0 : dayDirection * 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
+          >
+            <DaySchedule
+              slots={schedule.slots}
+              floatingEvents={schedule.floatingEvents}
+              date={selectedDate}
+            />
+          </motion.div>
+        )}
       </div>
     </div>
   );

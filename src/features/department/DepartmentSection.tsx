@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useDatabase } from '../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { Section } from '../../shared/ui/Section';
-import { STAGGER_CONTAINER, STAGGER_ITEM, EXPAND_VARIANTS, SPRING_SNAPPY } from '../../shared/constants/motion';
+import { EXPAND_VARIANTS, SPRING_SNAPPY } from '../../shared/constants/motion';
 import type { TeacherDoc } from '../../database/types';
 
 // ID преподавателей кафедры — захардкожены
@@ -50,13 +50,11 @@ export function DepartmentSection() {
         {/* Список преподавателей */}
         {!loading && sorted.length > 0 && (
           <div className="border-t border-gray-100 dark:border-neutral-800 pt-2">
-            <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate">
+            <div>
               {sorted.map((teacher) => (
-                <motion.div key={teacher.id} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
-                  <TeacherRow teacher={teacher} />
-                </motion.div>
+                <TeacherRow key={teacher.id} teacher={teacher} />
               ))}
-            </motion.div>
+            </div>
           </div>
         )}
       </div>

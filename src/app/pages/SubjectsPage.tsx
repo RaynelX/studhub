@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { ArrowDownAZ, Hash, Clock } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useSubjectDetails } from '../../features/subjects/hooks/use-subject-details';
 import { SubjectCard } from '../../features/subjects/components/SubjectCard';
-import { STAGGER_CONTAINER, STAGGER_ITEM, SPRING_SNAPPY, FADE_SLIDE_VARIANTS, TWEEN_FAST } from '../../shared/constants/motion';
 import type { SubjectDetails } from '../../features/subjects/hooks/use-subject-details';
 
 type SortMode = 'alpha' | 'count' | 'next';
@@ -23,33 +21,17 @@ export function SubjectsPage() {
 
   if (loading) {
     return (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="loading"
-          className="h-full flex items-center justify-center"
-          variants={FADE_SLIDE_VARIANTS}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={TWEEN_FAST}
-        >
-          <p className="text-neutral-400">Загрузка...</p>
-        </motion.div>
-      </AnimatePresence>
+      <div className="h-full flex items-center justify-center">
+        <p className="text-neutral-400">Загрузка...</p>
+      </div>
     );
   }
 
   if (subjects.length === 0) {
     return (
-      <motion.div
-        className="h-full flex items-center justify-center p-4"
-        variants={FADE_SLIDE_VARIANTS}
-        initial="initial"
-        animate="animate"
-        transition={TWEEN_FAST}
-      >
+      <div className="h-full flex items-center justify-center p-4">
         <p className="text-neutral-400 dark:text-neutral-500">Предметы не найдены</p>
-      </motion.div>
+      </div>
     );
   }
 
@@ -76,19 +58,13 @@ export function SubjectsPage() {
       </div>
 
       {/* Список */}
-      <motion.div
+      <div
         className="px-4 pb-4 space-y-3"
-        variants={STAGGER_CONTAINER}
-        initial="initial"
-        animate="animate"
-        key={sortMode}
       >
         {sorted.map((data) => (
-          <motion.div key={data.subject.id} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>
-            <SubjectCard data={data} />
-          </motion.div>
+          <SubjectCard key={data.subject.id} data={data} />
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
