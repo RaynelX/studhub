@@ -32,7 +32,7 @@ export function UpcomingEventsBlock({ events }: Props) {
       </div>
 
       {/* Карточка */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors">
         <motion.div variants={STAGGER_CONTAINER} initial="initial" animate="animate">
           {events.map((event) => (
             <motion.div key={event.id} variants={STAGGER_ITEM} transition={SPRING_SNAPPY}>

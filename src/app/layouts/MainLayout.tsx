@@ -1,12 +1,11 @@
-import { useRef } from 'react';
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Calendar, BookOpen, Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSync } from '../../database/sync/SyncProvider';
 import { usePageHeader } from '../providers/PageHeaderProvider';
 import { useSwUpdate } from '../hooks/use-sw-update';
 import { UpdateBanner } from '../components/UpdateBanner';
-import { pageVariants, PAGE_TRANSITION, TWEEN_FAST, FADE_VARIANTS } from '../../shared/constants/motion';
+import { TWEEN_FAST, FADE_VARIANTS } from '../../shared/constants/motion';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Сегодня' },
@@ -18,14 +17,6 @@ const navItems = [
 export function MainLayout() {
   const header = usePageHeader();
   const sw = useSwUpdate();
-  const location = useLocation();
-
-  // Определяем направление перехода по индексу вкладки
-  const TAB_INDEX: Record<string, number> = { '/': 0, '/schedule': 1, '/subjects': 2, '/more': 3 };
-  const currentIndex = TAB_INDEX[location.pathname] ?? 0;
-  const prevIndexRef = useRef(currentIndex);
-  const direction = currentIndex >= prevIndexRef.current ? 1 : -1;
-  prevIndexRef.current = currentIndex;
 
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-black overflow-hidden">
@@ -48,20 +39,8 @@ export function MainLayout() {
       </header>
 
       {/* Content */}
-      <main className="flex-1 min-h-0 overflow-y-auto touch-auto overscroll-none relative">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            variants={pageVariants(direction)}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={PAGE_TRANSITION}
-            className="h-full"
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+      <main className="flex-1 min-h-0 overflow-y-auto touch-auto overscroll-none">
+        <Outlet />
       </main>
 
       {/* Баннер обновления */}

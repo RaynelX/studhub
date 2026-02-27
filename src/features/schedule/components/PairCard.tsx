@@ -81,6 +81,7 @@ export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
         border-t border-r border-b border-gray-200
         dark:border-t-transparent dark:border-r-transparent dark:border-b-transparent
         ${bgColor} p-4
+        active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors
         ${isCurrent ? 'ring-2 ring-blue-400 ring-offset-1 dark:ring-offset-black' : ''}
         ${isCancelled ? 'opacity-60' : ''}
       `}
@@ -157,7 +158,7 @@ interface WindowCardProps {
 
 export function WindowCard({ pairNumber, startTime, endTime }: WindowCardProps) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-neutral-800/50">
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-neutral-800/50 active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors">
       <span className="text-sm text-gray-400 dark:text-neutral-500">
         {pairNumber} пара · {startTime} – {endTime}
       </span>
@@ -190,7 +191,7 @@ export function FloatingEventCard({
   const config = EVENT_TYPE_CONFIG[eventType] ?? EVENT_TYPE_CONFIG.other;
 
   return (
-    <div className={`rounded-xl border border-gray-200 dark:border-neutral-800/50 ${config.bg} ${config.darkBg} p-4`}>
+    <div className={`rounded-xl border border-gray-200 dark:border-neutral-800/50 ${config.bg} ${config.darkBg} p-4 active:bg-neutral-50 dark:active:bg-neutral-800 transition-colors`}>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm text-gray-500 dark:text-neutral-400">
           {eventTime ?? 'В течение дня'}

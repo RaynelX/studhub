@@ -15,7 +15,7 @@ import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { DAY_NAMES_SHORT } from '../../shared/constants/days';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
-import { FADE_SLIDE_VARIANTS, TWEEN_FAST, SPRING_SNAPPY } from '../../shared/constants/motion';
+import { TWEEN_FAST, SPRING_SNAPPY } from '../../shared/constants/motion';
 
 // ============================================================
 // Компонент страницы
@@ -51,11 +51,14 @@ export function SchedulePage() {
 
   const { schedule, loading } = useDaySchedule(selectedDate);
 
-  // Направление анимации при смене дня
-  const dayRef = useRef(getDayOfWeek(selectedDate));
+  // Трекинг направления анимации при смене дня/недели
+  const prevDateRef = useRef(selectedDate);
+  const prevMonday = getMonday(prevDateRef.current);
+  const isWeekChange = monday.getTime() !== prevMonday.getTime();
   const currentDay = getDayOfWeek(selectedDate);
-  const dayDirection = currentDay >= dayRef.current ? 1 : -1;
-  dayRef.current = currentDay;
+  const prevDay = getDayOfWeek(prevDateRef.current);
+  const dayDirection = currentDay >= prevDay ? 1 : -1;
+  prevDateRef.current = selectedDate;
 
   // Навигация по неделям
   const goToPrevWeek = () => { if (canGoPrev) setSelectedDate((d) => addDays(d, -7)); };
@@ -145,26 +148,39 @@ export function SchedulePage() {
 
       {/* Содержимое дня */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           {loading ? (
             <motion.div
               key="loading"
               className="flex items-center justify-center py-16"
-              variants={FADE_SLIDE_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={TWEEN_FAST}
             >
               <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
             </motion.div>
+          ) : isWeekChange ? (
+            <motion.div
+              key={`week-${monday.toISOString()}-${currentDay}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={TWEEN_FAST}
+            >
+              <DaySchedule
+                slots={schedule.slots}
+                floatingEvents={schedule.floatingEvents}
+                date={selectedDate}
+              />
+            </motion.div>
           ) : (
             <motion.div
               key={`day-${selectedDate.toISOString()}`}
-              initial={{ x: dayDirection * 20, opacity: 0 }}
+              initial={{ x: dayDirection * 40, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: dayDirection * -20, opacity: 0 }}
-              transition={TWEEN_FAST}
+              exit={{ x: dayDirection * -40, opacity: 0 }}
+              transition={{ type: 'tween', duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
             >
               <DaySchedule
                 slots={schedule.slots}

@@ -7,40 +7,24 @@ import type { Transition, Variants } from 'motion/react';
 /** Быстрый spring для микро-интеракций (expand/collapse, tab switch) */
 export const SPRING_SNAPPY: Transition = {
   type: 'spring',
-  stiffness: 400,
-  damping: 30,
+  stiffness: 350,
+  damping: 35,
+  mass: 0.8,
 };
 
-/** Мягкий spring для BottomSheet, page transitions */
+/** Мягкий spring для BottomSheet, progress bars */
 export const SPRING_GENTLE: Transition = {
   type: 'spring',
-  stiffness: 260,
-  damping: 25,
+  stiffness: 200,
+  damping: 28,
+  mass: 1,
 };
 
 /** Быстрый tween для fade-переходов */
 export const TWEEN_FAST: Transition = {
   type: 'tween',
-  duration: 0.15,
+  duration: 0.18,
   ease: 'easeOut',
-};
-
-// ============================================================
-// Page transition variants
-// ============================================================
-
-export function pageVariants(direction: number): Variants {
-  return {
-    initial: { x: direction * 30, opacity: 0 },
-    animate: { x: 0, opacity: 1 },
-    exit: { x: direction * -30, opacity: 0 },
-  };
-}
-
-export const PAGE_TRANSITION: Transition = {
-  type: 'tween',
-  duration: 0.2,
-  ease: [0.25, 0.1, 0.25, 1],
 };
 
 // ============================================================
@@ -82,13 +66,13 @@ export const SHEET_VARIANTS: Variants = {
 export const STAGGER_CONTAINER: Variants = {
   animate: {
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.04,
     },
   },
 };
 
 export const STAGGER_ITEM: Variants = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
 };
 
