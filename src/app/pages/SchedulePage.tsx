@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
 import {
@@ -153,18 +153,21 @@ export function SchedulePage() {
             <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
           </div>
         ) : (
-          <motion.div
-            key={selectedDate.toISOString()}
-            initial={{ opacity: 0, x: isWeekChange ? 0 : dayDirection * 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-          >
-            <DaySchedule
-              slots={schedule.slots}
-              floatingEvents={schedule.floatingEvents}
-              date={selectedDate}
-            />
-          </motion.div>
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.div
+              key={selectedDate.toISOString()}
+              initial={{ opacity: 0, x: isWeekChange ? 0 : dayDirection * 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isWeekChange ? 0 : -dayDirection * 30 }}
+              transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
+            >
+              <DaySchedule
+                slots={schedule.slots}
+                floatingEvents={schedule.floatingEvents}
+                date={selectedDate}
+              />
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
     </div>
