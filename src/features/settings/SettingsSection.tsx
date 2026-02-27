@@ -1,7 +1,5 @@
-import { motion, AnimatePresence } from 'motion/react';
 import { useSettings } from './SettingsProvider';
 import { Section } from '../../shared/ui/Section';
-import { EXPAND_VARIANTS, SPRING_SNAPPY } from '../../shared/constants/motion';
 
 type Language = 'en' | 'de' | 'fr' | 'es';
 type Subgroup = 'a' | 'b';
@@ -54,16 +52,8 @@ export function SettingsSection() {
         </div>
 
         {/* Подгруппа по англ. */}
-        <AnimatePresence initial={false}>
-          {settings.language === 'en' && (
-            <motion.div
-              variants={EXPAND_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={SPRING_SNAPPY}
-              className="overflow-hidden"
-            >
+        <div className="grid-expandable" data-expanded={settings.language === 'en'}>
+          <div className="grid-expandable-inner">
               <div>
                 <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">
                   Подгруппа по англ. языку
@@ -83,9 +73,8 @@ export function SettingsSection() {
                   </ToggleButton>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        </div>
 
         {/* Подгруппа по ОИТ */}
         <div>

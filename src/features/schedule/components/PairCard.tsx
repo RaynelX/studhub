@@ -1,4 +1,3 @@
-import { motion } from 'motion/react';
 import type { ResolvedPair } from '../utils/schedule-builder';
 import { isCurrentPair } from '../utils/week-utils';
 
@@ -136,10 +135,8 @@ export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
 
       {/* Текущая пара */}
       {isCurrent && (
-        <motion.div
-          className="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-500"
-          animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
+        <div
+          className="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-500 anim-pulse-dot"
         />
       )}
     </div>

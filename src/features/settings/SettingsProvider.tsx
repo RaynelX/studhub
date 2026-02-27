@@ -5,9 +5,7 @@ import {
     useCallback,
     type ReactNode,
   } from 'react';
-  import { motion, AnimatePresence } from 'motion/react';
   import { SettingsSetup } from './SettingsSetup';
-  import { TWEEN_FAST } from '../../shared/constants/motion';
   
   // ============================================================
   // Типы
@@ -81,33 +79,17 @@ import {
   
     if (!settings) {
       return (
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="setup"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={TWEEN_FAST}
-            className="h-full"
-          >
-            <SettingsSetup onComplete={updateSettings} />
-          </motion.div>
-        </AnimatePresence>
+        <div className="h-full">
+          <SettingsSetup onComplete={updateSettings} />
+        </div>
       );
     }
   
     return (
       <SettingsContext.Provider value={{ settings, updateSettings, resetSettings }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="app"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={TWEEN_FAST}
-            className="h-full"
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+        <div className="h-full">
+          {children}
+        </div>
       </SettingsContext.Provider>
     );
   }

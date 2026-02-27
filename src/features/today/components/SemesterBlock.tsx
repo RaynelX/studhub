@@ -1,6 +1,4 @@
-import { motion } from 'motion/react';
 import type { SemesterProgress } from '../hooks/use-semester-progress';
-import { SPRING_GENTLE } from '../../../shared/constants/motion';
 
 interface Props {
   data: SemesterProgress;
@@ -26,11 +24,9 @@ export function SemesterBlock({ data }: Props) {
 
         <div className="mt-3 flex items-center gap-3">
           <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${data.progressPercent}%` }}
-              transition={SPRING_GENTLE}
+            <div
+              className="h-full bg-blue-500 dark:bg-blue-400 rounded-full anim-progress-bar"
+              style={{ width: `${data.progressPercent}%` }}
             />
           </div>
           <span className="text-xs text-neutral-500 dark:text-neutral-400 w-10 text-right shrink-0 tabular-nums">

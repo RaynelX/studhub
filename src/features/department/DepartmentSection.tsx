@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { ChevronDown, Mail, Phone, Send, Clock } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useDatabase } from '../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { Section } from '../../shared/ui/Section';
-import { EXPAND_VARIANTS, SPRING_SNAPPY } from '../../shared/constants/motion';
 import type { TeacherDoc } from '../../database/types';
 
 // ID преподавателей кафедры — захардкожены
@@ -89,29 +87,20 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
             )}
           </div>
           {hasContacts && (
-            <motion.div
-              animate={{ rotate: expanded ? 180 : 0 }}
-              transition={SPRING_SNAPPY}
-              className="shrink-0"
+            <div
+              className="shrink-0 anim-chevron"
+              style={{ transform: `rotate(${expanded ? 180 : 0}deg)` }}
             >
               <ChevronDown
                 size={16}
                 className="text-neutral-400 dark:text-neutral-500"
               />
-            </motion.div>
+            </div>
           )}
         </button>
   
-        <AnimatePresence initial={false}>
-          {expanded && hasContacts && (
-            <motion.div
-              variants={EXPAND_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={SPRING_SNAPPY}
-              className="overflow-hidden"
-            >
+        <div className="grid-expandable" data-expanded={expanded && hasContacts}>
+          <div className="grid-expandable-inner">
               <div className="px-3 pb-3 space-y-2">
             {teacher.email && (
               <a
@@ -149,9 +138,8 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
               </div>
             )}
             </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
+        </div>
       </div>
     );
 }

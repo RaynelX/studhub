@@ -1,11 +1,10 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Calendar, BookOpen, Menu } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useSync } from '../../database/sync/SyncProvider';
 import { usePageHeader } from '../providers/PageHeaderProvider';
 import { useSwUpdate } from '../hooks/use-sw-update';
 import { UpdateBanner } from '../components/UpdateBanner';
-import { TWEEN_FAST, FADE_VARIANTS } from '../../shared/constants/motion';
+import { useExitTransitionWait } from '../../shared/hooks/use-exit-transition';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Сегодня' },
@@ -90,32 +89,22 @@ function SyncIndicator() {
       className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-neutral-400 active:text-gray-700 transition-colors"
       title={status.error || 'Нажмите для синхронизации'}
     >
-      <motion.div
-        className={`w-2 h-2 rounded-full ${config.color}`}
-        animate={
-          status.state === 'syncing'
-            ? { scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }
-            : { scale: 1, opacity: 1 }
-        }
-        transition={
-          status.state === 'syncing'
-            ? { repeat: Infinity, duration: 1.2 }
-            : { duration: 0.2 }
-        }
+      <div
+        className={`w-2 h-2 rounded-full ${config.color} ${
+          status.state === 'syncing' ? 'anim-pulse-dot-fast' : ''
+        }`}
       />
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={config.text}
-          variants={FADE_VARIANTS}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={TWEEN_FAST}
-        >
-          {config.text}
-        </motion.span>
-      </AnimatePresence>
+      <SyncText text={config.text} />
     </button>
+  );
+}
+
+function SyncText({ text }: { text: string }) {
+  const { displayedKey, entering } = useExitTransitionWait(text, 180);
+  return (
+    <span className={entering ? 'anim-fade-enter' : 'anim-fade-exit'}>
+      {displayedKey}
+    </span>
   );
 }
 

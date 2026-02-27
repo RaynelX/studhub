@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
 import { BottomSheet } from '../../../shared/ui/BottomSheet';
 import { useAdmin } from '../AdminProvider';
-import { FADE_SLIDE_VARIANTS, TWEEN_FAST } from '../../../shared/constants/motion';
+import { useExitTransition } from '../../../shared/hooks/use-exit-transition';
 
 interface Props {
   open: boolean;
@@ -57,20 +56,7 @@ export function AdminLoginSheet({ open, onClose }: Props) {
           />
         </div>
 
-        <AnimatePresence>
-          {error && (
-            <motion.p
-              className="text-sm text-red-600 dark:text-red-400"
-              variants={FADE_SLIDE_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={TWEEN_FAST}
-            >
-              {error}
-            </motion.p>
-          )}
-        </AnimatePresence>
+        <ErrorMessage error={error} />
 
         <button
           onClick={handleSubmit}
@@ -85,5 +71,15 @@ export function AdminLoginSheet({ open, onClose }: Props) {
         </button>
       </div>
     </BottomSheet>
+  );
+}
+
+function ErrorMessage({ error }: { error: string | null }) {
+  const { mounted, entering } = useExitTransition(!!error, 180);
+  if (!mounted) return null;
+  return (
+    <p className={`text-sm text-red-600 dark:text-red-400 ${entering ? 'anim-fade-slide-enter' : 'anim-fade-slide-exit'}`}>
+      {error}
+    </p>
   );
 }

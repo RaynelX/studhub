@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
 import {
@@ -15,7 +14,8 @@ import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { DAY_NAMES_SHORT } from '../../shared/constants/days';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
-import { SPRING_SNAPPY } from '../../shared/constants/motion';
+import { useFlipPill } from '../../shared/hooks/use-flip-pill';
+import { useExitTransitionWait } from '../../shared/hooks/use-exit-transition';
 
 // ============================================================
 // Компонент страницы
@@ -49,21 +49,50 @@ export function SchedulePage() {
   const canGoPrev = !semesterStartMonday || monday.getTime() > semesterStartMonday.getTime();
   const canGoNext = !semesterEndMonday || monday.getTime() < semesterEndMonday.getTime();
 
-  const { schedule, loading } = useDaySchedule(selectedDate);
-
-  // Трекинг направления анимации при смене дня/недели
-  const prevDateRef = useRef(selectedDate);
-  const prevMonday = getMonday(prevDateRef.current);
-  const isWeekChange = monday.getTime() !== prevMonday.getTime();
-  const currentDay = getDayOfWeek(selectedDate);
-  const prevDay = getDayOfWeek(prevDateRef.current);
-  const dayDirection = currentDay >= prevDay ? 1 : -1;
-  prevDateRef.current = selectedDate;
+  // Направление анимации при смене дня — задаётся в обработчиках навигации
+  const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
 
   // Навигация по неделям
-  const goToPrevWeek = () => { if (canGoPrev) setSelectedDate((d) => addDays(d, -7)); };
-  const goToNextWeek = () => { if (canGoNext) setSelectedDate((d) => addDays(d, 7)); };
-  const goToDay = (dayOffset: number) => setSelectedDate(addDays(monday, dayOffset));
+  const goToPrevWeek = () => { if (canGoPrev) { setAnimDirection('fade'); setSelectedDate((d) => addDays(d, -7)); } };
+  const goToNextWeek = () => { if (canGoNext) { setAnimDirection('fade'); setSelectedDate((d) => addDays(d, 7)); } };
+  const goToDay = (dayOffset: number) => {
+    const newDay = dayOffset + 1;
+    const curDay = getDayOfWeek(selectedDate);
+    setAnimDirection(newDay >= curDay ? 'right' : 'left');
+    setSelectedDate(addDays(monday, dayOffset));
+  };
+
+  // Ref для контейнера дней (для FLIP pill)
+  const dayTabsRef = useRef<HTMLDivElement>(null);
+
+  // Определяем индекс выбранного дня для pill (0-6, воскресенье = -1)
+  const selectedDayIndex = (() => {
+    const day = getDayOfWeek(selectedDate);
+    const isCurrentWeek = getMonday(selectedDate).getTime() === monday.getTime();
+    if (!isCurrentWeek || day === 7) return -1;
+    return day - 1;
+  })();
+
+  const pillStyle = useFlipPill(dayTabsRef, selectedDayIndex);
+
+  // Ключ для анимации смены дня — displayedKey задерживается на время exit-анимации,
+  // чтобы контент не менялся до завершения выхода.
+  const dateKey = selectedDate.toISOString();
+  const { displayedKey, entering: dayEntering } = useExitTransitionWait(dateKey, 120);
+
+  // Данные расписания привязаны к displayedDate, а не к selectedDate.
+  // Это гарантирует, что контент обновится только после exit-анимации.
+  const displayedDate = new Date(displayedKey);
+  const { schedule, loading } = useDaySchedule(displayedDate);
+
+  // Определяем CSS класс анимации
+  const dayAnimClass = dayEntering
+    ? animDirection === 'right' ? 'anim-day-enter-right'
+    : animDirection === 'left'  ? 'anim-day-enter-left'
+    : 'anim-day-enter-fade'
+    : animDirection === 'right' ? 'anim-day-exit-left'
+    : animDirection === 'left'  ? 'anim-day-exit-right'
+    : 'anim-day-exit-fade';
 
   useSetPageHeader({title: 'Расписание'});
 
@@ -96,7 +125,22 @@ export function SchedulePage() {
       </div>
 
       {/* Табы дней */}
-      <div className="shrink-0 flex bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 px-1">
+      <div ref={dayTabsRef} className="shrink-0 relative flex bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 px-1">
+        {/* Скользящая пилюля */}
+        {selectedDayIndex >= 0 && pillStyle.ready && (
+          <div
+            className="absolute anim-day-pill pointer-events-none"
+            style={{
+              left: pillStyle.left,
+              width: pillStyle.width,
+              bottom: 12,
+              height: 32,
+            }}
+          >
+            <div className="w-8 h-8 mx-auto bg-blue-600 dark:bg-blue-500 rounded-full" />
+          </div>
+        )}
+
         {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
           const date = addDays(monday, offset);
           const dayNum = offset + 1;
@@ -132,13 +176,6 @@ export function SchedulePage() {
                       : ''
                 }`}
               >
-                {isSelected && (
-                  <motion.div
-                    layoutId="active-day"
-                    className="absolute inset-0 bg-blue-600 dark:bg-blue-500 rounded-full"
-                    transition={SPRING_SNAPPY}
-                  />
-                )}
                 <span className="relative z-10">{date.getDate()}</span>
               </span>
             </button>
@@ -153,21 +190,13 @@ export function SchedulePage() {
             <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
           </div>
         ) : (
-          <AnimatePresence initial={false} mode="popLayout">
-            <motion.div
-              key={selectedDate.toISOString()}
-              initial={{ opacity: 0, x: isWeekChange ? 0 : dayDirection * 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: isWeekChange ? 0 : -dayDirection * 30 }}
-              transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
-            >
-              <DaySchedule
-                slots={schedule.slots}
-                floatingEvents={schedule.floatingEvents}
-                date={selectedDate}
-              />
-            </motion.div>
-          </AnimatePresence>
+          <div key={displayedKey} className={dayAnimClass}>
+            <DaySchedule
+              slots={schedule.slots}
+              floatingEvents={schedule.floatingEvents}
+              date={displayedDate}
+            />
+          </div>
         )}
       </div>
     </div>

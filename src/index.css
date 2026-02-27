@@ -1,2 +1,162 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   Animation timing functions (spring-like cubic-bezier)
+   ============================================================ */
+
+:root {
+  --spring-snappy: cubic-bezier(0.25, 1.15, 0.35, 1);
+  --spring-gentle: cubic-bezier(0.22, 1.0, 0.36, 1);
+  --ease-fast: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --duration-fast: 180ms;
+  --duration-normal: 250ms;
+  --duration-gentle: 350ms;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-gentle: 0ms;
+  }
+}
+
+/* ============================================================
+   Keyframes
+   ============================================================ */
+
+/* Pulsing dot (PairCard current indicator, sync indicator) */
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* Fade */
+@keyframes fade-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Fade + slide (for FADE_SLIDE_VARIANTS replacement) */
+@keyframes fade-slide-in  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fade-slide-out { from { opacity: 1; transform: translateY(0); }  to { opacity: 0; transform: translateY(-8px); } }
+
+/* Banner slide */
+@keyframes banner-enter { from { opacity: 0; transform: translateY(50px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes banner-exit  { from { opacity: 1; transform: translateY(0); }    to { opacity: 0; transform: translateY(50px); } }
+
+/* Day content slide (directional) */
+@keyframes slide-in-right  { from { opacity: 0; transform: translateX(20px); }  to { opacity: 1; transform: translateX(0); } }
+@keyframes slide-in-left   { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes slide-out-right { from { opacity: 1; transform: translateX(0); }     to { opacity: 0; transform: translateX(20px); } }
+@keyframes slide-out-left  { from { opacity: 1; transform: translateX(0); }     to { opacity: 0; transform: translateX(-20px); } }
+
+/* Bottom sheet */
+@keyframes sheet-enter { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheet-exit  { from { transform: translateY(0); }    to { transform: translateY(100%); } }
+
+/* ============================================================
+   Expand / collapse via CSS grid hack
+   ============================================================ */
+
+.grid-expandable {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-normal) var(--spring-snappy);
+}
+
+.grid-expandable[data-expanded="true"] {
+  grid-template-rows: 1fr;
+}
+
+.grid-expandable > .grid-expandable-inner {
+  overflow: hidden;
+}
+
+/* ============================================================
+   Utility animation classes
+   ============================================================ */
+
+.anim-pulse-dot {
+  animation: pulse-dot 1.5s infinite;
+}
+
+.anim-pulse-dot-fast {
+  animation: pulse-dot 1.2s infinite;
+}
+
+/* Progress bar fill animation */
+.anim-progress-bar {
+  transition: width 500ms var(--spring-gentle);
+}
+
+/* Chevron rotate */
+.anim-chevron {
+  transition: transform var(--duration-normal) var(--spring-snappy);
+}
+
+/* Backdrop */
+.anim-backdrop-enter {
+  animation: fade-in var(--duration-fast) var(--ease-fast) both;
+}
+.anim-backdrop-exit {
+  animation: fade-out var(--duration-fast) var(--ease-fast) both;
+}
+
+/* Sheet panel */
+.anim-sheet-enter {
+  animation: sheet-enter var(--duration-gentle) var(--spring-gentle) both;
+}
+.anim-sheet-exit {
+  animation: sheet-exit var(--duration-gentle) var(--spring-gentle) both;
+}
+
+/* Fade transition */
+.anim-fade-enter {
+  animation: fade-in var(--duration-fast) var(--ease-fast) both;
+}
+.anim-fade-exit {
+  animation: fade-out var(--duration-fast) var(--ease-fast) both;
+}
+
+/* Fade + slide */
+.anim-fade-slide-enter {
+  animation: fade-slide-in var(--duration-fast) var(--ease-fast) both;
+}
+.anim-fade-slide-exit {
+  animation: fade-slide-out var(--duration-fast) var(--ease-fast) both;
+}
+
+/* Banner */
+.anim-banner-enter {
+  animation: banner-enter var(--duration-gentle) var(--spring-gentle) both;
+}
+.anim-banner-exit {
+  animation: banner-exit var(--duration-gentle) var(--spring-gentle) both;
+}
+
+/* Day content directional slides */
+.anim-day-enter-right {
+  animation: slide-in-right 120ms ease-out both;
+}
+.anim-day-enter-left {
+  animation: slide-in-left 120ms ease-out both;
+}
+.anim-day-enter-fade {
+  animation: fade-in 120ms ease-out both;
+}
+.anim-day-exit-right {
+  animation: slide-out-right 100ms ease-in both;
+}
+.anim-day-exit-left {
+  animation: slide-out-left 100ms ease-in both;
+}
+.anim-day-exit-fade {
+  animation: fade-out 100ms ease-in both;
+}
+
+/* Day pill (FLIP) */
+.anim-day-pill {
+  transition: left var(--duration-normal) var(--spring-snappy),
+              width var(--duration-normal) var(--spring-snappy);
+}
