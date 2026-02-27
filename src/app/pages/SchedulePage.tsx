@@ -52,9 +52,10 @@ export function SchedulePage() {
   // Направление анимации при смене дня — задаётся в обработчиках навигации
   const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
 
-  // Навигация по неделям
-  const goToPrevWeek = () => { if (canGoPrev) { setAnimDirection('fade'); setSelectedDate((d) => addDays(d, -7)); } };
-  const goToNextWeek = () => { if (canGoNext) { setAnimDirection('fade'); setSelectedDate((d) => addDays(d, 7)); } };
+  // Навигация по неделям — при смене недели всегда переходим на понедельник,
+  // чтобы пользователь видел изменения (расписание часто одинаковое для одного дня).
+  const goToPrevWeek = () => { if (canGoPrev) { setAnimDirection('fade'); setSelectedDate(addDays(monday, -7)); } };
+  const goToNextWeek = () => { if (canGoNext) { setAnimDirection('fade'); setSelectedDate(addDays(monday, 7)); } };
   const goToDay = (dayOffset: number) => {
     const newDay = dayOffset + 1;
     const curDay = getDayOfWeek(selectedDate);
