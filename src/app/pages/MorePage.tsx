@@ -75,7 +75,7 @@ export function MorePage() {
             </Section>
           </motion.div>
         )}
-      </AnimatePresence>}
+      </AnimatePresence>
 
       <AdminLoginSheet open={loginOpen} onClose={() => setLoginOpen(false)} />
 
