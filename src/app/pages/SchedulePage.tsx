@@ -73,10 +73,12 @@ export function SchedulePage() {
 
       {/* Табы дней */}
       <div className="shrink-0 flex bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800 px-1">
-        {[0, 1, 2, 3, 4, 5].map((offset) => {
+        {[0, 1, 2, 3, 4, 5, 6].map((offset) => {
           const date = addDays(monday, offset);
           const dayNum = offset + 1;
+          const isSunday = dayNum === 7;
           const isSelected =
+            !isSunday &&
             getDayOfWeek(selectedDate) === dayNum &&
             getMonday(selectedDate).getTime() === monday.getTime();
           const isTodayDate = isToday(date);
@@ -84,11 +86,14 @@ export function SchedulePage() {
           return (
             <button
               key={offset}
-              onClick={() => goToDay(offset)}
+              onClick={() => !isSunday && goToDay(offset)}
+              disabled={isSunday}
               className={`flex-1 flex flex-col items-center gap-1 py-3 transition-colors ${
-                isSelected
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : 'text-gray-500 dark:text-neutral-400 active:text-gray-700'
+                isSunday
+                  ? 'text-gray-300 dark:text-neutral-600 cursor-default'
+                  : isSelected
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-neutral-400 active:text-gray-700'
               }`}
             >
               <span className="text-xs font-medium">
@@ -98,7 +103,7 @@ export function SchedulePage() {
                 className={`text-sm w-8 h-8 flex items-center justify-center rounded-full font-medium ${
                   isSelected
                     ? 'bg-blue-600 text-white dark:bg-blue-500'
-                    : isTodayDate
+                    : isTodayDate && !isSunday
                       ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400'
                       : ''
                 }`}

@@ -14,6 +14,7 @@ export const DAY_NAMES_SHORT: Record<number, string> = {
   4: 'Чт',
   5: 'Пт',
   6: 'Сб',
+  7: 'Вс',
 };
 
 export function getDayOfWeek(date: Date): number {
