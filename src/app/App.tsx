@@ -7,6 +7,7 @@ import { TodayPage } from './pages/TodayPage';
 import { SchedulePage } from './pages/SchedulePage';
 import { SubjectsPage } from './pages/SubjectsPage';
 import { MorePage } from './pages/MorePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { ThemeProvider } from '../features/settings/ThemeProvider';
 import { PageHeaderProvider } from './providers/PageHeaderProvider';
 import { AdminProvider } from '../features/admin/AdminProvider';
@@ -25,6 +26,7 @@ export function App() {
                       <Route index element={<TodayPage />} />
                       <Route path="schedule" element={<SchedulePage />} />
                       <Route path="subjects" element={<SubjectsPage />} />
+                      <Route path="more/settings" element={<SettingsPage />} />
                       <Route path="more" element={<MorePage />} />
                     </Route>
                   </Routes>

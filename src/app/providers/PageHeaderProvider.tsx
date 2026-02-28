@@ -10,6 +10,7 @@ import {
   interface PageHeader {
     title: string;
     subtitle?: string;
+    backTo?: string;
   }
   
   interface PageHeaderContextValue {
@@ -45,5 +46,5 @@ import {
   
     useEffect(() => {
       ctx.setHeader(header);
-    }, [header.title, header.subtitle]);
+    }, [header.title, header.subtitle, header.backTo]);
   }

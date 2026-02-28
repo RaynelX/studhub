@@ -1,5 +1,5 @@
-import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Calendar, BookOpen, Menu } from 'lucide-react';
+import { Outlet, NavLink, Link } from 'react-router-dom';
+import { LayoutDashboard, Calendar, BookOpen, Menu, ChevronLeft } from 'lucide-react';
 import { useSync } from '../../database/sync/SyncProvider';
 import { usePageHeader } from '../providers/PageHeaderProvider';
 import { useSwUpdate } from '../hooks/use-sw-update';
@@ -24,15 +24,25 @@ export function MainLayout() {
         className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800"
         style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
       >
-        <div className="flex items-baseline gap-2">
-          <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-            {header.title}
-          </h1>
-          {header.subtitle && (
-            <span className="text-sm text-neutral-400 dark:text-neutral-500">
-              {header.subtitle}
-            </span>
+        <div className="flex items-center gap-1">
+          {header.backTo && (
+            <Link
+              to={header.backTo}
+              className="-ml-1.5 p-0.5 text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+            >
+              <ChevronLeft size={24} />
+            </Link>
           )}
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              {header.title}
+            </h1>
+            {header.subtitle && (
+              <span className="text-sm text-neutral-400 dark:text-neutral-500">
+                {header.subtitle}
+              </span>
+            )}
+          </div>
         </div>
         <SyncIndicator />
       </header>

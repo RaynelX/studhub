@@ -1,13 +1,11 @@
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
-import { SettingsSection } from '../../features/settings/SettingsSection';
-import { ThemeSection } from '../../features/settings/ThemeSection';
 import { DepartmentSection } from '../../features/department/DepartmentSection';
 import { AboutSection } from '../../features/about/AboutSection';
-import { ResetButton } from '../../features/settings/ResetButton';
+import { NavButtonGroup, NavButton } from '../../shared/ui/NavButtonGroup';
 import { useState } from 'react';
 import { useAdmin} from '../../features/admin/AdminProvider';
 import { AdminLoginSheet } from '../../features/admin/components/AdminLoginSheet';
-import { Shield, LogOut } from 'lucide-react';
+import { Shield, LogOut, Settings } from 'lucide-react';
 import { Section } from '../../shared/ui/Section';
 import { useExitTransitionWait } from '../../shared/hooks/use-exit-transition';
 
@@ -19,17 +17,18 @@ export function MorePage() {
 
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-6">
-      <SettingsSection />
-      <ThemeSection />
+      <NavButtonGroup>
+        <NavButton to="/more/settings" icon={Settings} iconBg="bg-gray-500" label="Настройки" />
+      </NavButtonGroup>
+
       <DepartmentSection />
-      <AboutSection />
 
       {/* Администрирование */}
       <AdminSection isAdmin={isAdmin} userEmail={user?.email} signOut={signOut} onLoginOpen={() => setLoginOpen(true)} />
 
       <AdminLoginSheet open={loginOpen} onClose={() => setLoginOpen(false)} />
 
-      <ResetButton />
+      <AboutSection />
     </div>
   );
 }
