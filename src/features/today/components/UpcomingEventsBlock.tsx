@@ -1,4 +1,5 @@
 import type { UpcomingEvent } from '../hooks/use-upcoming-events';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 const EVENT_BADGE: Record<string, { label: string; className: string }> = {
   usr:           { label: 'УСР',    className: 'bg-violet-100 text-violet-700 dark:bg-violet-500/40 dark:text-violet-300' },
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function UpcomingEventsBlock({ events }: Props) {
+  const rippleRef = useTouchRipple();
   if (events.length === 0) return null;
 
   return (
@@ -30,7 +32,7 @@ export function UpcomingEventsBlock({ events }: Props) {
       </div>
 
       {/* Карточка */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 transform-gpu active:scale-[0.98] transition-transform duration-75">
+      <div ref={rippleRef} className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 transform-gpu active:scale-[0.98] transition-transform duration-75">
         <div>
           {events.map((event) => (
             <EventRow key={event.id} event={event} />

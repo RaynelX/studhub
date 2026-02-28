@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, Link, StickyNote } from 'lucide-react';
 import type { SubjectDetails } from '../hooks/use-subject-details';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 const TYPE_LABELS: Record<string, string> = {
   lecture: 'Лек.',
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function SubjectCard({ data }: Props) {
+  const rippleRef = useTouchRipple();
   const [expanded, setExpanded] = useState(false);
   const { subject, teachers, progress } = data;
 
@@ -22,7 +24,7 @@ export function SubjectCard({ data }: Props) {
   const hasExpandedContent = hasLinks || hasNotes;
 
   return (
-    <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden">
+    <div ref={rippleRef} className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden">
       <button
         onClick={() => hasExpandedContent && setExpanded((v) => !v)}
         className="w-full text-left p-4 transform-gpu active:scale-[0.98] transition-transform duration-75"

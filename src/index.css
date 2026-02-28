@@ -160,3 +160,39 @@
   transition: left var(--duration-normal) var(--spring-snappy),
               width var(--duration-normal) var(--spring-snappy);
 }
+
+/* ============================================================
+   Touch ripple — radial highlight at the touch point
+   ============================================================ */
+
+.touch-ripple {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  border-radius: inherit;
+  opacity: 0;
+  background:
+    radial-gradient(
+      circle 200px at var(--rx, 50%) var(--ry, 50%),
+      rgba(0, 0, 0, 0.10) 0%,
+      rgba(0, 0, 0, 0.03) 100%
+    ),
+    rgba(0, 0, 0, 0.03);
+  transition: opacity var(--duration-normal) ease-out;
+}
+
+.touch-ripple[data-active] {
+  opacity: 1;
+  transition: none; /* instant on touch */
+}
+
+.dark .touch-ripple {
+  background:
+    radial-gradient(
+      circle 200px at var(--rx, 50%) var(--ry, 50%),
+      rgba(255, 255, 255, 0.14) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    ),
+    rgba(255, 255, 255, 0.04);
+}

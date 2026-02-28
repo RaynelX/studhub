@@ -1,5 +1,6 @@
 import type { ResolvedPair } from '../utils/schedule-builder';
 import { isCurrentPair } from '../utils/week-utils';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 // ============================================================
 // Конфигурация визуальных стилей
@@ -47,6 +48,7 @@ interface PairCardProps {
 }
 
 export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
+  const rippleRef = useTouchRipple();
   const isCurrent = isCurrentPair(date, startTime, endTime);
   const isCancelled = pair.status === 'cancelled';
   const isEvent = pair.status === 'event';
@@ -74,6 +76,7 @@ export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
 
   return (
     <div
+      ref={rippleRef}
       className={`
         relative rounded-xl
         border-l-4 ${borderColor}
@@ -154,8 +157,9 @@ interface WindowCardProps {
 }
 
 export function WindowCard({ pairNumber, startTime, endTime }: WindowCardProps) {
+  const rippleRef = useTouchRipple();
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-neutral-800/50 transform-gpu active:scale-[0.98] transition-transform duration-75">
+    <div ref={rippleRef} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-neutral-800/50 transform-gpu active:scale-[0.98] transition-transform duration-75">
       <span className="text-sm text-gray-400 dark:text-neutral-500">
         {pairNumber} пара · {startTime} – {endTime}
       </span>
@@ -185,10 +189,11 @@ export function FloatingEventCard({
   room,
   eventTime,
 }: FloatingEventCardProps) {
+  const rippleRef = useTouchRipple();
   const config = EVENT_TYPE_CONFIG[eventType] ?? EVENT_TYPE_CONFIG.other;
 
   return (
-    <div className={`rounded-xl border border-gray-200 dark:border-neutral-800/50 ${config.bg} ${config.darkBg} p-4 transform-gpu active:scale-[0.98] transition-transform duration-75`}>
+    <div ref={rippleRef} className={`relative rounded-xl border border-gray-200 dark:border-neutral-800/50 ${config.bg} ${config.darkBg} p-4 transform-gpu active:scale-[0.98] transition-transform duration-75`}>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm text-gray-500 dark:text-neutral-400">
           {eventTime ?? 'В течение дня'}

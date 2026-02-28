@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import type { TodayScheduleData } from '../hooks/use-today-schedule';
 import type { DaySlot } from '../../schedule/utils/schedule-builder';
 import { useCurrentMinutes } from '../hooks/use-current-time';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 interface Props {
   data: TodayScheduleData;
@@ -70,6 +71,7 @@ function PairsCard({
 }) {
   const navigate = useNavigate();
   const currentMinutes = useCurrentMinutes();
+  const rippleRef = useTouchRipple();
 
   // Определяем текущую пару
   let currentIndex = -1;
@@ -107,6 +109,7 @@ function PairsCard({
 
   return (
     <div
+      ref={rippleRef}
       className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden cursor-pointer
                  transform-gpu active:scale-[0.98] transition-transform duration-75"
       onClick={() => navigate('/schedule')}
@@ -278,8 +281,9 @@ function Section({
 }
 
 function EmptyCard({ text }: { text: string }) {
+  const rippleRef = useTouchRipple();
   return (
-    <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent">
+    <div ref={rippleRef} className="relative p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent">
       <p className="text-sm text-neutral-500 dark:text-neutral-400">{text}</p>
     </div>
   );

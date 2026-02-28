@@ -1,10 +1,12 @@
 import type { SemesterProgress } from '../hooks/use-semester-progress';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 interface Props {
   data: SemesterProgress;
 }
 
 export function SemesterBlock({ data }: Props) {
+  const rippleRef = useTouchRipple();
   if (data.loading) return null;
 
   return (
@@ -13,7 +15,7 @@ export function SemesterBlock({ data }: Props) {
         Семестр
       </h3>
 
-      <div className="p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent transform-gpu active:scale-[0.98] transition-transform duration-75">
+      <div ref={rippleRef} className="relative p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent transform-gpu active:scale-[0.98] transition-transform duration-75">
         <p className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
           {data.name}
         </p>
