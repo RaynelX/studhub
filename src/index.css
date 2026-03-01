@@ -196,3 +196,23 @@
     ),
     rgba(255, 255, 255, 0.04);
 }
+
+/* ============================================================
+   Toast (undo snackbar)
+   ============================================================ */
+
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-exit {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(16px); }
+}
+
+.anim-toast-enter {
+  animation: toast-enter var(--duration-normal) var(--spring-snappy) both;
+}
+.anim-toast-exit {
+  animation: toast-exit var(--duration-fast) var(--ease-fast) both;
+}

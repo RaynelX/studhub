@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
+import type { ResolvedPair } from '../../features/schedule/utils/schedule-builder';
 import {
   getMonday,
   addDays,
@@ -9,6 +10,7 @@ import {
   isToday,
   formatWeekRange,
   getWeekNumber,
+  toISODate,
 } from '../../features/schedule/utils/week-utils';
 import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
@@ -16,6 +18,14 @@ import { DAY_NAMES_SHORT } from '../../shared/constants/days';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useFlipPill } from '../../shared/hooks/use-flip-pill';
 import { useExitTransitionWait } from '../../shared/hooks/use-exit-transition';
+import { useAdmin } from '../../features/admin/AdminProvider';
+import { AdminActionSheet } from '../../features/admin/components/admin-action-sheet';
+import type { AdminAction } from '../../features/admin/components/admin-action-sheet';
+import { OverrideSheet } from '../../features/admin/components/override-sheet';
+import { EventSheet } from '../../features/admin/components/event-sheet';
+import { UndoToast } from '../../features/admin/components/undo-toast';
+import { AdminFab } from '../../features/admin/components/admin-fab';
+import { useCancelPair } from '../../features/admin/hooks/use-cancel-pair';
 
 // ============================================================
 // Компонент страницы
@@ -25,6 +35,11 @@ export function SchedulePage() {
   const db = useDatabase();
   const { data: semesterData } = useRxCollection(db.semester);
   const semesterConfig = semesterData[0] ?? null;
+
+  // Admin state
+  const { isAdmin } = useAdmin();
+  const { data: subjects } = useRxCollection(db.subjects);
+  const { data: teachers } = useRxCollection(db.teachers);
 
   // Если сегодня воскресенье — по умолчанию показываем понедельник следующей недели
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
@@ -83,8 +98,72 @@ export function SchedulePage() {
 
   // Данные расписания привязаны к displayedDate, а не к selectedDate.
   // Это гарантирует, что контент обновится только после exit-анимации.
-  const displayedDate = new Date(displayedKey);
+  const displayedDate = useMemo(() => new Date(displayedKey), [displayedKey]);
   const { schedule, loading } = useDaySchedule(displayedDate);
+
+  // ============================================================
+  // Admin: sheet state
+  // ============================================================
+
+  const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const [overrideSheetOpen, setOverrideSheetOpen] = useState(false);
+  const [eventSheetOpen, setEventSheetOpen] = useState(false);
+  const [overrideMode, setOverrideMode] = useState<'replace' | 'add'>('replace');
+
+  // Context for the action being performed (stored as state so it's safe in render)
+  const [sheetContext, setSheetContext] = useState<{
+    pairNumber: number;
+    pair: ResolvedPair | null;
+    date: Date;
+  }>({ pairNumber: 1, pair: null, date: new Date() });
+
+  const { cancelPair, undoCancel, toastOpen, dismissToast } = useCancelPair();
+
+  const handlePairLongPress = (pairNumber: number, pair: ResolvedPair | null) => {
+    setSheetContext({ pairNumber, pair, date: displayedDate });
+    setActionSheetOpen(true);
+  };
+
+  const handleAction = (action: AdminAction) => {
+    const { pairNumber, pair, date } = sheetContext;
+
+    switch (action) {
+      case 'cancel': {
+        const targets = pair?.sourceTargets ?? {
+          target_language: 'all' as const,
+          target_eng_subgroup: 'all' as const,
+          target_oit_subgroup: 'all' as const,
+        };
+        cancelPair(toISODate(date), pairNumber, targets);
+        break;
+      }
+      case 'replace':
+        setOverrideMode('replace');
+        setOverrideSheetOpen(true);
+        break;
+      case 'add':
+        setOverrideMode('add');
+        setOverrideSheetOpen(true);
+        break;
+      case 'event':
+        setEventSheetOpen(true);
+        break;
+    }
+  };
+
+  const handleFabAction = (action: 'add' | 'event') => {
+    // FAB uses the currently displayed date, pair number starts at the first empty slot
+    const firstEmptySlot = schedule.slots.find((s) => s.pair === null);
+    const pairNumber = firstEmptySlot?.pairNumber ?? 1;
+    setSheetContext({ pairNumber, pair: null, date: displayedDate });
+
+    if (action === 'add') {
+      setOverrideMode('add');
+      setOverrideSheetOpen(true);
+    } else {
+      setEventSheetOpen(true);
+    }
+  };
 
   // Определяем CSS класс анимации
   const dayAnimClass = dayEntering
@@ -196,10 +275,68 @@ export function SchedulePage() {
               slots={schedule.slots}
               floatingEvents={schedule.floatingEvents}
               date={displayedDate}
+              isAdmin={isAdmin}
+              onPairLongPress={isAdmin ? handlePairLongPress : undefined}
             />
           </div>
         )}
       </div>
+
+      {/* Admin UI */}
+      {isAdmin && (
+        <>
+          <AdminActionSheet
+            open={actionSheetOpen}
+            onClose={() => setActionSheetOpen(false)}
+            pair={sheetContext.pair}
+            date={sheetContext.date}
+            pairNumber={sheetContext.pairNumber}
+            onAction={handleAction}
+          />
+
+          <OverrideSheet
+            key={`override-${toISODate(sheetContext.date)}-${sheetContext.pairNumber}-${overrideMode}`}
+            open={overrideSheetOpen}
+            onClose={() => setOverrideSheetOpen(false)}
+            mode={overrideMode}
+            date={sheetContext.date}
+            pairNumber={sheetContext.pairNumber}
+            subjects={subjects}
+            teachers={teachers}
+            sourceTargets={sheetContext.pair?.sourceTargets}
+            defaults={
+              overrideMode === 'replace' && sheetContext.pair
+                ? {
+                    subjectId: undefined,
+                    entryType: sheetContext.pair.entryType,
+                    teacherId: undefined,
+                    room: sheetContext.pair.room,
+                  }
+                : undefined
+            }
+          />
+
+          <EventSheet
+            key={`event-${toISODate(sheetContext.date)}-${sheetContext.pairNumber}`}
+            open={eventSheetOpen}
+            onClose={() => setEventSheetOpen(false)}
+            date={sheetContext.date}
+            pairNumber={sheetContext.pairNumber}
+            subjects={subjects}
+            teachers={teachers}
+            pair={sheetContext.pair}
+          />
+
+          <UndoToast
+            message="Пара отменена"
+            open={toastOpen}
+            onUndo={undoCancel}
+            onDismiss={dismissToast}
+          />
+
+          <AdminFab onAction={handleFabAction} />
+        </>
+      )}
     </div>
   );
 }

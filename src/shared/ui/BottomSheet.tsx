@@ -7,9 +7,11 @@ interface Props {
   onClose: () => void;
   title?: string;
   children: ReactNode;
+  /** Sticky footer rendered below the scrollable content area */
+  footer?: ReactNode;
 }
 
-export function BottomSheet({ open, onClose, title, children }: Props) {
+export function BottomSheet({ open, onClose, title, children, footer }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const { mounted, entering } = useExitTransition(open, 350);
   const { onTouchStart, onTouchMove, onTouchEnd } = useBottomSheetGesture({
@@ -92,6 +94,13 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4" data-sheet-scroll>
           {children}
         </div>
+
+        {/* Фиксированный футер */}
+        {footer && (
+          <div className="shrink-0 px-4 pb-4 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

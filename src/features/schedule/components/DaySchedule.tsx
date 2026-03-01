@@ -1,13 +1,17 @@
-import type { DaySlot, FloatingEvent } from '../utils/schedule-builder';
+import type { DaySlot, FloatingEvent, ResolvedPair } from '../utils/schedule-builder';
 import { PairCard, WindowCard, FloatingEventCard } from './PairCard';
 
 interface Props {
   slots: DaySlot[];
   floatingEvents: FloatingEvent[];
   date: Date;
+  /** Called on long press on a pair slot (admin only) */
+  onPairLongPress?: (pairNumber: number, pair: ResolvedPair | null) => void;
+  /** Whether the current user is admin */
+  isAdmin?: boolean;
 }
 
-export function DaySchedule({ slots, floatingEvents, date }: Props) {
+export function DaySchedule({ slots, floatingEvents, date, onPairLongPress, isAdmin }: Props) {
     // Находим диапазон непустых слотов
   const firstIdx = slots.findIndex((s) => s.pair !== null);
   const lastIdx = findLastIndex(slots, (s) => s.pair !== null);
@@ -50,6 +54,8 @@ export function DaySchedule({ slots, floatingEvents, date }: Props) {
             startTime={slot.startTime}
             endTime={slot.endTime}
             date={date}
+            isAdmin={isAdmin}
+            onLongPress={onPairLongPress ? () => onPairLongPress(slot.pairNumber, slot.pair) : undefined}
           />
         ) : (
           <WindowCard
@@ -57,6 +63,8 @@ export function DaySchedule({ slots, floatingEvents, date }: Props) {
             pairNumber={slot.pairNumber}
             startTime={slot.startTime}
             endTime={slot.endTime}
+            isAdmin={isAdmin}
+            onLongPress={onPairLongPress ? () => onPairLongPress(slot.pairNumber, null) : undefined}
           />
         ),
       )}

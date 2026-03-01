@@ -20,17 +20,31 @@ import type {
   // Типы результата
   // ============================================================
   
+  export interface SourceTargets {
+    target_language: TargetLanguage;
+    target_eng_subgroup: TargetEngSubgroup;
+    target_oit_subgroup: TargetOitSubgroup;
+  }
+
   export interface ResolvedPair {
     pairNumber: number;
     subjectName: string;
     subjectShortName?: string;
+    subjectId?: string;
     entryType?: EntryType;
     teacherName: string;
+    teacherId?: string;
     room: string;
     status: 'normal' | 'replaced' | 'added' | 'cancelled' | 'event';
     comment?: string;
     eventType?: EventType;
     description?: string;
+    /** ID of the base schedule entry, if any */
+    sourceEntryId?: string;
+    /** ID of the override, if any */
+    sourceOverrideId?: string;
+    /** Target subgroup filters inherited from the source record */
+    sourceTargets?: SourceTargets;
   }
   
   export interface DaySlot {
@@ -196,12 +210,20 @@ import type {
           pairNumber: bell.pairNumber,
           subjectName: subject?.name ?? event.title,
           subjectShortName: subject?.short_name,
+          subjectId: event.subject_id ?? entry?.subject_id,
           entryType: undefined,
           teacherName: teacher?.full_name ?? '',
+          teacherId: event.teacher_id ?? entry?.teacher_id,
           room,
           status: 'event',
           eventType: event.event_type,
           description: event.description,
+          sourceEntryId: entry?.id,
+          sourceTargets: {
+            target_language: event.target_language,
+            target_eng_subgroup: event.target_eng_subgroup,
+            target_oit_subgroup: event.target_oit_subgroup,
+          },
         };
       } else if (override) {
         pair = resolveOverride(override, entry, subjectMap, teacherMap, bell.pairNumber);
@@ -213,10 +235,18 @@ import type {
           pairNumber: bell.pairNumber,
           subjectName: subject?.name ?? 'Неизвестный предмет',
           subjectShortName: subject?.short_name,
+          subjectId: entry.subject_id,
           entryType: entry.entry_type,
           teacherName: teacher?.full_name ?? '',
+          teacherId: entry.teacher_id,
           room: entry.room,
           status: 'normal',
+          sourceEntryId: entry.id,
+          sourceTargets: {
+            target_language: entry.target_language,
+            target_eng_subgroup: entry.target_eng_subgroup,
+            target_oit_subgroup: entry.target_oit_subgroup,
+          },
         };
       }
   
@@ -269,11 +299,20 @@ import type {
         pairNumber,
         subjectName: subject?.name ?? '',
         subjectShortName: subject?.short_name,
+        subjectId: baseEntry.subject_id,
         entryType: baseEntry.entry_type,
         teacherName: '',
+        teacherId: baseEntry.teacher_id,
         room: '',
         status: 'cancelled',
         comment: override.comment,
+        sourceEntryId: baseEntry.id,
+        sourceOverrideId: override.id,
+        sourceTargets: {
+          target_language: override.target_language,
+          target_eng_subgroup: override.target_eng_subgroup,
+          target_oit_subgroup: override.target_oit_subgroup,
+        },
       };
     }
   
@@ -289,10 +328,19 @@ import type {
       pairNumber,
       subjectName: subject?.name ?? '',
       subjectShortName: subject?.short_name,
+      subjectId: override.subject_id,
       entryType: override.entry_type,
       teacherName: teacher?.full_name ?? '',
+      teacherId: override.teacher_id,
       room: override.room ?? '',
       status: override.override_type === 'replace' ? 'replaced' : 'added',
       comment: override.comment,
+      sourceEntryId: baseEntry?.id,
+      sourceOverrideId: override.id,
+      sourceTargets: {
+        target_language: override.target_language,
+        target_eng_subgroup: override.target_eng_subgroup,
+        target_oit_subgroup: override.target_oit_subgroup,
+      },
     };
   }

@@ -1,6 +1,8 @@
 import type { ResolvedPair } from '../utils/schedule-builder';
 import { isCurrentPair } from '../utils/week-utils';
 import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
+import { useLongPress } from '../../../shared/hooks/use-long-press';
+import { MoreVertical } from 'lucide-react';
 
 // ============================================================
 // Конфигурация визуальных стилей
@@ -45,10 +47,15 @@ interface PairCardProps {
   startTime: string;
   endTime: string;
   date: Date;
+  /** Called on long press (admin only) */
+  onLongPress?: () => void;
+  /** Show admin affordances */
+  isAdmin?: boolean;
 }
 
-export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
+export function PairCard({ pair, startTime, endTime, date, onLongPress, isAdmin }: PairCardProps) {
   const rippleRef = useTouchRipple();
+  const longPressHandlers = useLongPress(onLongPress ?? (() => {}), { disabled: !isAdmin || !onLongPress });
   const isCurrent = isCurrentPair(date, startTime, endTime);
   const isCancelled = pair.status === 'cancelled';
   const isEvent = pair.status === 'event';
@@ -77,6 +84,7 @@ export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
   return (
     <div
       ref={rippleRef}
+      {...longPressHandlers}
       className={`
         relative rounded-xl
         border-l-4 ${borderColor}
@@ -142,6 +150,13 @@ export function PairCard({ pair, startTime, endTime, date }: PairCardProps) {
           className="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-500 anim-pulse-dot"
         />
       )}
+
+      {/* Admin hint: subtle ⋮ icon */}
+      {isAdmin && !isCurrent && (
+        <MoreVertical
+          className="absolute top-4 right-4 w-3.5 h-3.5 text-gray-300 dark:text-neutral-600 pointer-events-none"
+        />
+      )}
     </div>
   );
 }
@@ -154,12 +169,17 @@ interface WindowCardProps {
   pairNumber: number;
   startTime: string;
   endTime: string;
+  /** Called on long press (admin only) */
+  onLongPress?: () => void;
+  /** Show admin affordances */
+  isAdmin?: boolean;
 }
 
-export function WindowCard({ pairNumber, startTime, endTime }: WindowCardProps) {
+export function WindowCard({ pairNumber, startTime, endTime, onLongPress, isAdmin }: WindowCardProps) {
   const rippleRef = useTouchRipple();
+  const longPressHandlers = useLongPress(onLongPress ?? (() => {}), { disabled: !isAdmin || !onLongPress });
   return (
-    <div ref={rippleRef} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-neutral-800/50 transform-gpu active:scale-[0.98] transition-transform duration-75">
+    <div ref={rippleRef} {...longPressHandlers} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-gray-200 dark:border-neutral-800/50 transform-gpu active:scale-[0.98] transition-transform duration-75">
       <span className="text-sm text-gray-400 dark:text-neutral-500">
         {pairNumber} пара · {startTime} – {endTime}
       </span>
