@@ -12,7 +12,7 @@ export interface StudentFormData {
 interface StudentFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: StudentFormData) => void;
+  onSubmit: (data: StudentFormData) => Promise<void> | void;
   editStudent?: StudentDoc | null;
 }
 
@@ -48,8 +48,8 @@ export function StudentForm({ open, onClose, onSubmit, editStudent }: StudentFor
   // Show EN subgroup only when language is English
   const showEngSubgroup = form.language === 'en';
 
-  function handleSubmit() {
-    onSubmit(form);
+  async function handleSubmit() {
+    await onSubmit(form);
     onClose();
   }
 

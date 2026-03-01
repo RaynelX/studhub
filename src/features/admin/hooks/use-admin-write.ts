@@ -11,8 +11,6 @@ interface AdminWriteResult {
   remove: (table: string, id: string) => Promise<void>;
   /** Whether a write operation is in progress */
   loading: boolean;
-  /** Last error message, if any */
-  error: string | null;
 }
 
 /**
@@ -24,11 +22,9 @@ interface AdminWriteResult {
 export function useAdminWrite(): AdminWriteResult {
   const { triggerSync } = useSync();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const insert = useCallback(
     async (table: string, data: Record<string, unknown>): Promise<string> => {
-      setError(null);
       setLoading(true);
 
       const now = new Date().toISOString();
@@ -50,10 +46,6 @@ export function useAdminWrite(): AdminWriteResult {
 
         triggerSync();
         return id;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        setError(message);
-        throw err;
       } finally {
         setLoading(false);
       }
@@ -63,7 +55,6 @@ export function useAdminWrite(): AdminWriteResult {
 
   const remove = useCallback(
     async (table: string, id: string): Promise<void> => {
-      setError(null);
       setLoading(true);
 
       try {
@@ -75,10 +66,6 @@ export function useAdminWrite(): AdminWriteResult {
         if (supaError) throw new Error(supaError.message);
 
         triggerSync();
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        setError(message);
-        throw err;
       } finally {
         setLoading(false);
       }
@@ -88,7 +75,6 @@ export function useAdminWrite(): AdminWriteResult {
 
   const update = useCallback(
     async (table: string, id: string, data: Record<string, unknown>): Promise<void> => {
-      setError(null);
       setLoading(true);
 
       try {
@@ -100,10 +86,6 @@ export function useAdminWrite(): AdminWriteResult {
         if (supaError) throw new Error(supaError.message);
 
         triggerSync();
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        setError(message);
-        throw err;
       } finally {
         setLoading(false);
       }
@@ -111,5 +93,5 @@ export function useAdminWrite(): AdminWriteResult {
     [triggerSync],
   );
 
-  return { insert, update, remove, loading, error };
+  return { insert, update, remove, loading };
 }

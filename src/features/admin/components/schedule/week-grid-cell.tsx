@@ -1,22 +1,7 @@
 import { AlertTriangle, CalendarCheck, Plus } from 'lucide-react';
 import type { GridCell } from '../../hooks/use-week-grid';
 import { getSubjectColor } from '../../hooks/use-week-grid';
-
-const ENTRY_TYPE_LABELS: Record<string, string> = {
-  lecture: 'Лек',
-  seminar: 'Сем',
-  practice: 'Пр',
-  other: 'Др',
-};
-
-const SUBGROUP_LABELS: Record<string, string> = {
-  en: 'EN',
-  de: 'DE',
-  fr: 'FR',
-  es: 'ES',
-  a: 'A',
-  b: 'B',
-};
+import { ENTRY_TYPE_LABELS_SHORT, formatSubgroupBadges } from '../../../../shared/constants/admin-labels';
 
 interface WeekGridCellProps {
   cell: GridCell;
@@ -54,8 +39,8 @@ export function WeekGridCell({ cell, subjectIds, onClick }: WeekGridCellProps) {
       {cell.entries.map((ge, i) => {
         const colorCls = getSubjectColor(ge.entry.subject_id, subjectIds);
         const name = ge.subject?.short_name ?? ge.subject?.name ?? '—';
-        const type = ENTRY_TYPE_LABELS[ge.entry.entry_type] ?? '';
-        const subgroups = buildSubgroupBadges(ge.entry);
+        const type = ENTRY_TYPE_LABELS_SHORT[ge.entry.entry_type] ?? '';
+        const subgroups = formatSubgroupBadges(ge.entry);
         const isCancelled = hasCancels && cell.overrides.some(
           (o) =>
             o.override.override_type === 'cancel' &&
@@ -136,22 +121,6 @@ export function WeekGridCell({ cell, subjectIds, onClick }: WeekGridCellProps) {
 // ============================================================
 // Helpers
 // ============================================================
-
-function buildSubgroupBadges(
-  entry: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },
-): string[] {
-  const badges: string[] = [];
-  if (entry.target_language !== 'all') {
-    badges.push(SUBGROUP_LABELS[entry.target_language] ?? entry.target_language);
-  }
-  if (entry.target_eng_subgroup !== 'all') {
-    badges.push(`EN-${SUBGROUP_LABELS[entry.target_eng_subgroup] ?? entry.target_eng_subgroup}`);
-  }
-  if (entry.target_oit_subgroup !== 'all') {
-    badges.push(`ОИТ-${SUBGROUP_LABELS[entry.target_oit_subgroup] ?? entry.target_oit_subgroup}`);
-  }
-  return badges;
-}
 
 function matchesSubgroup(
   a: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },

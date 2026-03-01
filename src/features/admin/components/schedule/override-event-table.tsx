@@ -1,17 +1,6 @@
 import { Trash2 } from 'lucide-react';
 import type { ScheduleOverrideDoc, EventDoc, SubjectDoc, TeacherDoc } from '../../../../database/types';
-
-const OVERRIDE_TYPE_LABELS: Record<string, string> = {
-  cancel: 'Отмена',
-  replace: 'Замена',
-  add: 'Доп. пара',
-};
-
-const OVERRIDE_TYPE_COLORS: Record<string, string> = {
-  cancel: 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400',
-  replace: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400',
-  add: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400',
-};
+import { OVERRIDE_TYPE_LABELS, OVERRIDE_TYPE_COLORS } from '../../../../shared/constants/admin-labels';
 
 interface OverrideEventTableProps {
   overrides: ScheduleOverrideDoc[];

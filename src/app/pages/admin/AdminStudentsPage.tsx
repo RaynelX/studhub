@@ -20,7 +20,7 @@ const LANG_LABELS: Record<string, string> = {
 
 export function AdminStudentsPage() {
   const db = useDatabase();
-  const { data: students } = useRxCollection(db.students);
+  const { data: students, loading: dataLoading } = useRxCollection(db.students);
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
@@ -87,7 +87,7 @@ export function AdminStudentsPage() {
     <>
       <AdminPageHeader
         title="Студенты"
-        description={`Список студентов группы · ${activeStudents.length} чел.`}
+        description={`Список студентов группы · ${dataLoading ? '…' : `${activeStudents.length} чел.`}`}
         actions={
           <button
             onClick={handleCreate}
@@ -100,7 +100,9 @@ export function AdminStudentsPage() {
       />
 
       <AdminCard noPadding>
-        {activeStudents.length === 0 ? (
+        {dataLoading ? (
+          <div className="py-12 text-center text-neutral-400 text-sm">Загрузка…</div>
+        ) : activeStudents.length === 0 ? (
           <div className="py-12 text-center text-neutral-400 dark:text-neutral-500 text-sm">
             Список пуст. Нажмите «Добавить студента» чтобы начать.
           </div>

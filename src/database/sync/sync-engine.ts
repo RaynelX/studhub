@@ -102,12 +102,6 @@ export class SyncEngine {
       setTimeout(() => reject(new Error('Sync timeout')), 10_000),
     );
 
-    this.isSyncing = true;
-    this.status$.next({
-      state: 'syncing',
-      lastSyncAt: this.getLastSyncAt(),
-    });
-
     try {
       const since = this.getLastSyncAt();
       const syncTimestamp = new Date().toISOString();

@@ -13,7 +13,7 @@ import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
 
 export function AdminTeachersPage() {
   const db = useDatabase();
-  const { data: teachers } = useRxCollection(db.teachers);
+  const { data: teachers, loading: dataLoading } = useRxCollection(db.teachers);
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
@@ -94,7 +94,9 @@ export function AdminTeachersPage() {
       />
 
       <AdminCard noPadding>
-        {activeTeachers.length === 0 ? (
+        {dataLoading ? (
+          <div className="py-12 text-center text-neutral-400 text-sm">Загрузка…</div>
+        ) : activeTeachers.length === 0 ? (
           <div className="py-12 text-center text-neutral-400 dark:text-neutral-500 text-sm">
             Нет преподавателей. Нажмите «Добавить преподавателя» чтобы начать.
           </div>

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -79,13 +79,13 @@ export function AdminSidebar() {
         </button>
 
         {/* Back to app */}
-        <a
-          href="/"
+        <Link
+          to="/"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-300 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           В приложение
-        </a>
+        </Link>
       </div>
     </aside>
   );

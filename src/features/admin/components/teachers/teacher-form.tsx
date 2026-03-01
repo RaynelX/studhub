@@ -15,7 +15,7 @@ export interface TeacherFormData {
 interface TeacherFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: TeacherFormData) => void;
+  onSubmit: (data: TeacherFormData) => Promise<void> | void;
   editTeacher?: TeacherDoc | null;
 }
 
@@ -44,8 +44,8 @@ export function TeacherForm({ open, onClose, onSubmit, editTeacher }: TeacherFor
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleSubmit() {
-    onSubmit(form);
+  async function handleSubmit() {
+    await onSubmit(form);
     onClose();
   }
 

@@ -13,7 +13,7 @@ import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
 
 export function AdminSubjectsPage() {
   const db = useDatabase();
-  const { data: subjects } = useRxCollection(db.subjects);
+  const { data: subjects, loading: dataLoading } = useRxCollection(db.subjects);
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
@@ -97,7 +97,9 @@ export function AdminSubjectsPage() {
       />
 
       <AdminCard noPadding>
-        {activeSubjects.length === 0 ? (
+        {dataLoading ? (
+          <div className="py-12 text-center text-neutral-400 text-sm">Загрузка…</div>
+        ) : activeSubjects.length === 0 ? (
           <div className="py-12 text-center text-neutral-400 dark:text-neutral-500 text-sm">
             Нет предметов. Нажмите «Добавить предмет» чтобы начать.
           </div>

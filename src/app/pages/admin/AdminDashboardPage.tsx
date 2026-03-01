@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CalendarClock, CalendarDays, GraduationCap, Plus, CalendarPlus } from 'lucide-react';
+import { BookOpen, CalendarClock, CalendarDays, GraduationCap, Plus, CalendarPlus, Clock, AlertTriangle, Layers } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminStatCard } from '../../../features/admin/components/ui/admin-stat-card';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
@@ -7,16 +7,11 @@ import { useAdminStats } from '../../../features/admin/hooks/use-admin-stats';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useDatabase } from '../../providers/DatabaseProvider';
 import { toISODate } from '../../../features/schedule/utils/week-utils';
+import { OVERRIDE_TYPE_LABELS } from '../../../shared/constants/admin-labels';
 
 // ============================================================
 // Helpers
 // ============================================================
-
-const OVERRIDE_TYPE_LABELS: Record<string, string> = {
-  cancel: 'Отмена',
-  replace: 'Замена',
-  add: 'Доп. пара',
-};
 
 function formatDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00');
@@ -60,11 +55,26 @@ export function AdminDashboardPage() {
       <AdminPageHeader title="Обзор" description="Панель управления старосты" />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <AdminStatCard
           label="Предметов"
           value={stats.loading ? '—' : stats.subjectCount}
           icon={<BookOpen className="w-5 h-5" />}
+        />
+        <AdminStatCard
+          label="Студентов"
+          value={stats.loading ? '—' : stats.studentCount}
+          icon={<GraduationCap className="w-5 h-5" />}
+        />
+        <AdminStatCard
+          label="Записей в расписании"
+          value={stats.loading ? '—' : stats.scheduleEntryCount}
+          icon={<Layers className="w-5 h-5" />}
+        />
+        <AdminStatCard
+          label="Пар сегодня (базовых)"
+          value={stats.loading ? '—' : stats.todayPairsCount}
+          icon={<Clock className="w-5 h-5" />}
         />
         <AdminStatCard
           label="Изменений на неделе"
@@ -76,11 +86,70 @@ export function AdminDashboardPage() {
           value={stats.loading ? '—' : stats.upcomingEventsCount}
           icon={<CalendarDays className="w-5 h-5" />}
         />
-        <AdminStatCard
-          label="Студентов"
-          value={stats.loading ? '—' : stats.studentCount}
-          icon={<GraduationCap className="w-5 h-5" />}
-        />
+      </div>
+
+      {/* Semester progress + today's overrides banner */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {/* Semester progress */}
+        <AdminCard title="Прогресс семестра">
+          {stats.loading ? (
+            <p className="text-sm text-neutral-400 dark:text-neutral-500 py-2">Загрузка…</p>
+          ) : stats.semesterProgress ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-neutral-600 dark:text-neutral-400">{stats.semesterProgress.name}</span>
+                <span className="font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+                  {stats.semesterProgress.percent}%
+                </span>
+              </div>
+              <div className="w-full h-2.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                  style={{ width: `${stats.semesterProgress.percent}%` }}
+                />
+              </div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Осталось {stats.semesterProgress.daysLeft} из {stats.semesterProgress.totalDays} дней
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-400 dark:text-neutral-500 py-2">Семестр не задан</p>
+          )}
+        </AdminCard>
+
+        {/* Today's changes inline */}
+        <AdminCard title="Сегодня">
+          {stats.loading ? (
+            <p className="text-sm text-neutral-400 dark:text-neutral-500 py-2">Загрузка…</p>
+          ) : stats.todayOverridesCount > 0 ? (
+            <div className="flex items-center gap-3 py-1">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                  {stats.todayOverridesCount}{' '}
+                  {stats.todayOverridesCount === 1 ? 'изменение' : stats.todayOverridesCount < 5 ? 'изменения' : 'изменений'}
+                </p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  На сегодня есть правки в расписании
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 py-1">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 flex items-center justify-center shrink-0">
+                <CalendarDays className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Без изменений</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Расписание на сегодня не менялось
+                </p>
+              </div>
+            </div>
+          )}
+        </AdminCard>
       </div>
 
       {/* Quick actions */}

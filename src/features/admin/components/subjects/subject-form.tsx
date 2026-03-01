@@ -14,7 +14,7 @@ export interface SubjectFormData {
 interface SubjectFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: SubjectFormData) => void;
+  onSubmit: (data: SubjectFormData) => Promise<void> | void;
   /** When provided, form is in edit mode */
   editSubject?: SubjectDoc | null;
 }
@@ -57,10 +57,10 @@ export function SubjectForm({ open, onClose, onSubmit, editSubject }: SubjectFor
     update('additionalLinks', form.additionalLinks.filter((_, i) => i !== idx));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     // Filter out empty links
     const cleanedLinks = form.additionalLinks.filter((l) => l.label.trim() && l.url.trim());
-    onSubmit({ ...form, additionalLinks: cleanedLinks });
+    await onSubmit({ ...form, additionalLinks: cleanedLinks });
     onClose();
   }
 

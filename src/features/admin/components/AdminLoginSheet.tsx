@@ -14,8 +14,8 @@ export function AdminLoginSheet({ open, onClose }: Props) {
   const [password, setPassword] = useState('');
 
   const handleSubmit = async () => {
-    await signIn(email, password);
-    if (!error) {
+    const success = await signIn(email, password);
+    if (success) {
       setEmail('');
       setPassword('');
       onClose();

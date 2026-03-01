@@ -1,20 +1,8 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ScheduleEntryDoc, SubjectDoc, TeacherDoc, SemesterConfigDoc } from '../../../../database/types';
 import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
+import { ENTRY_TYPE_LABELS, PARITY_LABELS, formatSubgroupCompact } from '../../../../shared/constants/admin-labels';
 import { countTotalPairs } from '../../utils/schedule-calculator';
-
-const ENTRY_TYPE_LABELS: Record<string, string> = {
-  lecture: 'Лекция',
-  seminar: 'Семинар',
-  practice: 'Практика',
-  other: 'Другое',
-};
-
-const PARITY_LABELS: Record<string, string> = {
-  all: 'Кажд.',
-  odd: 'Нечёт',
-  even: 'Чёт',
-};
 
 interface CourseTableProps {
   entries: ScheduleEntryDoc[];
@@ -84,7 +72,7 @@ export function CourseTable({
                     semesterConfig.odd_week_start,
                   )
                 : '—';
-            const subgroups = buildSubgroupCompact(entry);
+            const subgroups = formatSubgroupCompact(entry);
 
             return (
               <tr
@@ -150,16 +138,4 @@ export function CourseTable({
       </table>
     </div>
   );
-}
-
-function buildSubgroupCompact(entry: {
-  target_language: string;
-  target_eng_subgroup: string;
-  target_oit_subgroup: string;
-}): string {
-  const parts: string[] = [];
-  if (entry.target_language !== 'all') parts.push(entry.target_language.toUpperCase());
-  if (entry.target_eng_subgroup !== 'all') parts.push(`EN-${entry.target_eng_subgroup.toUpperCase()}`);
-  if (entry.target_oit_subgroup !== 'all') parts.push(`ОИТ-${entry.target_oit_subgroup.toUpperCase()}`);
-  return parts.join(' / ');
 }

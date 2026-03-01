@@ -3,19 +3,7 @@ import type { GridCell } from '../../hooks/use-week-grid';
 import type { SubjectDoc, TeacherDoc } from '../../../../database/types';
 import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
 import { getBellSlot } from '../../../../shared/constants/bell-schedule';
-
-const ENTRY_TYPE_LABELS: Record<string, string> = {
-  lecture: 'Лекция',
-  seminar: 'Семинар',
-  practice: 'Практика',
-  other: 'Другое',
-};
-
-const OVERRIDE_TYPE_LABELS: Record<string, string> = {
-  cancel: 'Отменена',
-  replace: 'Замена',
-  add: 'Доп. пара',
-};
+import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS, formatSubgroupCompact } from '../../../../shared/constants/admin-labels';
 
 interface SlotPopoverProps {
   cell: GridCell;
@@ -82,7 +70,7 @@ export function SlotPopover({
               {cell.entries.map((ge) => {
                 const subj = ge.subject;
                 const teacher = ge.teacher;
-                const subgroups = buildSubgroupLabel(ge.entry);
+                const subgroups = formatSubgroupCompact(ge.entry, ', ');
                 return (
                   <div
                     key={ge.entry.id}
@@ -213,14 +201,4 @@ export function SlotPopover({
       </div>
     </div>
   );
-}
-
-function buildSubgroupLabel(
-  entry: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },
-): string {
-  const parts: string[] = [];
-  if (entry.target_language !== 'all') parts.push(entry.target_language.toUpperCase());
-  if (entry.target_eng_subgroup !== 'all') parts.push(`EN-${entry.target_eng_subgroup.toUpperCase()}`);
-  if (entry.target_oit_subgroup !== 'all') parts.push(`ОИТ-${entry.target_oit_subgroup.toUpperCase()}`);
-  return parts.join(', ');
 }

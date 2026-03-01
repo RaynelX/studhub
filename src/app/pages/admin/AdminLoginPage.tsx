@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAdmin } from '../../../features/admin/AdminProvider';
 
 /**
@@ -27,14 +27,13 @@ export function AdminLoginPage() {
     setError(null);
     setSubmitting(true);
 
-    try {
-      await signIn(email.trim(), password);
+    const success = await signIn(email.trim(), password);
+    if (success) {
       navigate('/admin', { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка входа');
-    } finally {
-      setSubmitting(false);
+    } else {
+      setError('Неверный email или пароль');
     }
+    setSubmitting(false);
   }
 
   return (
@@ -104,12 +103,12 @@ export function AdminLoginPage() {
 
         {/* Back link */}
         <div className="text-center mt-4">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="text-sm text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
           >
             ← В приложение
-          </a>
+          </Link>
         </div>
       </div>
     </div>
