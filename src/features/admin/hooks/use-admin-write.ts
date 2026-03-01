@@ -5,6 +5,8 @@ import { useSync } from '../../../database/sync/SyncProvider';
 interface AdminWriteResult {
   /** Insert a new row into a Supabase table. Returns the generated id. */
   insert: (table: string, data: Record<string, unknown>) => Promise<string>;
+  /** Update an existing row in a Supabase table. */
+  update: (table: string, id: string, data: Record<string, unknown>) => Promise<void>;
   /** Soft-delete a row (set is_deleted = true). */
   remove: (table: string, id: string) => Promise<void>;
   /** Whether a write operation is in progress */
@@ -84,5 +86,30 @@ export function useAdminWrite(): AdminWriteResult {
     [triggerSync],
   );
 
-  return { insert, remove, loading, error };
+  const update = useCallback(
+    async (table: string, id: string, data: Record<string, unknown>): Promise<void> => {
+      setError(null);
+      setLoading(true);
+
+      try {
+        const { error: supaError } = await supabase
+          .from(table)
+          .update({ ...data, updated_at: new Date().toISOString() })
+          .eq('id', id);
+
+        if (supaError) throw new Error(supaError.message);
+
+        triggerSync();
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [triggerSync],
+  );
+
+  return { insert, update, remove, loading, error };
 }
