@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 import { BELL_SCHEDULE } from '../../../../shared/constants/bell-schedule';
 import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
 import { addDays, formatWeekRange, getMonday, toISODate } from '../../../schedule/utils/week-utils';
@@ -7,6 +7,7 @@ import { useWeekGrid } from '../../hooks/use-week-grid';
 import type { GridCell } from '../../hooks/use-week-grid';
 import { WeekGridCell } from './week-grid-cell';
 import { SlotPopover } from './slot-popover';
+import { formatWeekScheduleText } from '../../utils/format-schedule-text';
 
 interface WeekGridProps {
   onEditEntry?: (entryId: string) => void;
@@ -92,6 +93,7 @@ export function WeekGrid({
           >
             Сегодня
           </button>
+          <CopyScheduleButton cells={gridData.cells} mondayDate={mondayDate} />
         </div>
         <div className="text-sm text-neutral-600 dark:text-neutral-400">
           <span className="font-medium">{formatWeekRange(mondayDate)}</span>
@@ -188,5 +190,31 @@ export function WeekGrid({
         />
       )}
     </div>
+  );
+}
+
+// ============================================================
+// Copy schedule button
+// ============================================================
+
+function CopyScheduleButton({ cells, mondayDate }: { cells: GridCell[][]; mondayDate: Date }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    const text = formatWeekScheduleText(cells, mondayDate);
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+      title="Скопировать расписание для Telegram/VK"
+    >
+      {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+      {copied ? 'Скопировано!' : 'Скопировать'}
+    </button>
   );
 }

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { AdminSidebar } from '../../features/admin/components/admin-sidebar';
+import { AdminSearchDialog } from '../../features/admin/components/admin-search-dialog';
 
 /**
  * Desktop admin layout: fixed sidebar + scrollable content area.
@@ -14,6 +15,8 @@ export function AdminLayout() {
           <Outlet />
         </div>
       </main>
+
+      <AdminSearchDialog />
     </div>
   );
 }

@@ -31,7 +31,6 @@ interface UseOverrideFormResult {
   submit: () => Promise<void>;
   isValid: boolean;
   loading: boolean;
-  error: string | null;
 }
 
 /**
@@ -45,7 +44,7 @@ export function useOverrideForm({
   defaults,
   onSuccess,
 }: UseOverrideFormOptions): UseOverrideFormResult {
-  const { insert, loading, error } = useAdminWrite();
+  const { insert, loading } = useAdminWrite();
 
   const [fields, setFields] = useState<OverrideFormFields>({
     subjectId: defaults?.subjectId ?? '',
@@ -91,5 +90,5 @@ export function useOverrideForm({
     onSuccess?.();
   }, [isValid, insert, date, pairNumber, mode, fields, onSuccess]);
 
-  return { fields, setField, submit, isValid, loading, error };
+  return { fields, setField, submit, isValid, loading };
 }

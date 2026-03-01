@@ -32,7 +32,6 @@ interface UseEventFormResult {
   submit: () => Promise<void>;
   isValid: boolean;
   loading: boolean;
-  error: string | null;
 }
 
 /**
@@ -46,7 +45,7 @@ export function useEventForm({
   defaultRoom,
   onSuccess,
 }: UseEventFormOptions): UseEventFormResult {
-  const { insert, loading, error } = useAdminWrite();
+  const { insert, loading } = useAdminWrite();
 
   const [fields, setFields] = useState<EventFormFields>({
     eventType: 'other',
@@ -108,5 +107,5 @@ export function useEventForm({
     onSuccess?.();
   }, [isValid, insert, fields, onSuccess]);
 
-  return { fields, setField, submit, isValid, loading, error };
+  return { fields, setField, submit, isValid, loading };
 }
