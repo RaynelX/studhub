@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   ArrowLeft,
+  Search,
 } from 'lucide-react';
 import { useAdmin } from '../AdminProvider';
 
@@ -41,6 +42,18 @@ export function AdminSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+        {/* Search shortcut */}
+        <button
+          onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }))}
+          className="w-full flex items-center gap-3 px-3 py-2 mb-1 rounded-lg text-sm text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-300 transition-colors"
+        >
+          <Search className="w-[18px] h-[18px] shrink-0" />
+          <span className="flex-1 text-left">Поиск</span>
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-800 border border-neutral-700 text-neutral-500">
+            Ctrl K
+          </kbd>
+        </button>
+
         {NAV_ITEMS.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}

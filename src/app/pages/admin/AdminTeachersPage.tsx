@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
 import { AdminConfirmDialog } from '../../../features/admin/components/ui/admin-confirm-dialog';
 import { useAdminToast } from '../../../features/admin/components/ui/admin-toast';
+import { SortableTh } from '../../../features/admin/components/ui/sortable-th';
 import { TeacherForm } from '../../../features/admin/components/teachers/teacher-form';
 import type { TeacherFormData } from '../../../features/admin/components/teachers/teacher-form';
 import type { TeacherDoc } from '../../../database/types';
 import { useDatabase } from '../../providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
+import { useSortState } from '../../../features/admin/hooks/use-sort-state';
 
 export function AdminTeachersPage() {
   const db = useDatabase();
@@ -17,7 +19,23 @@ export function AdminTeachersPage() {
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
-  const activeTeachers = teachers.filter((t) => !t.is_deleted);
+  const activeTeachers = useMemo(
+    () => teachers.filter((t) => !t.is_deleted),
+    [teachers],
+  );
+
+  const sortAccessors = useMemo(
+    () => ({
+      name: (t: TeacherDoc) => t.full_name,
+      position: (t: TeacherDoc) => t.position ?? '',
+      email: (t: TeacherDoc) => t.email ?? '',
+      telegram: (t: TeacherDoc) => t.telegram ?? '',
+    }),
+    [],
+  );
+
+  const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted: sortedTeachers } =
+    useSortState(activeTeachers, sortAccessors, 'name');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editTeacher, setEditTeacher] = useState<TeacherDoc | null>(null);
@@ -105,16 +123,16 @@ export function AdminTeachersPage() {
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
-                  <th className="px-5 py-3 whitespace-nowrap">ФИО</th>
-                  <th className="px-5 py-3 whitespace-nowrap">Должность</th>
-                  <th className="px-5 py-3 whitespace-nowrap">Email</th>
-                  <th className="px-5 py-3 whitespace-nowrap">Telegram</th>
+                  <SortableTh column="name" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">ФИО</SortableTh>
+                  <SortableTh column="position" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Должность</SortableTh>
+                  <SortableTh column="email" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Email</SortableTh>
+                  <SortableTh column="telegram" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Telegram</SortableTh>
                   <th className="px-5 py-3 whitespace-nowrap">Консультации</th>
                   <th className="px-5 py-3 w-24" />
                 </tr>
               </thead>
               <tbody>
-                {activeTeachers.map((teacher) => (
+                {sortedTeachers.map((teacher) => (
                   <tr
                     key={teacher.id}
                     className="border-b border-neutral-50 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"

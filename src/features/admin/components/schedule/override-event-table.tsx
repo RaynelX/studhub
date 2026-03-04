@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { ScheduleOverrideDoc, EventDoc, SubjectDoc, TeacherDoc } from '../../../../database/types';
 import { OVERRIDE_TYPE_LABELS, OVERRIDE_TYPE_COLORS } from '../../../../shared/constants/admin-labels';
+import { SortableTh } from '../ui/sortable-th';
+import { useSortState } from '../../hooks/use-sort-state';
 
 interface OverrideEventTableProps {
   overrides: ScheduleOverrideDoc[];
@@ -19,19 +22,39 @@ export function OverrideEventTable({
   onDeleteOverride,
   onDeleteEvent,
 }: OverrideEventTableProps) {
-  const subjectMap = new Map(subjects.map((s) => [s.id, s]));
-  const teacherMap = new Map(teachers.map((t) => [t.id, t]));
+  const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.id, s])), [subjects]);
+  const teacherMap = useMemo(() => new Map(teachers.map((t) => [t.id, t])), [teachers]);
 
-  const allItems = [
+  type Row = { kind: 'override'; date: string; item: ScheduleOverrideDoc } | { kind: 'event'; date: string; item: EventDoc };
+
+  const allItems = useMemo<Row[]>(() => [
     ...overrides
       .filter((o) => !o.is_deleted)
       .map((o) => ({ kind: 'override' as const, date: o.date, item: o })),
     ...events
       .filter((e) => !e.is_deleted)
       .map((e) => ({ kind: 'event' as const, date: e.date, item: e })),
-  ].sort((a, b) => a.date.localeCompare(b.date));
+  ], [overrides, events]);
 
-  if (allItems.length === 0) {
+  const sortAccessors = useMemo(
+    () => ({
+      date: (r: Row) => r.date,
+      type: (r: Row) => r.kind === 'override' ? (OVERRIDE_TYPE_LABELS[r.item.override_type] ?? '') : 'Событие',
+      pair: (r: Row) => r.kind === 'override' ? r.item.pair_number : (r.item.pair_number ?? 99),
+      subject: (r: Row) => {
+        const sid = r.kind === 'override' ? r.item.subject_id : r.item.subject_id;
+        if (!sid) return '';
+        const s = subjectMap.get(sid);
+        return s?.short_name ?? s?.name ?? '';
+      },
+    }),
+    [subjectMap],
+  );
+
+  const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted: sortedItems } =
+    useSortState(allItems, sortAccessors, 'date');
+
+  if (sortedItems.length === 0) {
     return (
       <div className="text-sm text-neutral-400 dark:text-neutral-500 py-6 text-center">
         Нет изменений и событий для отображения
@@ -44,17 +67,17 @@ export function OverrideEventTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
-            <th className="px-3 py-2">Дата</th>
-            <th className="px-3 py-2">Тип</th>
-            <th className="px-3 py-2">Пара</th>
-            <th className="px-3 py-2">Предмет</th>
+            <SortableTh column="date" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Дата</SortableTh>
+            <SortableTh column="type" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Тип</SortableTh>
+            <SortableTh column="pair" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Пара</SortableTh>
+            <SortableTh column="subject" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Предмет</SortableTh>
             <th className="px-3 py-2">Преп. / Описание</th>
             <th className="px-3 py-2">Ауд.</th>
             <th className="px-3 py-2 w-10" />
           </tr>
         </thead>
         <tbody>
-          {allItems.map((row) => {
+          {sortedItems.map((row) => {
             if (row.kind === 'override') {
               const o = row.item;
               const subj = o.subject_id ? subjectMap.get(o.subject_id) : undefined;

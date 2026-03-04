@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
 import { AdminConfirmDialog } from '../../../features/admin/components/ui/admin-confirm-dialog';
 import { useAdminToast } from '../../../features/admin/components/ui/admin-toast';
+import { SortableTh } from '../../../features/admin/components/ui/sortable-th';
 import { SubjectForm } from '../../../features/admin/components/subjects/subject-form';
 import type { SubjectFormData } from '../../../features/admin/components/subjects/subject-form';
 import type { SubjectDoc } from '../../../database/types';
 import { useDatabase } from '../../providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
+import { useSortState } from '../../../features/admin/hooks/use-sort-state';
 
 export function AdminSubjectsPage() {
   const db = useDatabase();
@@ -17,7 +19,22 @@ export function AdminSubjectsPage() {
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
-  const activeSubjects = subjects.filter((s) => !s.is_deleted);
+  const activeSubjects = useMemo(
+    () => subjects.filter((s) => !s.is_deleted),
+    [subjects],
+  );
+
+  const sortAccessors = useMemo(
+    () => ({
+      name: (s: SubjectDoc) => s.name,
+      short: (s: SubjectDoc) => s.short_name ?? '',
+      links: (s: SubjectDoc) => s.additional_links?.length ?? 0,
+    }),
+    [],
+  );
+
+  const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted: sortedSubjects } =
+    useSortState(activeSubjects, sortAccessors, 'name');
 
   // Modal state
   const [formOpen, setFormOpen] = useState(false);
@@ -108,16 +125,16 @@ export function AdminSubjectsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
-                  <th className="px-5 py-3">Название</th>
-                  <th className="px-5 py-3">Сокращение</th>
+                  <SortableTh column="name" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">Название</SortableTh>
+                  <SortableTh column="short" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">Сокращение</SortableTh>
                   <th className="px-5 py-3">СДО</th>
-                  <th className="px-5 py-3">Ссылки</th>
+                  <SortableTh column="links" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">Ссылки</SortableTh>
                   <th className="px-5 py-3">Заметки</th>
                   <th className="px-5 py-3 w-24" />
                 </tr>
               </thead>
               <tbody>
-                {activeSubjects.map((subject) => (
+                {sortedSubjects.map((subject) => (
                   <tr
                     key={subject.id}
                     className="border-b border-neutral-50 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"

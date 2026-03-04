@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ScheduleEntryDoc, SubjectDoc, TeacherDoc, SemesterConfigDoc } from '../../../../database/types';
 import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
 import { ENTRY_TYPE_LABELS, PARITY_LABELS, formatSubgroupCompact } from '../../../../shared/constants/admin-labels';
 import { countTotalPairs } from '../../utils/schedule-calculator';
+import { SortableTh } from '../ui/sortable-th';
+import { useSortState } from '../../hooks/use-sort-state';
 
 interface CourseTableProps {
   entries: ScheduleEntryDoc[];
@@ -21,16 +24,24 @@ export function CourseTable({
   onEdit,
   onDelete,
 }: CourseTableProps) {
-  const subjectMap = new Map(subjects.map((s) => [s.id, s]));
-  const teacherMap = new Map(teachers.map((t) => [t.id, t]));
+  const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.id, s])), [subjects]);
+  const teacherMap = useMemo(() => new Map(teachers.map((t) => [t.id, t])), [teachers]);
 
-  const sorted = [...entries].sort((a, b) => {
-    const subA = subjectMap.get(a.subject_id)?.name ?? '';
-    const subB = subjectMap.get(b.subject_id)?.name ?? '';
-    if (subA !== subB) return subA.localeCompare(subB);
-    if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week;
-    return a.pair_number - b.pair_number;
-  });
+  const sortAccessors = useMemo(
+    () => ({
+      subject: (e: ScheduleEntryDoc) => subjectMap.get(e.subject_id)?.name ?? '',
+      type: (e: ScheduleEntryDoc) => ENTRY_TYPE_LABELS[e.entry_type] ?? e.entry_type,
+      day: (e: ScheduleEntryDoc) => e.day_of_week,
+      pair: (e: ScheduleEntryDoc) => e.pair_number,
+      parity: (e: ScheduleEntryDoc) => e.week_parity,
+      teacher: (e: ScheduleEntryDoc) => teacherMap.get(e.teacher_id)?.full_name ?? '',
+      room: (e: ScheduleEntryDoc) => e.room ?? '',
+    }),
+    [subjectMap, teacherMap],
+  );
+
+  const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted } =
+    useSortState(entries, sortAccessors, 'subject');
 
   if (sorted.length === 0) {
     return (
@@ -45,13 +56,13 @@ export function CourseTable({
       <table className="w-full text-sm">
         <thead>
             <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
-            <th className="px-3 py-2">Предмет</th>
-            <th className="px-3 py-2">Тип</th>
-            <th className="px-3 py-2">День</th>
-            <th className="px-3 py-2">Пара</th>
-            <th className="px-3 py-2">Чётность</th>
-            <th className="px-3 py-2">Преподаватель</th>
-            <th className="px-3 py-2">Ауд.</th>
+            <SortableTh column="subject" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Предмет</SortableTh>
+            <SortableTh column="type" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Тип</SortableTh>
+            <SortableTh column="day" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">День</SortableTh>
+            <SortableTh column="pair" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Пара</SortableTh>
+            <SortableTh column="parity" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Чётность</SortableTh>
+            <SortableTh column="teacher" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Преподаватель</SortableTh>
+            <SortableTh column="room" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Ауд.</SortableTh>
             <th className="px-3 py-2">Период</th>
             <th className="px-3 py-2">Пар</th>
             <th className="px-3 py-2">Подгруппы</th>

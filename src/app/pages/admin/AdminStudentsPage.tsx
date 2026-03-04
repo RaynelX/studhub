@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
 import { AdminConfirmDialog } from '../../../features/admin/components/ui/admin-confirm-dialog';
 import { useAdminToast } from '../../../features/admin/components/ui/admin-toast';
+import { SortableTh } from '../../../features/admin/components/ui/sortable-th';
 import { StudentForm } from '../../../features/admin/components/students/student-form';
 import type { StudentFormData } from '../../../features/admin/components/students/student-form';
 import type { StudentDoc } from '../../../database/types';
 import { useDatabase } from '../../providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
+import { useSortState } from '../../../features/admin/hooks/use-sort-state';
 
 const LANG_LABELS: Record<string, string> = {
   en: 'EN',
@@ -24,9 +26,23 @@ export function AdminStudentsPage() {
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
-  const activeStudents = students
-    .filter((s) => !s.is_deleted)
-    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+  const activeStudents = useMemo(
+    () => students.filter((s) => !s.is_deleted),
+    [students],
+  );
+
+  const sortAccessors = useMemo(
+    () => ({
+      name: (s: StudentDoc) => s.full_name,
+      language: (s: StudentDoc) => s.language,
+      eng: (s: StudentDoc) => s.eng_subgroup ?? '',
+      oit: (s: StudentDoc) => s.oit_subgroup,
+    }),
+    [],
+  );
+
+  const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted: sortedStudents } =
+    useSortState(activeStudents, sortAccessors, 'name');
 
   const [formOpen, setFormOpen] = useState(false);
   const [editStudent, setEditStudent] = useState<StudentDoc | null>(null);
@@ -87,7 +103,7 @@ export function AdminStudentsPage() {
     <>
       <AdminPageHeader
         title="Студенты"
-        description={`Список студентов группы · ${dataLoading ? '…' : `${activeStudents.length} чел.`}`}
+        description={`Список студентов группы · ${dataLoading ? '…' : `${sortedStudents.length} чел.`}`}
         actions={
           <button
             onClick={handleCreate}
@@ -112,15 +128,15 @@ export function AdminStudentsPage() {
               <thead>
                 <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
                   <th className="px-5 py-3 w-10">#</th>
-                  <th className="px-5 py-3">ФИО</th>
-                  <th className="px-5 py-3">Язык</th>
-                  <th className="px-5 py-3">EN</th>
-                  <th className="px-5 py-3">ОИТ</th>
+                  <SortableTh column="name" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">ФИО</SortableTh>
+                  <SortableTh column="language" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">Язык</SortableTh>
+                  <SortableTh column="eng" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">EN</SortableTh>
+                  <SortableTh column="oit" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">ОИТ</SortableTh>
                   <th className="px-5 py-3 w-24" />
                 </tr>
               </thead>
               <tbody>
-                {activeStudents.map((student, idx) => (
+                {sortedStudents.map((student, idx) => (
                   <tr
                     key={student.id}
                     className="border-b border-neutral-50 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
