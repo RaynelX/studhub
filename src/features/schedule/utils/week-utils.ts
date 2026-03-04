@@ -77,19 +77,19 @@ export function getDayOfWeek(date: Date): number {
    * Форматирует диапазон недели: "10 – 15 фев." или "28 янв. – 2 фев."
    */
   export function formatWeekRange(monday: Date): string {
-    const saturday = addDays(monday, 5);
+    const sunday = addDays(monday, 6);
   
     const monDay = monday.getDate();
-    const satDay = saturday.getDate();
+    const sunDay = sunday.getDate();
   
     const monthFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'short' });
     const monMonth = monthFormatter.format(monday);
-    const satMonth = monthFormatter.format(saturday);
+    const sunMonth = monthFormatter.format(sunday);
   
-    if (monMonth === satMonth) {
-      return `${monDay} – ${satDay} ${satMonth}`;
+    if (monMonth === sunMonth) {
+      return `${monDay} – ${sunDay} ${sunMonth}`;
     }
-    return `${monDay} ${monMonth} – ${satDay} ${satMonth}`;
+    return `${monDay} ${monMonth} – ${sunDay} ${sunMonth}`;
   }
   
   /**
