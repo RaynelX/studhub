@@ -5,6 +5,7 @@ import { useOverrideForm } from '../hooks/use-override-form';
 import type { SubjectDoc, TeacherDoc, EntryType } from '../../../database/types';
 import type { SourceTargets } from '../../schedule/utils/schedule-builder';
 import { toISODate } from '../../schedule/utils/week-utils';
+import { TeacherAutocomplete } from './ui/teacher-autocomplete';
 
 // ============================================================
 // Types
@@ -138,16 +139,13 @@ export function OverrideSheet({
           <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-1.5 block">
             Преподаватель
           </label>
-          <select
-            className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100 appearance-none"
+          <TeacherAutocomplete
+            teachers={teachers}
             value={fields.teacherId}
-            onChange={(e) => setField('teacherId', e.target.value)}
-          >
-            <option value="">Выберите преподавателя</option>
-            {teachers.map((t) => (
-              <option key={t.id} value={t.id}>{t.full_name}</option>
-            ))}
-          </select>
+            onChange={(id) => setField('teacherId', id)}
+            placeholder="Выберите преподавателя"
+            className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
+          />
         </div>
 
         {/* Room */}

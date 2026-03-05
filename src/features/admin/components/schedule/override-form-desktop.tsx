@@ -10,6 +10,7 @@ import type {
 } from '../../../../database/types';
 import { AdminModal } from '../ui/admin-modal';
 import { BELL_SCHEDULE } from '../../../../shared/constants/bell-schedule';
+import { TeacherAutocomplete } from '../ui/teacher-autocomplete';
 
 export interface OverrideFormData {
   date: string;
@@ -180,16 +181,12 @@ export function OverrideFormDesktop({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Преподаватель</label>
-                <select
+                <TeacherAutocomplete
+                  teachers={teachers}
                   value={form.teacherId}
-                  onChange={(e) => update('teacherId', e.target.value)}
+                  onChange={(id) => update('teacherId', id)}
                   className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Выберите</option>
-                  {teachers.map((t) => (
-                    <option key={t.id} value={t.id}>{t.full_name}</option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Аудитория</label>
