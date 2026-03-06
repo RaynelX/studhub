@@ -63,6 +63,8 @@ export function BottomSheet({ open, onClose, title, children, footer }: Props) {
       {/* Шторка */}
       <div
         ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
         className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 rounded-t-2xl shadow-xl
                      max-h-[85dvh] flex flex-col ${entering ? 'anim-sheet-enter' : 'anim-sheet-exit'}`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}

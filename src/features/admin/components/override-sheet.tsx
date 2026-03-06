@@ -89,10 +89,7 @@ export function OverrideSheet({
         </button>
       }
     >
-      <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
-        {/* Honeypot: сбивает эвристику автозаполнения мобильных браузеров */}
-        <input type="text" name="prevent_autofill" tabIndex={-1} aria-hidden="true" style={{ position: 'absolute', opacity: 0, height: 0, width: 0, overflow: 'hidden', pointerEvents: 'none' }} />
-        <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {/* Context */}
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
           {formatDateLabel(date)} · {pairNumber} пара
@@ -161,8 +158,7 @@ export function OverrideSheet({
             placeholder="Аудитория или ДОТ"
             value={fields.room}
             onChange={(e) => setField('room', e.target.value)}
-            name="studhub-room"
-            autoComplete="one-time-code"
+            autoComplete="off"
           />
         </div>
 
@@ -185,8 +181,7 @@ export function OverrideSheet({
               value={fields.comment}
               onChange={(e) => setField('comment', e.target.value)}
               autoFocus
-              name="studhub-comment"
-              autoComplete="one-time-code"
+              autoComplete="off"
             />
           </div>
         )}
@@ -272,7 +267,6 @@ export function OverrideSheet({
           </div>
         )}
       </div>
-      </form>
     </BottomSheet>
   );
 }
