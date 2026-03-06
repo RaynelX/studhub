@@ -143,7 +143,6 @@ export function OverrideSheet({
             teachers={teachers}
             value={fields.teacherId}
             onChange={(id) => setField('teacherId', id)}
-            placeholder="Выберите преподавателя"
             className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
           />
         </div>
@@ -155,7 +154,6 @@ export function OverrideSheet({
           </label>
           <input
             className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
-            placeholder="Аудитория или ДОТ"
             value={fields.room}
             onChange={(e) => setField('room', e.target.value)}
           />
@@ -176,7 +174,6 @@ export function OverrideSheet({
             </label>
             <input
               className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
-              placeholder="Например: преподаватель заболел"
               value={fields.comment}
               onChange={(e) => setField('comment', e.target.value)}
               autoFocus
