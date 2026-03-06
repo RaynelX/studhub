@@ -178,7 +178,7 @@ export function EventSheet({
             </label>
             <input
               type="time"
-              className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
+              className="w-full min-w-0 p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100 appearance-none"
               value={fields.eventTime}
               onChange={(e) => setField('eventTime', e.target.value)}
             />
