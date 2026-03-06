@@ -78,7 +78,10 @@ export function EventSheet({
         </button>
       }
     >
-      <div className="flex flex-col gap-4">
+      <form autoComplete="off" onSubmit={(e) => e.preventDefault()}>
+        {/* Honeypot: сбивает эвристику автозаполнения мобильных браузеров */}
+        <input type="text" name="prevent_autofill" tabIndex={-1} aria-hidden="true" style={{ position: 'absolute', opacity: 0, height: 0, width: 0, overflow: 'hidden', pointerEvents: 'none' }} />
+        <div className="flex flex-col gap-4">
         {/* Context */}
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
           {formatDateLabel(date)}
@@ -281,6 +284,7 @@ export function EventSheet({
           </div>
         )}
       </div>
+      </form>
     </BottomSheet>
   );
 }
