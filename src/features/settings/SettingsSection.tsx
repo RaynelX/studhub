@@ -1,4 +1,5 @@
 import { useSettings } from './SettingsProvider';
+import { useTouchRipple } from '../../shared/hooks/use-touch-ripple';
 import { Section } from '../../shared/ui/Section';
 
 type Language = 'en' | 'de' | 'fr' | 'es';
@@ -110,8 +111,10 @@ function ToggleButton({
   onClick: () => void;
   children: React.ReactNode;
 }) {
+  const rippleRef = useTouchRipple<HTMLButtonElement>({ stopPropagation: true });
   return (
     <button
+      ref={rippleRef}
       onClick={onClick}
       className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
         active

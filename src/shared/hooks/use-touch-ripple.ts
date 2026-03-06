@@ -15,8 +15,14 @@ import { useEffect, useRef } from 'react';
  *  - Must accept a ref (any HTMLElement).
  *  - The hook sets `position: relative` if needed; no className changes required.
  */
-export function useTouchRipple<T extends HTMLElement = HTMLDivElement>() {
+interface TouchRippleOptions {
+  /** Stop pointerdown propagation so parent ripples don't fire */
+  stopPropagation?: boolean;
+}
+
+export function useTouchRipple<T extends HTMLElement = HTMLDivElement>(options?: TouchRippleOptions) {
   const ref = useRef<T>(null);
+  const stop = options?.stopPropagation ?? false;
 
   useEffect(() => {
     const el = ref.current;
@@ -36,6 +42,7 @@ export function useTouchRipple<T extends HTMLElement = HTMLDivElement>() {
     function onDown(e: PointerEvent) {
       // Primary pointer only (left-click / single touch)
       if (e.button !== 0) return;
+      if (stop) e.stopPropagation();
       const rect = el!.getBoundingClientRect();
       overlay.style.setProperty('--rx', `${e.clientX - rect.left}px`);
       overlay.style.setProperty('--ry', `${e.clientY - rect.top}px`);
@@ -58,7 +65,7 @@ export function useTouchRipple<T extends HTMLElement = HTMLDivElement>() {
       el.removeEventListener('pointercancel', onUp);
       overlay.remove();
     };
-  }, []);
+  }, [stop]);
 
   return ref;
 }

@@ -1,5 +1,6 @@
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
+import { useTouchRipple } from '../../shared/hooks/use-touch-ripple';
 import { Section } from '../../shared/ui/Section';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -17,20 +18,43 @@ export function ThemeSection() {
     <Section title="Тема">
       <div className="flex gap-2">
         {THEMES.map(({ value, icon: Icon, label }) => (
-          <button
+          <ThemeButton
             key={value}
+            active={theme === value}
             onClick={() => setTheme(value)}
-            className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-sm font-medium transition-colors ${
-              theme === value
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 active:bg-neutral-200 dark:active:bg-neutral-700'
-            }`}
-          >
-            <Icon size={20} />
-            {label}
-          </button>
+            icon={Icon}
+            label={label}
+          />
         ))}
       </div>
     </Section>
+  );
+}
+
+function ThemeButton({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof Sun;
+  label: string;
+}) {
+  const rippleRef = useTouchRipple<HTMLButtonElement>({ stopPropagation: true });
+  return (
+    <button
+      ref={rippleRef}
+      onClick={onClick}
+      className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-sm font-medium transition-colors ${
+        active
+          ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+          : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 active:bg-neutral-200 dark:active:bg-neutral-700'
+      }`}
+    >
+      <Icon size={20} />
+      {label}
+    </button>
   );
 }

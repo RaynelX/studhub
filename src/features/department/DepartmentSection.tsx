@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, Mail, Phone, Send, Clock } from 'lucide-react';
 import { useDatabase } from '../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
+import { useTouchRipple } from '../../shared/hooks/use-touch-ripple';
 import { Section } from '../../shared/ui/Section';
 import type { TeacherDoc } from '../../database/types';
 
@@ -63,9 +64,11 @@ export function DepartmentSection() {
 function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
     const [expanded, setExpanded] = useState(false);
     const hasContacts = !!(teacher.email || teacher.phone || teacher.telegram || teacher.consultation_info);
+    const rippleRef = useTouchRipple<HTMLDivElement>({ stopPropagation: true });
   
     return (
       <div
+        ref={rippleRef}
         className={`rounded-xl transition-colors ${
           expanded
             ? 'bg-neutral-50 dark:bg-neutral-800/50'
