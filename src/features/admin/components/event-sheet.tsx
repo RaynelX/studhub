@@ -195,6 +195,7 @@ export function EventSheet({
             placeholder="Аудитория (необязательно)"
             value={fields.room}
             onChange={(e) => setField('room', e.target.value)}
+            autoComplete="off"
           />
         </div>
 
