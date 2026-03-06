@@ -158,7 +158,8 @@ export function OverrideSheet({
             placeholder="Аудитория или ДОТ"
             value={fields.room}
             onChange={(e) => setField('room', e.target.value)}
-            autoComplete="off"
+            name="studhub-room"
+            autoComplete="one-time-code"
           />
         </div>
 
@@ -181,7 +182,8 @@ export function OverrideSheet({
               value={fields.comment}
               onChange={(e) => setField('comment', e.target.value)}
               autoFocus
-              autoComplete="off"
+              name="studhub-comment"
+              autoComplete="one-time-code"
             />
           </div>
         )}

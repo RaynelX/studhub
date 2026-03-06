@@ -66,12 +66,13 @@ export function TeacherAutocomplete({
       <input
         ref={inputRef}
         type="text"
+        name="studhub-teacher"
         value={query}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        autoComplete="off"
+        autoComplete="one-time-code"
         className={className}
       />
       {isOpen && filtered.length > 0 && (
