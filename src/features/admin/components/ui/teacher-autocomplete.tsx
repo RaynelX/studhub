@@ -19,7 +19,7 @@ export function TeacherAutocomplete({
   const [typing, setTyping] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedName = teachers.find((t) => t.id === value)?.full_name ?? '';
   const query = typing ? inputText : selectedName;
@@ -63,16 +63,15 @@ export function TeacherAutocomplete({
 
   return (
     <div className="relative">
-      <input
+      <textarea
         ref={inputRef}
-        type="text"
         value={query}
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
-        autoComplete="off"
-        className={className}
+        rows={1}
+        className={className + ' resize-none'}
       />
       {isOpen && filtered.length > 0 && (
         <ul className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 shadow-lg">

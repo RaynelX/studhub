@@ -153,11 +153,12 @@ export function OverrideSheet({
           <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-1.5 block">
             Аудитория
           </label>
-          <input
-            className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
+          <textarea
+            className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100 resize-none"
             placeholder="Аудитория или ДОТ"
             value={fields.room}
             onChange={(e) => setField('room', e.target.value)}
+            rows={1}
           />
         </div>
 
@@ -174,12 +175,13 @@ export function OverrideSheet({
             <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-1.5 block">
               Комментарий
             </label>
-            <input
-              className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100"
+            <textarea
+              className="w-full p-3 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-neutral-100 resize-none"
               placeholder="Например: преподаватель заболел"
               value={fields.comment}
               onChange={(e) => setField('comment', e.target.value)}
               autoFocus
+              rows={1}
             />
           </div>
         )}
