@@ -41,12 +41,12 @@ export function SubjectsPage() {
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden">
       {/* Сортировка */}
-      <div className="flex gap-2 px-4 pt-4 pb-2">
+      <div className="flex flex-wrap gap-2 px-4 pt-4 pb-2">
         {SORT_OPTIONS.map(({ mode, icon: Icon, label }) => (
           <button
             key={mode}
             onClick={() => setSortMode(mode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
               sortMode === mode
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                 : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 active:bg-neutral-200 dark:active:bg-neutral-700'
