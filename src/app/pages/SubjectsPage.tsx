@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { ArrowDownAZ, Hash, Clock } from 'lucide-react';
+import { ArrowDownAZ, Hash, Clock, Percent } from 'lucide-react';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useSubjectDetails } from '../../features/subjects/hooks/use-subject-details';
 import { SubjectCard } from '../../features/subjects/components/SubjectCard';
 import type { SubjectDetails } from '../../features/subjects/hooks/use-subject-details';
 
-type SortMode = 'alpha' | 'count' | 'next';
+type SortMode = 'alpha' | 'count' | 'next' | 'progress';
 
 const SORT_OPTIONS: { mode: SortMode; icon: typeof ArrowDownAZ; label: string }[] = [
   { mode: 'alpha', icon: ArrowDownAZ, label: 'А–Я' },
   { mode: 'count', icon: Hash, label: 'Кол-во' },
   { mode: 'next', icon: Clock, label: 'Ближайшая' },
+  { mode: 'progress', icon: Percent, label: 'Прогресс' },
 ];
 
 export function SubjectsPage() {
@@ -48,7 +49,7 @@ export function SubjectsPage() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
               sortMode === mode
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 active:bg-neutral-200'
+                : 'bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 active:bg-neutral-200 dark:active:bg-neutral-700'
             }`}
           >
             <Icon size={14} />
@@ -80,12 +81,15 @@ function sortSubjects(subjects: SubjectDetails[], mode: SortMode): SubjectDetail
       return copy.sort((a, b) => b.progress.total - a.progress.total);
 
     case 'next':
-      // По количеству оставшихся пар (меньше осталось → ближе к концу → ниже)
       return copy.sort((a, b) => {
-        const remainA = a.progress.total - a.progress.passed;
-        const remainB = b.progress.total - b.progress.passed;
-        return remainB - remainA;
+        if (!a.nextPairDate && !b.nextPairDate) return 0;
+        if (!a.nextPairDate) return 1;
+        if (!b.nextPairDate) return -1;
+        return a.nextPairDate.localeCompare(b.nextPairDate);
       });
+
+    case 'progress':
+      return copy.sort((a, b) => b.progress.percent - a.progress.percent);
 
     default:
       return copy;

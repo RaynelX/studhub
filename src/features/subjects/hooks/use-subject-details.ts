@@ -29,6 +29,7 @@ export interface SubjectDetails {
   subject: SubjectDoc;
   teachers: SubjectTeacher[];
   progress: SubjectProgress;
+  nextPairDate: string | null;
 }
 
 export function useSubjectDetails(): {
@@ -86,7 +87,10 @@ export function useSubjectDetails(): {
       // Прогресс
       const progress = calculateProgress(subjectEntries, todayStr, semesterConfig);
 
-      return { subject, teachers: subjectTeachers, progress };
+      // Ближайшая пара
+      const nextPairDate = findNextPairDate(subjectEntries, todayStr, semesterConfig);
+
+      return { subject, teachers: subjectTeachers, progress, nextPairDate };
     });
 
     // Убрать предметы без пар (для данного студента)
@@ -132,6 +136,25 @@ function calculateProgress(
 
   const percent = total > 0 ? Math.round((passed / total) * 100) : 0;
   return { passed, total, percent };
+}
+
+function findNextPairDate(
+  entries: ScheduleEntryDoc[],
+  todayStr: string,
+  semesterConfig: SemesterConfigDoc | null,
+): string | null {
+  let earliest: string | null = null;
+
+  for (const entry of entries) {
+    const dates = generatePairDates(entry, semesterConfig);
+    for (const d of dates) {
+      if (d > todayStr && (!earliest || d < earliest)) {
+        earliest = d;
+      }
+    }
+  }
+
+  return earliest;
 }
 
 function generatePairDates(
