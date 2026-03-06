@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Save, CalendarRange, Info } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Save, CalendarRange, Info, Trash2 } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
 import { useAdminToast } from '../../../features/admin/components/ui/admin-toast';
 import { useDatabase } from '../../providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
+import { PurgeDataDialog } from '../../../features/admin/components/ui/purge-data-dialog';
 
 interface SemesterFormData {
   name: string;
@@ -17,8 +18,14 @@ interface SemesterFormData {
 export function AdminSemesterPage() {
   const db = useDatabase();
   const { data: semesters, loading: dataLoading } = useRxCollection(db.semester);
-  const { update, insert, loading: writeLoading } = useAdminWrite();
+  const { update, insert, purge, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
+  const [purgeOpen, setPurgeOpen] = useState(false);
+
+  const handlePurge = useCallback(async (tables: string[]) => {
+    await purge(tables);
+    showToast('success', 'Данные успешно удалены');
+  }, [purge, showToast]);
 
   const semesterConfig = semesters[0] ?? null;
 
@@ -202,8 +209,35 @@ export function AdminSemesterPage() {
               </div>
             </div>
           </AdminCard>
+
+          {/* Purge data */}
+          <AdminCard>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-900/30 text-red-500 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">Удалить данные</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+                  Очистка данных при смене семестра
+                </p>
+                <button
+                  onClick={() => setPurgeOpen(true)}
+                  className="mt-2.5 px-3.5 py-1.5 rounded-lg text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                >
+                  Удалить данные…
+                </button>
+              </div>
+            </div>
+          </AdminCard>
         </div>
       </div>
+
+      <PurgeDataDialog
+        open={purgeOpen}
+        onClose={() => setPurgeOpen(false)}
+        onPurge={handlePurge}
+      />
     </>
   );
 }
