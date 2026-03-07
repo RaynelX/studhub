@@ -9,9 +9,13 @@ interface Props {
   children: ReactNode;
   /** Sticky footer rendered below the scrollable content area */
   footer?: ReactNode;
+  /** Override default max-height (e.g. '95dvh' for near-fullscreen) */
+  maxHeight?: string;
+  /** Set a fixed height instead of content-driven sizing */
+  height?: string;
 }
 
-export function BottomSheet({ open, onClose, title, children, footer }: Props) {
+export function BottomSheet({ open, onClose, title, children, footer, maxHeight, height }: Props) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const { mounted, entering } = useExitTransition(open, 350);
   const { onTouchStart, onTouchMove, onTouchEnd } = useBottomSheetGesture({
@@ -64,8 +68,8 @@ export function BottomSheet({ open, onClose, title, children, footer }: Props) {
       <div
         ref={sheetRef}
         className={`absolute bottom-0 left-0 right-0 bg-white dark:bg-neutral-900 rounded-t-2xl shadow-xl
-                     max-h-[85dvh] flex flex-col ${entering ? 'anim-sheet-enter' : 'anim-sheet-exit'}`}
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+                     flex flex-col ${entering ? 'anim-sheet-enter' : 'anim-sheet-exit'}`}
+        style={{ height: height ?? undefined, maxHeight: maxHeight ?? '85dvh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}

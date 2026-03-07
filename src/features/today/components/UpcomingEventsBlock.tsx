@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { UpcomingEvent } from '../hooks/use-upcoming-events';
 import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
+import { AllEventsSheet } from './AllEventsSheet';
 
 const EVENT_BADGE: Record<string, { label: string; className: string }> = {
   usr:           { label: 'УСР',    className: 'bg-violet-100 text-violet-700 dark:bg-violet-500/40 dark:text-violet-300' },
@@ -17,6 +19,7 @@ interface Props {
 
 export function UpcomingEventsBlock({ events }: Props) {
   const rippleRef = useTouchRipple();
+  const [sheetOpen, setSheetOpen] = useState(false);
   if (events.length === 0) return null;
 
   return (
@@ -26,7 +29,10 @@ export function UpcomingEventsBlock({ events }: Props) {
         <h3 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">
           Ближайшие события
         </h3>
-        <button className="text-sm text-blue-600 dark:text-blue-400 font-medium active:opacity-70 transition-opacity">
+        <button
+          onClick={() => setSheetOpen(true)}
+          className="text-sm text-blue-600 dark:text-blue-400 font-medium active:opacity-70 transition-opacity"
+        >
           Показать все &rsaquo;
         </button>
       </div>
@@ -39,6 +45,8 @@ export function UpcomingEventsBlock({ events }: Props) {
           ))}
         </div>
       </div>
+
+      <AllEventsSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
     </div>
   );
 }
