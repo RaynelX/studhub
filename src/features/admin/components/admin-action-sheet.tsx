@@ -1,8 +1,8 @@
-import { X, RefreshCw, Plus, CalendarPlus } from 'lucide-react';
+import { X, RefreshCw, Plus, CalendarPlus, FileText } from 'lucide-react';
 import { BottomSheet } from '../../../shared/ui/BottomSheet';
 import type { ResolvedPair } from '../../schedule/utils/schedule-builder';
 
-export type AdminAction = 'cancel' | 'replace' | 'add' | 'event';
+export type AdminAction = 'cancel' | 'replace' | 'add' | 'event' | 'homework';
 
 interface AdminActionSheetProps {
   open: boolean;
@@ -12,6 +12,8 @@ interface AdminActionSheetProps {
   date: Date;
   pairNumber: number;
   onAction: (action: AdminAction) => void;
+  /** Whether a homework already exists for this slot */
+  hasHomework?: boolean;
 }
 
 const DAY_NAMES: Record<number, string> = {
@@ -36,6 +38,7 @@ export function AdminActionSheet({
   date,
   pairNumber,
   onAction,
+  hasHomework,
 }: AdminActionSheetProps) {
   function handle(action: AdminAction) {
     onAction(action);
@@ -59,6 +62,13 @@ export function AdminActionSheet({
       <div className="flex flex-col gap-1.5">
         {pair && pair.status !== 'cancelled' ? (
           <>
+            {/* Homework */}
+            <ActionButton
+              icon={<FileText className="w-5 h-5 text-indigo-500" />}
+              label="Домашнее задание"
+              sublabel={hasHomework ? 'Редактировать задание' : 'Добавить задание к паре'}
+              onClick={() => handle('homework')}
+            />
             {/* Cancel */}
             <ActionButton
               icon={<X className="w-5 h-5 text-red-500" />}

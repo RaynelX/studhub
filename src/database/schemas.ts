@@ -8,6 +8,7 @@ import type {
   DeadlineDoc,
   StudentDoc,
   SemesterConfigDoc,
+  HomeworkDoc,
 } from './types';
 
 // ============================================================
@@ -297,6 +298,43 @@ const semesterSchema: RxJsonSchema<SemesterConfigDoc> = {
 };
 
 // ============================================================
+// HOMEWORKS
+// ============================================================
+
+const homeworksSchema: RxJsonSchema<HomeworkDoc> = {
+  version: 0,
+  primaryKey: 'id',
+  type: 'object',
+  properties: {
+    id: { type: 'string', maxLength: 36 },
+    subject_id: { type: 'string' },
+    date: { type: 'string' },
+    pair_number: { type: 'integer', minimum: 1, maximum: 5 },
+    content: { type: 'string' },
+    target_language: {
+      type: 'string',
+      enum: ['all', 'en', 'de', 'fr', 'es'],
+    },
+    target_eng_subgroup: {
+      type: 'string',
+      enum: ['all', 'a', 'b'],
+    },
+    target_oit_subgroup: {
+      type: 'string',
+      enum: ['all', 'a', 'b'],
+    },
+    created_at: { type: 'string' },
+    updated_at: { type: 'string' },
+    is_deleted: { type: 'boolean' },
+  },
+  required: [
+    'id', 'subject_id', 'date', 'pair_number', 'content',
+    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'created_at', 'updated_at', 'is_deleted',
+  ],
+};
+
+// ============================================================
 // ЭКСПОРТ
 // ============================================================
 
@@ -309,4 +347,5 @@ export const schemas = {
   deadlines: deadlinesSchema,
   students: studentsSchema,
   semester: semesterSchema,
+  homeworks: homeworksSchema,
 };

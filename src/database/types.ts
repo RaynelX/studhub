@@ -134,6 +134,20 @@ export interface StudentDoc {
   is_deleted: boolean;
 }
 
+export interface HomeworkDoc {
+  id: string;
+  subject_id: string;
+  date: string;
+  pair_number: number;
+  content: string;
+  target_language: TargetLanguage;
+  target_eng_subgroup: TargetEngSubgroup;
+  target_oit_subgroup: TargetOitSubgroup;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+}
+
 export interface SemesterConfigDoc {
   id: string;
   name: string;
@@ -157,6 +171,7 @@ export type DatabaseCollections = {
   deadlines: RxCollection<DeadlineDoc>;
   students: RxCollection<StudentDoc>;
   semester: RxCollection<SemesterConfigDoc>;
+  homeworks: RxCollection<HomeworkDoc>;
 };
 
 export type AppDatabase = RxDatabase<DatabaseCollections>;

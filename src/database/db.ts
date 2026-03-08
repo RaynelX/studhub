@@ -38,6 +38,7 @@ async function createDatabase(): Promise<AppDatabase> {
     deadlines: { schema: schemas.deadlines },
     students: { schema: schemas.students },
     semester: { schema: schemas.semester },
+    homeworks: { schema: schemas.homeworks },
   });
 
   console.log('[DB] Database initialized with collections:', Object.keys(db.collections));

@@ -34,6 +34,7 @@ const SYNC_CONFIGS: CollectionSyncConfig[] = [
   { rxdbName: 'overrides', supabaseTable: 'schedule_overrides', hasIsDeleted: true },
   { rxdbName: 'events',    supabaseTable: 'events',             hasIsDeleted: true },
   { rxdbName: 'deadlines', supabaseTable: 'deadlines',          hasIsDeleted: true },
+  { rxdbName: 'homeworks', supabaseTable: 'homeworks',           hasIsDeleted: true },
 ];
 
 const LAST_SYNC_KEY = 'student_hub_last_sync-01';

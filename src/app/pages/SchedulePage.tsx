@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { useDayDeadlines } from '../../features/schedule/hooks/use-day-deadlines';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
+import { HomeworkViewSheet } from '../../features/schedule/components/HomeworkViewSheet';
 import type { ResolvedPair } from '../../features/schedule/utils/schedule-builder';
 import {
   getMonday,
@@ -15,6 +16,7 @@ import {
 } from '../../features/schedule/utils/week-utils';
 import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
+import type { HomeworkDoc } from '../../database/types';
 import { DAY_NAMES_SHORT } from '../../shared/constants/days';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useFlipPill } from '../../shared/hooks/use-flip-pill';
@@ -25,6 +27,7 @@ import type { AdminAction } from '../../features/admin/components/admin-action-s
 import { OverrideSheet } from '../../features/admin/components/override-sheet';
 import { EventSheet } from '../../features/admin/components/event-sheet';
 import { DeadlineSheet } from '../../features/admin/components/deadline-sheet';
+import { HomeworkSheet } from '../../features/admin/components/homework-sheet';
 import { UndoToast } from '../../features/admin/components/undo-toast';
 import { AdminFab } from '../../features/admin/components/admin-fab';
 import { useCancelPair } from '../../features/admin/hooks/use-cancel-pair';
@@ -104,6 +107,19 @@ export function SchedulePage() {
   const { schedule, loading } = useDaySchedule(displayedDate);
   const { deadlines } = useDayDeadlines(displayedDate);
 
+  // Homeworks for the displayed date
+  const { data: allHomeworks } = useRxCollection(db.homeworks);
+  const displayedDateStr = toISODate(displayedDate);
+  const homeworkMap = useMemo(() => {
+    const map = new Map<number, HomeworkDoc>();
+    for (const hw of allHomeworks) {
+      if (hw.date === displayedDateStr && !hw.is_deleted) {
+        map.set(hw.pair_number, hw);
+      }
+    }
+    return map;
+  }, [allHomeworks, displayedDateStr]);
+
   // ============================================================
   // Admin: sheet state
   // ============================================================
@@ -112,6 +128,7 @@ export function SchedulePage() {
   const [overrideSheetOpen, setOverrideSheetOpen] = useState(false);
   const [eventSheetOpen, setEventSheetOpen] = useState(false);
   const [deadlineSheetOpen, setDeadlineSheetOpen] = useState(false);
+  const [homeworkSheetOpen, setHomeworkSheetOpen] = useState(false);
   const [overrideMode, setOverrideMode] = useState<'replace' | 'add'>('replace');
 
   // Context for the action being performed (stored as state so it's safe in render)
@@ -152,6 +169,9 @@ export function SchedulePage() {
       case 'event':
         setEventSheetOpen(true);
         break;
+      case 'homework':
+        setHomeworkSheetOpen(true);
+        break;
     }
   };
 
@@ -169,6 +189,19 @@ export function SchedulePage() {
     } else {
       setDeadlineSheetOpen(true);
     }
+  };
+
+  // Homework view sheet (for students)
+  const [homeworkViewOpen, setHomeworkViewOpen] = useState(false);
+  const [viewedHomework, setViewedHomework] = useState<{ content: string; subjectName: string; dateLabel: string } | null>(null);
+
+  const handleHomeworkTap = (homework: HomeworkDoc, pair: ResolvedPair) => {
+    const dayNames: Record<number, string> = { 0: 'вс', 1: 'пн', 2: 'вт', 3: 'ср', 4: 'чт', 5: 'пт', 6: 'сб' };
+    const d = displayedDate;
+    const dayName = dayNames[d.getDay()] ?? '';
+    const dateLabel = `${dayName}, ${d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`;
+    setViewedHomework({ content: homework.content, subjectName: pair.subjectName, dateLabel });
+    setHomeworkViewOpen(true);
   };
 
   // Определяем CSS класс анимации
@@ -284,6 +317,8 @@ export function SchedulePage() {
               date={displayedDate}
               isAdmin={isAdmin}
               onPairLongPress={isAdmin ? handlePairLongPress : undefined}
+              homeworkMap={homeworkMap}
+              onHomeworkTap={handleHomeworkTap}
             />
           </div>
         )}
@@ -299,6 +334,7 @@ export function SchedulePage() {
             date={sheetContext.date}
             pairNumber={sheetContext.pairNumber}
             onAction={handleAction}
+            hasHomework={!!sheetContext.pair?.subjectId && homeworkMap.has(sheetContext.pairNumber)}
           />
 
           <OverrideSheet
@@ -342,6 +378,19 @@ export function SchedulePage() {
             subjects={subjects}
           />
 
+          {sheetContext.pair?.subjectId && (
+            <HomeworkSheet
+              key={`hw-${toISODate(sheetContext.date)}-${sheetContext.pairNumber}`}
+              open={homeworkSheetOpen}
+              onClose={() => setHomeworkSheetOpen(false)}
+              date={sheetContext.date}
+              pairNumber={sheetContext.pairNumber}
+              subjectId={sheetContext.pair.subjectId}
+              subjectName={sheetContext.pair.subjectName}
+              existing={homeworkMap.get(sheetContext.pairNumber)}
+            />
+          )}
+
           <UndoToast
             message="Пара отменена"
             open={toastOpen}
@@ -351,6 +400,17 @@ export function SchedulePage() {
 
           <AdminFab onAction={handleFabAction} />
         </>
+      )}
+
+      {/* Homework view (for all users) */}
+      {viewedHomework && (
+        <HomeworkViewSheet
+          open={homeworkViewOpen}
+          onClose={() => setHomeworkViewOpen(false)}
+          subjectName={viewedHomework.subjectName}
+          dateLabel={viewedHomework.dateLabel}
+          content={viewedHomework.content}
+        />
       )}
     </div>
   );

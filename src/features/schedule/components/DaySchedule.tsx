@@ -1,5 +1,6 @@
 import type { DaySlot, FloatingEvent, ResolvedPair } from '../utils/schedule-builder';
 import type { DayDeadline } from '../hooks/use-day-deadlines';
+import type { HomeworkDoc } from '../../../database/types';
 import { PairCard, WindowCard, FloatingEventCard } from './PairCard';
 import { DeadlineCard } from './DeadlineCard';
 
@@ -12,9 +13,13 @@ interface Props {
   onPairLongPress?: (pairNumber: number, pair: ResolvedPair | null) => void;
   /** Whether the current user is admin */
   isAdmin?: boolean;
+  /** Map of homework keyed by pairNumber */
+  homeworkMap?: Map<number, HomeworkDoc>;
+  /** Called when user taps homework indicator on a pair */
+  onHomeworkTap?: (homework: HomeworkDoc, pair: ResolvedPair) => void;
 }
 
-export function DaySchedule({ slots, floatingEvents, deadlines, date, onPairLongPress, isAdmin }: Props) {
+export function DaySchedule({ slots, floatingEvents, deadlines, date, onPairLongPress, isAdmin, homeworkMap, onHomeworkTap }: Props) {
     // Находим диапазон непустых слотов
   const firstIdx = slots.findIndex((s) => s.pair !== null);
   const lastIdx = findLastIndex(slots, (s) => s.pair !== null);
@@ -75,6 +80,10 @@ export function DaySchedule({ slots, floatingEvents, deadlines, date, onPairLong
             date={date}
             isAdmin={isAdmin}
             onLongPress={onPairLongPress ? () => onPairLongPress(slot.pairNumber, slot.pair) : undefined}
+            homework={homeworkMap?.get(slot.pairNumber)?.content}
+            onHomeworkTap={homeworkMap?.has(slot.pairNumber) && slot.pair
+              ? () => onHomeworkTap?.(homeworkMap.get(slot.pairNumber)!, slot.pair!)
+              : undefined}
           />
         ) : (
           <WindowCard

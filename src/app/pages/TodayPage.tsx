@@ -2,14 +2,17 @@ import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useTodaySchedule } from '../../features/today/hooks/use-today-schedule';
 import { useUpcomingEvents } from '../../features/today/hooks/use-upcoming-events';
 import { useUpcomingDeadlines } from '../../features/today/hooks/use-upcoming-deadlines';
+import { useActiveHomework } from '../../features/today/hooks/use-active-homework';
 import { useSemesterProgress } from '../../features/today/hooks/use-semester-progress';
 import { TodayPairsBlock } from '../../features/today/components/TodayPairsBlock';
+import { HomeworkBlock } from '../../features/today/components/HomeworkBlock';
 import { UpcomingEventsBlock } from '../../features/today/components/UpcomingEventsBlock';
 import { UpcomingDeadlinesBlock } from '../../features/today/components/UpcomingDeadlinesBlock';
 import { SemesterBlock } from '../../features/today/components/SemesterBlock';
 
 export function TodayPage() {
   const todaySchedule = useTodaySchedule();
+  const activeHomework = useActiveHomework();
   const upcomingEvents = useUpcomingEvents();
   const upcomingDeadlines = useUpcomingDeadlines();
   const semesterProgress = useSemesterProgress();
@@ -36,6 +39,7 @@ export function TodayPage() {
   return (
     <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-5">
       <TodayPairsBlock data={todaySchedule} />
+      <HomeworkBlock homework={activeHomework.homework} />
       <UpcomingEventsBlock events={upcomingEvents.events} />
       <UpcomingDeadlinesBlock deadlines={upcomingDeadlines.deadlines} />
       <SemesterBlock data={semesterProgress} />

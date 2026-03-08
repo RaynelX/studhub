@@ -2,7 +2,7 @@ import type { ResolvedPair } from '../utils/schedule-builder';
 import { isCurrentPair } from '../utils/week-utils';
 import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 import { useLongPress } from '../../../shared/hooks/use-long-press';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, FileText } from 'lucide-react';
 
 // ============================================================
 // Конфигурация визуальных стилей
@@ -50,9 +50,13 @@ interface PairCardProps {
   onLongPress?: () => void;
   /** Show admin affordances */
   isAdmin?: boolean;
+  /** Homework content for this pair (if exists) */
+  homework?: string;
+  /** Called when user taps the homework indicator */
+  onHomeworkTap?: () => void;
 }
 
-export function PairCard({ pair, startTime, endTime, date, onLongPress, isAdmin }: PairCardProps) {
+export function PairCard({ pair, startTime, endTime, date, onLongPress, isAdmin, homework, onHomeworkTap }: PairCardProps) {
   const rippleRef = useTouchRipple();
   const longPressHandlers = useLongPress(onLongPress ?? (() => {}), { disabled: !isAdmin || !onLongPress });
   const isCurrent = isCurrentPair(date, startTime, endTime);
@@ -141,6 +145,17 @@ export function PairCard({ pair, startTime, endTime, date, onLongPress, isAdmin 
       {/* Комментарий */}
       {pair.comment && (
         <p className="mt-2 text-xs text-gray-500 dark:text-neutral-400 italic">{pair.comment}</p>
+      )}
+
+      {/* Домашнее задание */}
+      {homework && !isCancelled && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onHomeworkTap?.(); }}
+          className="mt-2.5 flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 active:opacity-70 transition-opacity"
+        >
+          <FileText className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">Домашнее задание</span>
+        </button>
       )}
 
       {/* Текущая пара */}
