@@ -14,6 +14,7 @@ interface AdminStats {
   subjectCount: number;
   overrideCountThisWeek: number;
   upcomingEventsCount: number;
+  upcomingDeadlinesCount: number;
   studentCount: number;
   todayPairsCount: number;
   todayOverridesCount: number;
@@ -33,6 +34,7 @@ export function useAdminStats(): AdminStats {
   const { data: students, loading: l4 } = useRxCollection(db.students);
   const { data: schedule, loading: l5 } = useRxCollection(db.schedule);
   const { data: semesters, loading: l6 } = useRxCollection(db.semester);
+  const { data: deadlines, loading: l7 } = useRxCollection(db.deadlines);
 
   const today = useMemo(() => new Date(), []);
   const monday = useMemo(() => getMonday(today), [today]);
@@ -51,6 +53,11 @@ export function useAdminStats(): AdminStats {
   const upcomingEventsCount = useMemo(
     () => events.filter((e) => e.date >= todayISO).length,
     [events, todayISO],
+  );
+
+  const upcomingDeadlinesCount = useMemo(
+    () => deadlines.filter((d) => d.date >= todayISO).length,
+    [deadlines, todayISO],
   );
 
   const todayPairsCount = useMemo(
@@ -97,11 +104,12 @@ export function useAdminStats(): AdminStats {
     subjectCount: subjects.filter((s) => !s.is_deleted).length,
     overrideCountThisWeek,
     upcomingEventsCount,
+    upcomingDeadlinesCount,
     studentCount: students.filter((s) => !s.is_deleted).length,
     todayPairsCount,
     todayOverridesCount,
     scheduleEntryCount,
     semesterProgress,
-    loading: l1 || l2 || l3 || l4 || l5 || l6,
+    loading: l1 || l2 || l3 || l4 || l5 || l6 || l7,
   };
 }

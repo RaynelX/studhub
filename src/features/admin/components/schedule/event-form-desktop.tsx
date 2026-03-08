@@ -38,7 +38,6 @@ interface EventFormDesktopProps {
 
 const EVENT_TYPE_OPTIONS: { value: EventType; label: string }[] = [
   { value: 'usr', label: 'УСР' },
-  { value: 'deadline', label: 'Дедлайн' },
   { value: 'control_work', label: 'Контрольная' },
   { value: 'credit', label: 'Зачёт' },
   { value: 'exam', label: 'Экзамен' },

@@ -12,7 +12,6 @@ export type WeekParity = 'all' | 'odd' | 'even';
 export type OverrideType = 'cancel' | 'replace' | 'add';
 export type EventType =
   | 'usr'
-  | 'deadline'
   | 'control_work'
   | 'credit'
   | 'exam'
@@ -110,6 +109,20 @@ export interface EventDoc {
   is_deleted: boolean;
 }
 
+export interface DeadlineDoc {
+  id: string;
+  subject_id?: string;
+  date: string;
+  time?: string;
+  description?: string;
+  target_language: TargetLanguage;
+  target_eng_subgroup: TargetEngSubgroup;
+  target_oit_subgroup: TargetOitSubgroup;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface StudentDoc {
   id: string;
   full_name: string;
@@ -141,6 +154,7 @@ export type DatabaseCollections = {
   schedule: RxCollection<ScheduleEntryDoc>;
   overrides: RxCollection<ScheduleOverrideDoc>;
   events: RxCollection<EventDoc>;
+  deadlines: RxCollection<DeadlineDoc>;
   students: RxCollection<StudentDoc>;
   semester: RxCollection<SemesterConfigDoc>;
 };

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, CalendarClock, CalendarDays, GraduationCap, Plus, CalendarPlus, Clock, AlertTriangle, Layers } from 'lucide-react';
+import { BookOpen, CalendarClock, CalendarDays, GraduationCap, Plus, CalendarPlus, Clock, AlertTriangle, Layers, Target } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminStatCard } from '../../../features/admin/components/ui/admin-stat-card';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
@@ -28,12 +28,17 @@ export function AdminDashboardPage() {
   const db = useDatabase();
   const { data: overrides } = useRxCollection(db.overrides);
   const { data: events } = useRxCollection(db.events);
+  const { data: deadlines } = useRxCollection(db.deadlines);
   const { data: subjects } = useRxCollection(db.subjects);
 
   const todayISO = toISODate(new Date());
 
-  // Recent/upcoming overrides and events, sorted by date, max 5
-  const recentChanges = [...overrides, ...events]
+  // Recent/upcoming overrides, events and deadlines, sorted by date, max 5
+  const recentChanges = [
+    ...overrides,
+    ...events,
+    ...deadlines.map((d) => ({ ...d, _kind: 'deadline' as const })),
+  ]
     .filter((item) => item.date >= todayISO)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
@@ -46,8 +51,14 @@ export function AdminDashboardPage() {
         : undefined;
       return subj ? `${typeLabel}: ${subj}, ${item.pair_number} пара` : `${typeLabel}, ${item.pair_number} пара`;
     }
+    if ('_kind' in item && item._kind === 'deadline') {
+      const subj = item.subject_id
+        ? subjects.find((s) => s.id === item.subject_id)?.short_name ?? subjects.find((s) => s.id === item.subject_id)?.name
+        : undefined;
+      return subj ? `Дедлайн: ${subj}` : item.description ?? 'Дедлайн';
+    }
     // EventDoc
-    return item.title;
+    return 'title' in item ? item.title : 'Событие';
   }
 
   return (
@@ -85,6 +96,11 @@ export function AdminDashboardPage() {
           label="Событий впереди"
           value={stats.loading ? '—' : stats.upcomingEventsCount}
           icon={<CalendarDays className="w-5 h-5" />}
+        />
+        <AdminStatCard
+          label="Дедлайнов впереди"
+          value={stats.loading ? '—' : stats.upcomingDeadlinesCount}
+          icon={<Target className="w-5 h-5" />}
         />
       </div>
 
@@ -205,6 +221,11 @@ export function AdminDashboardPage() {
                 {'event_type' in item && (
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
                     Событие
+                  </span>
+                )}
+                {'_kind' in item && item._kind === 'deadline' && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
+                    Дедлайн
                   </span>
                 )}
               </div>

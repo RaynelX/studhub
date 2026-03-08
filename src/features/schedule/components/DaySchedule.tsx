@@ -1,9 +1,12 @@
 import type { DaySlot, FloatingEvent, ResolvedPair } from '../utils/schedule-builder';
+import type { DayDeadline } from '../hooks/use-day-deadlines';
 import { PairCard, WindowCard, FloatingEventCard } from './PairCard';
+import { DeadlineCard } from './DeadlineCard';
 
 interface Props {
   slots: DaySlot[];
   floatingEvents: FloatingEvent[];
+  deadlines: DayDeadline[];
   date: Date;
   /** Called on long press on a pair slot (admin only) */
   onPairLongPress?: (pairNumber: number, pair: ResolvedPair | null) => void;
@@ -11,7 +14,7 @@ interface Props {
   isAdmin?: boolean;
 }
 
-export function DaySchedule({ slots, floatingEvents, date, onPairLongPress, isAdmin }: Props) {
+export function DaySchedule({ slots, floatingEvents, deadlines, date, onPairLongPress, isAdmin }: Props) {
     // Находим диапазон непустых слотов
   const firstIdx = slots.findIndex((s) => s.pair !== null);
   const lastIdx = findLastIndex(slots, (s) => s.pair !== null);
@@ -20,21 +23,37 @@ export function DaySchedule({ slots, floatingEvents, date, onPairLongPress, isAd
   if (firstIdx === -1) {
     return (
       <div>
-        {floatingEvents.length === 0 ? (
+        {floatingEvents.length === 0 && deadlines.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-neutral-500">
             <p className="text-lg">Нет пар</p>
             <p className="text-sm mt-1">Свободный день</p>
           </div>
         ) : (
-          <div>
-            <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-2.5">
-              События дня
-            </p>
-            <div className="space-y-2.5">
-              {floatingEvents.map((event, i) => (
-                <FloatingEventCard key={i} {...event} />
-              ))}
-            </div>
+          <div className="space-y-6">
+            {floatingEvents.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-2.5">
+                  События дня
+                </p>
+                <div className="space-y-2.5">
+                  {floatingEvents.map((event, i) => (
+                    <FloatingEventCard key={i} {...event} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {deadlines.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2.5">
+                  Дедлайны
+                </p>
+                <div className="space-y-2.5">
+                  {deadlines.map((dl) => (
+                    <DeadlineCard key={dl.id} deadline={dl} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -77,6 +96,19 @@ export function DaySchedule({ slots, floatingEvents, date, onPairLongPress, isAd
           <div className="space-y-2.5">
             {floatingEvents.map((event, i) => (
               <FloatingEventCard key={i} {...event} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {deadlines.length > 0 && (
+        <div className="mt-6">
+          <p className="text-xs font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2.5">
+            Дедлайны
+          </p>
+          <div className="space-y-2.5">
+            {deadlines.map((dl) => (
+              <DeadlineCard key={dl.id} deadline={dl} />
             ))}
           </div>
         </div>

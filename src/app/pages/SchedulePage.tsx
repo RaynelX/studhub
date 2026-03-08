@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
+import { useDayDeadlines } from '../../features/schedule/hooks/use-day-deadlines';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
 import type { ResolvedPair } from '../../features/schedule/utils/schedule-builder';
 import {
@@ -23,6 +24,7 @@ import { AdminActionSheet } from '../../features/admin/components/admin-action-s
 import type { AdminAction } from '../../features/admin/components/admin-action-sheet';
 import { OverrideSheet } from '../../features/admin/components/override-sheet';
 import { EventSheet } from '../../features/admin/components/event-sheet';
+import { DeadlineSheet } from '../../features/admin/components/deadline-sheet';
 import { UndoToast } from '../../features/admin/components/undo-toast';
 import { AdminFab } from '../../features/admin/components/admin-fab';
 import { useCancelPair } from '../../features/admin/hooks/use-cancel-pair';
@@ -100,6 +102,7 @@ export function SchedulePage() {
   // Это гарантирует, что контент обновится только после exit-анимации.
   const displayedDate = useMemo(() => new Date(displayedKey), [displayedKey]);
   const { schedule, loading } = useDaySchedule(displayedDate);
+  const { deadlines } = useDayDeadlines(displayedDate);
 
   // ============================================================
   // Admin: sheet state
@@ -108,6 +111,7 @@ export function SchedulePage() {
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [overrideSheetOpen, setOverrideSheetOpen] = useState(false);
   const [eventSheetOpen, setEventSheetOpen] = useState(false);
+  const [deadlineSheetOpen, setDeadlineSheetOpen] = useState(false);
   const [overrideMode, setOverrideMode] = useState<'replace' | 'add'>('replace');
 
   // Context for the action being performed (stored as state so it's safe in render)
@@ -151,7 +155,7 @@ export function SchedulePage() {
     }
   };
 
-  const handleFabAction = (action: 'add' | 'event') => {
+  const handleFabAction = (action: 'add' | 'event' | 'deadline') => {
     // FAB uses the currently displayed date, pair number starts at the first empty slot
     const firstEmptySlot = schedule.slots.find((s) => s.pair === null);
     const pairNumber = firstEmptySlot?.pairNumber ?? 1;
@@ -160,8 +164,10 @@ export function SchedulePage() {
     if (action === 'add') {
       setOverrideMode('add');
       setOverrideSheetOpen(true);
-    } else {
+    } else if (action === 'event') {
       setEventSheetOpen(true);
+    } else {
+      setDeadlineSheetOpen(true);
     }
   };
 
@@ -274,6 +280,7 @@ export function SchedulePage() {
             <DaySchedule
               slots={schedule.slots}
               floatingEvents={schedule.floatingEvents}
+              deadlines={deadlines}
               date={displayedDate}
               isAdmin={isAdmin}
               onPairLongPress={isAdmin ? handlePairLongPress : undefined}
@@ -325,6 +332,14 @@ export function SchedulePage() {
             subjects={subjects}
             teachers={teachers}
             pair={sheetContext.pair}
+          />
+
+          <DeadlineSheet
+            key={`deadline-${toISODate(sheetContext.date)}`}
+            open={deadlineSheetOpen}
+            onClose={() => setDeadlineSheetOpen(false)}
+            date={sheetContext.date}
+            subjects={subjects}
           />
 
           <UndoToast

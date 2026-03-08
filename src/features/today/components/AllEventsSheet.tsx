@@ -11,7 +11,6 @@ const EVENT_TYPE_CONFIG: Record<
 > = {
   usr:           { label: 'УСР',          badge: 'bg-violet-100 text-violet-700 dark:bg-violet-500/40 dark:text-violet-300',   bg: 'bg-violet-50',  darkBg: 'dark:bg-violet-950/40' },
   control_work:  { label: 'Контрольная',  badge: 'bg-red-100 text-red-700 dark:bg-red-500/40 dark:text-red-300',               bg: 'bg-red-50',     darkBg: 'dark:bg-red-950/40' },
-  deadline:      { label: 'Дедлайн',      badge: 'bg-amber-100 text-amber-700 dark:bg-amber-500/40 dark:text-amber-300',       bg: 'bg-amber-50',   darkBg: 'dark:bg-amber-950/40' },
   credit:        { label: 'Зачёт',        badge: 'bg-teal-100 text-teal-700 dark:bg-teal-500/40 dark:text-teal-300',           bg: 'bg-teal-50',    darkBg: 'dark:bg-teal-950/40' },
   exam:          { label: 'Экзамен',      badge: 'bg-rose-100 text-rose-700 dark:bg-rose-500/40 dark:text-rose-300',           bg: 'bg-rose-50',    darkBg: 'dark:bg-rose-950/40' },
   consultation:  { label: 'Консультация', badge: 'bg-sky-100 text-sky-700 dark:bg-sky-500/40 dark:text-sky-300',               bg: 'bg-sky-50',     darkBg: 'dark:bg-sky-950/40' },
@@ -22,7 +21,6 @@ const FILTER_OPTIONS: { value: EventType | 'all'; label: string }[] = [
   { value: 'all',          label: 'Все' },
   { value: 'usr',          label: 'УСР' },
   { value: 'control_work', label: 'КР' },
-  { value: 'deadline',     label: 'Дедлайн' },
   { value: 'credit',       label: 'Зачёт' },
   { value: 'exam',         label: 'Экзамен' },
   { value: 'consultation', label: 'Конс.' },

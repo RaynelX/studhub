@@ -32,7 +32,6 @@ export function useDaySchedule(date: Date): {
     subjects,
     teachers,
     semesterConfig: semesterData[0] ?? null,
-    excludeEventTypes: ['deadline'],
   });
 
   return { schedule, loading: false };

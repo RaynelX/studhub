@@ -18,7 +18,7 @@ interface AdminWriteResult {
 /** Tables that use is_deleted soft-delete. semester_config is hard-deleted. */
 const SOFT_DELETE_TABLES = new Set([
   'subjects', 'teachers', 'schedule_entries',
-  'schedule_overrides', 'events', 'students',
+  'schedule_overrides', 'events', 'deadlines', 'students',
 ]);
 
 /**

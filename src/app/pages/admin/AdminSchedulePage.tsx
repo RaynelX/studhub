@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { Plus, CalendarPlus, Clock } from 'lucide-react';
 import { AdminPageHeader } from '../../../features/admin/components/ui/admin-page-header';
 import { AdminCard } from '../../../features/admin/components/ui/admin-card';
 import { WeekGrid } from '../../../features/admin/components/schedule/week-grid';
@@ -11,6 +11,8 @@ import { OverrideFormDesktop } from '../../../features/admin/components/schedule
 import type { OverrideFormData } from '../../../features/admin/components/schedule/override-form-desktop';
 import { EventFormDesktop } from '../../../features/admin/components/schedule/event-form-desktop';
 import type { EventFormData } from '../../../features/admin/components/schedule/event-form-desktop';
+import { DeadlineFormDesktop } from '../../../features/admin/components/schedule/deadline-form-desktop';
+import type { DeadlineFormData } from '../../../features/admin/components/schedule/deadline-form-desktop';
 import type { WizardData } from '../../../features/admin/hooks/use-schedule-planner';
 import { AdminConfirmDialog } from '../../../features/admin/components/ui/admin-confirm-dialog';
 import { useAdminToast } from '../../../features/admin/components/ui/admin-toast';
@@ -42,6 +44,7 @@ export function AdminSchedulePage() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [overrideFormOpen, setOverrideFormOpen] = useState(false);
   const [eventFormOpen, setEventFormOpen] = useState(false);
+  const [deadlineFormOpen, setDeadlineFormOpen] = useState(false);
 
   // Pre-fill state for override form opened from popover
   const [overridePreFill, setOverridePreFill] = useState<{ date: string; pairNumber: number } | null>(null);
@@ -135,6 +138,23 @@ export function AdminSchedulePage() {
       showToast('success', 'Событие создано');
     } catch {
       showToast('error', 'Не удалось создать событие');
+    }
+  }
+
+  async function handleCreateDeadline(data: DeadlineFormData) {
+    try {
+      await insert('deadlines', {
+        description: data.description || null,
+        date: data.date,
+        time: data.time || null,
+        subject_id: data.subjectId || null,
+        target_language: data.targetLanguage,
+        target_eng_subgroup: data.targetEngSubgroup,
+        target_oit_subgroup: data.targetOitSubgroup,
+      });
+      showToast('success', 'Дедлайн создан');
+    } catch {
+      showToast('error', 'Не удалось создать дедлайн');
     }
   }
 
@@ -233,6 +253,13 @@ export function AdminSchedulePage() {
             >
               <CalendarPlus className="w-4 h-4" />
               Событие
+            </button>
+            <button
+              onClick={() => setDeadlineFormOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 text-sm text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950 transition-colors"
+            >
+              <Clock className="w-4 h-4" />
+              Дедлайн
             </button>
             <button
               onClick={() => setWizardOpen(true)}
@@ -335,6 +362,13 @@ export function AdminSchedulePage() {
         subjects={activeSubjects}
         teachers={activeTeachers}
         onSubmit={handleCreateEvent}
+      />
+
+      <DeadlineFormDesktop
+        open={deadlineFormOpen}
+        onClose={() => setDeadlineFormOpen(false)}
+        subjects={activeSubjects}
+        onSubmit={handleCreateDeadline}
       />
 
       <AdminConfirmDialog

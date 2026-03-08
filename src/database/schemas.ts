@@ -5,6 +5,7 @@ import type {
   ScheduleEntryDoc,
   ScheduleOverrideDoc,
   EventDoc,
+  DeadlineDoc,
   StudentDoc,
   SemesterConfigDoc,
 } from './types';
@@ -175,7 +176,7 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
     event_type: {
       type: 'string',
       enum: [
-        'usr', 'deadline', 'control_work',
+        'usr', 'control_work',
         'credit', 'exam', 'consultation', 'other',
       ],
     },
@@ -205,6 +206,43 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
     'id', 'title', 'event_type', 'date',
     'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
     'created_at', 'updated_at', 'is_deleted',
+  ],
+};
+
+// ============================================================
+// DEADLINES
+// ============================================================
+
+const deadlinesSchema: RxJsonSchema<DeadlineDoc> = {
+  version: 0,
+  primaryKey: 'id',
+  type: 'object',
+  properties: {
+    id: { type: 'string', maxLength: 36 },
+    subject_id: { type: 'string' },
+    date: { type: 'string' },
+    time: { type: 'string' },
+    description: { type: 'string' },
+    target_language: {
+      type: 'string',
+      enum: ['all', 'en', 'de', 'fr', 'es'],
+    },
+    target_eng_subgroup: {
+      type: 'string',
+      enum: ['all', 'a', 'b'],
+    },
+    target_oit_subgroup: {
+      type: 'string',
+      enum: ['all', 'a', 'b'],
+    },
+    is_deleted: { type: 'boolean' },
+    created_at: { type: 'string' },
+    updated_at: { type: 'string' },
+  },
+  required: [
+    'id', 'date',
+    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'is_deleted', 'created_at', 'updated_at',
   ],
 };
 
@@ -268,6 +306,7 @@ export const schemas = {
   schedule: scheduleSchema,
   overrides: overridesSchema,
   events: eventsSchema,
+  deadlines: deadlinesSchema,
   students: studentsSchema,
   semester: semesterSchema,
 };

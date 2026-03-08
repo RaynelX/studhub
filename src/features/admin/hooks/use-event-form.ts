@@ -80,7 +80,6 @@ export function useEventForm({
     const EVENT_TYPE_LABELS: Record<EventType, string> = {
       usr: 'УСР',
       control_work: 'Контрольная',
-      deadline: 'Дедлайн',
       credit: 'Зачёт',
       exam: 'Экзамен',
       consultation: 'Консультация',

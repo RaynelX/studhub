@@ -81,7 +81,6 @@ import type {
     subjects: SubjectDoc[];
     teachers: TeacherDoc[];
     semesterConfig: SemesterConfigDoc | null;
-    excludeEventTypes?: EventType[];
   }
   
   // ============================================================
@@ -166,13 +165,10 @@ import type {
       (o) => o.date === dateStr && isForStudent(o, settings),
     );
   
-    const excludeTypes = new Set(params.excludeEventTypes ?? []);
-
     const allDayEvents = events.filter(
       (e) =>
         e.date === dateStr &&
-        isForStudent(e, settings) &&
-        !excludeTypes.has(e.event_type),
+        isForStudent(e, settings),
     );
   
     const dayEvents = allDayEvents.filter(

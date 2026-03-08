@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Plus, CalendarPlus } from 'lucide-react';
+import { Plus, CalendarPlus, Clock } from 'lucide-react';
 
-type FabAction = 'add' | 'event';
+type FabAction = 'add' | 'event' | 'deadline';
 
 interface AdminFabProps {
   onAction: (action: FabAction) => void;
@@ -58,6 +58,11 @@ export function AdminFab({ onAction }: AdminFabProps) {
             icon={<CalendarPlus className="w-4.5 h-4.5 text-blue-600" />}
             label="Событие"
             onClick={() => handle('event')}
+          />
+          <FabMenuItem
+            icon={<Clock className="w-4.5 h-4.5 text-amber-600" />}
+            label="Дедлайн"
+            onClick={() => handle('deadline')}
           />
         </div>
       )}

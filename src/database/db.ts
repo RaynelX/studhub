@@ -35,6 +35,7 @@ async function createDatabase(): Promise<AppDatabase> {
     schedule: { schema: schemas.schedule },
     overrides: { schema: schemas.overrides },
     events: { schema: schemas.events },
+    deadlines: { schema: schemas.deadlines },
     students: { schema: schemas.students },
     semester: { schema: schemas.semester },
   });
