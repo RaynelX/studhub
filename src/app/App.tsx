@@ -9,6 +9,7 @@ import { SchedulePage } from './pages/SchedulePage';
 import { SubjectsPage } from './pages/SubjectsPage';
 import { MorePage } from './pages/MorePage';
 import { SettingsPage } from './pages/SettingsPage';
+import { CalendarPage } from './pages/CalendarPage';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminSchedulePage } from './pages/admin/AdminSchedulePage';
@@ -57,6 +58,7 @@ export function App() {
                   <Route index element={<TodayPage />} />
                   <Route path="schedule" element={<SchedulePage />} />
                   <Route path="subjects" element={<SubjectsPage />} />
+                  <Route path="more/calendar" element={<CalendarPage />} />
                   <Route path="more/settings" element={<SettingsPage />} />
                   <Route path="more" element={<MorePage />} />
                 </Route>
