@@ -3,7 +3,7 @@ import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import type { EventType } from '../../../database/types';
-import { getBellSlot } from '../../../shared/constants/bell-schedule';
+import { getBellSlot, formatBellTime } from '../../../shared/constants/bell-schedule';
 
 // ============================================================
 // Типы
@@ -131,7 +131,7 @@ export function useSessionSchedule(): SessionScheduleData {
 function formatTimeLabel(pairNumber?: number, eventTime?: string): string {
   if (pairNumber) {
     const slot = getBellSlot(pairNumber);
-    return slot ? `${slot.startTime}–${slot.endTime}` : `${pairNumber} пара`;
+    return slot ? formatBellTime(slot) : `${pairNumber} пара`;
   }
   if (eventTime) return eventTime.slice(0, 5);
   return 'В течение дня';

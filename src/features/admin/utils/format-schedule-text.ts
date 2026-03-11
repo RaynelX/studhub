@@ -1,7 +1,7 @@
 import type { GridCell } from '../hooks/use-week-grid';
 import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS, formatSubgroupCompact } from '../../../shared/constants/admin-labels';
 import { DAY_NAMES } from '../../../shared/constants/days';
-import { BELL_SCHEDULE } from '../../../shared/constants/bell-schedule';
+import { BELL_SCHEDULE, formatBellTime } from '../../../shared/constants/bell-schedule';
 
 /**
  * Format a week's schedule grid into a plain-text string
@@ -45,7 +45,7 @@ export function formatWeekScheduleText(
 
     for (const cell of dayCells) {
       const bell = BELL_SCHEDULE.find((b) => b.pairNumber === cell.pairNumber);
-      const timeStr = bell ? `${bell.startTime}–${bell.endTime}` : '';
+      const timeStr = bell ? formatBellTime(bell) : '';
 
       // Overrides for this slot
       for (const go of cell.overrides) {

@@ -5,6 +5,7 @@ import { useEventForm } from '../hooks/use-event-form';
 import type { SubjectDoc, EventType } from '../../../database/types';
 import type { ResolvedPair } from '../../schedule/utils/schedule-builder';
 import { toISODate } from '../../schedule/utils/week-utils';
+import { BELL_SCHEDULE } from '../../../shared/constants/bell-schedule';
 
 // ============================================================
 // Types & config
@@ -153,17 +154,17 @@ export function EventSheet({
             >
               Весь день
             </button>
-            {[1, 2, 3, 4, 5].map((n) => (
+            {BELL_SCHEDULE.map((bell) => (
               <button
-                key={n}
-                onClick={() => setField('pairNumber', n)}
+                key={bell.pairNumber}
+                onClick={() => setField('pairNumber', bell.pairNumber)}
                 className={`w-9 h-9 rounded-lg text-xs font-medium ${
-                  fields.pairNumber === n
+                  fields.pairNumber === bell.pairNumber
                     ? 'bg-blue-500 text-white'
                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
                 }`}
               >
-                {n}
+                {bell.pairNumber}
               </button>
             ))}
           </div>

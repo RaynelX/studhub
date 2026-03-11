@@ -3,6 +3,7 @@ import type { TodayScheduleData } from '../hooks/use-today-schedule';
 import type { DaySlot } from '../../schedule/utils/schedule-builder';
 import { useCurrentMinutes } from '../hooks/use-current-time';
 import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
+import { getBellSlot } from '../../../shared/constants/bell-schedule';
 
 interface Props {
   data: TodayScheduleData;
@@ -23,6 +24,16 @@ const EVENT_BADGE: Record<string, { label: string; className: string }> = {
   consultation:  { label: 'Конс.',  className: 'bg-sky-100 text-sky-700 dark:bg-sky-500/40 dark:text-sky-300' },
   other:         { label: 'Соб.',   className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/40 dark:text-purple-300' },
 };
+
+type CurrentPairPhase = 'first-half' | 'inner-break' | 'second-half';
+
+interface CurrentPairStatus {
+  phase: CurrentPairPhase;
+  progressPercent: number;
+  remainingMinutes: number;
+  remainingLabel: string;
+  progressClassName: string;
+}
 
 export function TodayPairsBlock({ data }: Props) {
   if (!data.hasPairsToday && !data.nextDay) {
@@ -86,26 +97,21 @@ function PairsCard({
   const currentSlot = currentIndex >= 0 ? pairs[currentIndex] : null;
   const nextSlot = currentIndex >= 0 ? pairs[currentIndex + 1] ?? null : null;
 
-  // Вычисляем прогресс текущей пары
-  let progressPercent = 0;
-  let remainingMinutes = 0;
+  const currentStatus = currentSlot
+    ? getCurrentPairStatus(currentSlot, currentMinutes)
+    : null;
+
   let breakMinutes: number | null = null;
 
-  if (currentSlot) {
-    const [sh, sm] = currentSlot.startTime.split(':').map(Number);
+  if (currentSlot && nextSlot) {
     const [eh, em] = currentSlot.endTime.split(':').map(Number);
-    const startMin = sh * 60 + sm;
-    const endMin = eh * 60 + em;
-    const total = endMin - startMin;
-    const elapsed = currentMinutes - startMin;
-    remainingMinutes = endMin - currentMinutes;
-    progressPercent = Math.round((elapsed / total) * 100);
-
-    if (nextSlot) {
-      const [nsh, nsm] = nextSlot.startTime.split(':').map(Number);
-      breakMinutes = (nsh * 60 + nsm) - endMin;
-    }
+    const [nsh, nsm] = nextSlot.startTime.split(':').map(Number);
+    breakMinutes = (nsh * 60 + nsm) - (eh * 60 + em);
   }
+
+  const currentNextLabel = currentStatus
+    ? getCurrentNextLabel(currentStatus.phase, currentSlot, nextSlot, breakMinutes)
+    : null;
 
   return (
     <div
@@ -139,22 +145,24 @@ function PairsCard({
           </div>
 
           {/* Оставшееся время */}
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
-            Осталось {remainingMinutes} мин · до {currentSlot.endTime}
-          </p>
+          {currentStatus && (
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+              {currentStatus.remainingLabel}
+            </p>
+          )}
 
           {/* Прогресс-бар */}
           <div className="mt-2 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
             <div
-              className="h-full bg-blue-500 dark:bg-blue-400 rounded-full anim-progress-bar"
-              style={{ width: `${progressPercent}%` }}
+              className={`h-full rounded-full anim-progress-bar ${currentStatus?.progressClassName ?? 'bg-blue-500 dark:bg-blue-400'}`}
+              style={{ width: `${currentStatus?.progressPercent ?? 0}%` }}
             />
           </div>
 
           {/* Следующая пара */}
-          {nextSlot?.pair && breakMinutes !== null && (
+          {currentNextLabel && (
             <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-2">
-              Далее: {nextSlot.pair.subjectName} · перерыв {breakMinutes} мин
+              {currentNextLabel}
             </p>
           )}
         </div>
@@ -300,4 +308,76 @@ function pluralPairs(n: number): string {
   if (n % 10 === 1 && n % 100 !== 11) return 'пара';
   if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'пары';
   return 'пар';
+}
+
+function getCurrentPairStatus(slot: DaySlot, currentMinutes: number): CurrentPairStatus | null {
+  const bell = getBellSlot(slot.pairNumber);
+  if (!bell) return null;
+
+  const startMinutes = toMinutes(bell.startTime);
+  const breakStartMinutes = toMinutes(bell.breakStart);
+  const breakEndMinutes = toMinutes(bell.breakEnd);
+  const endMinutes = toMinutes(bell.endTime);
+
+  if (currentMinutes < breakStartMinutes) {
+    return {
+      phase: 'first-half',
+      progressPercent: calculateProgress(currentMinutes, startMinutes, breakStartMinutes),
+      remainingMinutes: breakStartMinutes - currentMinutes,
+      remainingLabel: `Осталось ${breakStartMinutes - currentMinutes} мин · до ${bell.breakStart}`,
+      progressClassName: 'bg-blue-500 dark:bg-blue-400',
+    };
+  }
+
+  if (currentMinutes < breakEndMinutes) {
+    return {
+      phase: 'inner-break',
+      progressPercent: calculateProgress(currentMinutes, breakStartMinutes, breakEndMinutes),
+      remainingMinutes: breakEndMinutes - currentMinutes,
+      remainingLabel: `Перерыв ${breakEndMinutes - currentMinutes} мин · до ${bell.breakEnd}`,
+      progressClassName: 'bg-amber-500 dark:bg-amber-400',
+    };
+  }
+
+  return {
+    phase: 'second-half',
+    progressPercent: calculateProgress(currentMinutes, breakEndMinutes, endMinutes),
+    remainingMinutes: endMinutes - currentMinutes,
+    remainingLabel: `Осталось ${endMinutes - currentMinutes} мин · до ${bell.endTime}`,
+    progressClassName: 'bg-blue-500 dark:bg-blue-400',
+  };
+}
+
+function getCurrentNextLabel(
+  phase: CurrentPairPhase,
+  currentSlot: DaySlot | null,
+  nextSlot: DaySlot | null,
+  breakMinutes: number | null,
+): string | null {
+  if (phase === 'first-half') {
+    return 'Далее: перерыв 5 мин';
+  }
+
+  if (phase === 'inner-break') {
+    return currentSlot?.pair ? `Далее: ${currentSlot.pair.subjectName}` : 'Далее: вторая половина пары';
+  }
+
+  if (nextSlot?.pair && breakMinutes !== null) {
+    return `Далее: ${nextSlot.pair.subjectName} · перерыв ${breakMinutes} мин`;
+  }
+
+  return null;
+}
+
+function toMinutes(value: string): number {
+  const [hours, minutes] = value.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
+function calculateProgress(currentMinutes: number, startMinutes: number, endMinutes: number): number {
+  const total = endMinutes - startMinutes;
+  if (total <= 0) return 0;
+
+  const elapsed = Math.min(Math.max(currentMinutes - startMinutes, 0), total);
+  return Math.round((elapsed / total) * 100);
 }
