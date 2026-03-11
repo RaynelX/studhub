@@ -43,7 +43,7 @@ export function DepartmentSection() {
         <div className="space-y-1 text-sm text-neutral-500 dark:text-neutral-400">
           <p>Ауд. 433</p>
           <p>Email: sociocom@bsu.by</p>
-          <p>Тел: +375 хх ххх хх хх</p>
+          <p>Тел: +375 17 259 70 39</p>
         </div>
 
         {/* Список преподавателей */}
