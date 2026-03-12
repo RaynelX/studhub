@@ -57,6 +57,15 @@ export function getDayOfWeek(date: Date): number {
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   }
+
+  /**
+   * Разбирает строку "YYYY-MM-DD" как локальную дату (не UTC).
+   * Использовать вместо new Date(isoString), который трактует формат как UTC.
+   */
+  export function parseLocalDate(isoDateStr: string): Date {
+    const [y, m, d] = isoDateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
   
   /**
    * Определяет чётность недели.
@@ -90,6 +99,25 @@ export function getDayOfWeek(date: Date): number {
       return `${monDay} – ${sunDay} ${sunMonth}`;
     }
     return `${monDay} ${monMonth} – ${sunDay} ${sunMonth}`;
+  }
+
+  /**
+   * Форматирует диапазон недели Пн–Сб: "10 – 15 фев." или "28 янв. – 2 фев."
+   */
+  export function formatWeekRangeSat(monday: Date): string {
+    const saturday = addDays(monday, 5);
+
+    const monDay = monday.getDate();
+    const satDay = saturday.getDate();
+
+    const monthFormatter = new Intl.DateTimeFormat('ru-RU', { month: 'short' });
+    const monMonth = monthFormatter.format(monday);
+    const satMonth = monthFormatter.format(saturday);
+
+    if (monMonth === satMonth) {
+      return `${monDay} – ${satDay} ${satMonth}`;
+    }
+    return `${monDay} ${monMonth} – ${satDay} ${satMonth}`;
   }
   
   /**

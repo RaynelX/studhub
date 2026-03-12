@@ -11,6 +11,7 @@ import { MorePage } from './pages/MorePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { SessionPage } from './pages/SessionPage';
+import { AttendancePage } from './pages/AttendancePage';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminSchedulePage } from './pages/admin/AdminSchedulePage';
@@ -61,6 +62,7 @@ export function App() {
                   <Route path="subjects" element={<SubjectsPage />} />
                   <Route path="more/calendar" element={<CalendarPage />} />
                   <Route path="more/settings" element={<SettingsPage />} />
+                  <Route path="more/attendance" element={<AttendancePage />} />
                   <Route path="more/session" element={<SessionPage />} />
                   <Route path="more" element={<MorePage />} />
                 </Route>
