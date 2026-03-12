@@ -106,8 +106,7 @@ export function useAdminAttendance() {
 
     const year = today.getFullYear();
     const month = today.getMonth();
-    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-    const todayStr = toISODate(today);
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
     const map = new Map<string, StudentHoursSummary>();
 
@@ -129,7 +128,7 @@ export function useAdminAttendance() {
         else entry.weekUnexcused += HOURS_PER_PAIR;
       }
 
-      if (date >= monthStart && date <= todayStr) {
+      if (date.startsWith(monthPrefix)) {
         if (isExcused) entry.monthExcused += HOURS_PER_PAIR;
         else entry.monthUnexcused += HOURS_PER_PAIR;
       }

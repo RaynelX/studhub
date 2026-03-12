@@ -14,6 +14,7 @@ import {
   addDays,
   toISODate,
   getDayOfWeek,
+  getWeekNumber,
 } from '../../schedule/utils/week-utils';
 
 // ============================================================
@@ -34,6 +35,10 @@ export function AdminAttendanceView() {
   const { data: students } = useRxCollection(db.students);
   const semesterConfig = semesterData[0] ?? null;
 
+  const weekNumber = semesterConfig
+    ? getWeekNumber(monday, semesterConfig.start_date)
+    : null;
+
   const canGoPrev = semesterConfig
     ? toISODate(monday) > semesterConfig.start_date
     : toISODate(monday) > toISODate(addDays(todayMonday, -28));
@@ -53,7 +58,9 @@ export function AdminAttendanceView() {
     const newMonday = addDays(monday, 7);
     setMonday(newMonday);
     const dayOffset = getDayOfWeek(new Date(selectedDate)) - 1;
-    setSelectedDate(toISODate(addDays(newMonday, dayOffset)));
+    let newDate = toISODate(addDays(newMonday, dayOffset));
+    if (newDate > todayStr) newDate = todayStr;
+    setSelectedDate(newDate);
   };
 
   // Данные расписания
@@ -102,13 +109,14 @@ export function AdminAttendanceView() {
   }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden p-4 space-y-4">
+    <div className="flex flex-col h-full overflow-hidden">
       <WeekNavigator
         monday={monday}
         onPrev={goToPrevWeek}
         onNext={goToNextWeek}
         canGoPrev={canGoPrev}
         canGoNext={canGoNext}
+        weekNumber={weekNumber}
       />
 
       <DayTabs
@@ -117,40 +125,42 @@ export function AdminAttendanceView() {
         onSelectDate={setSelectedDate}
       />
 
-      {dayPairs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <CalendarOff
-            size={56}
-            strokeWidth={1.2}
-            className="text-neutral-300 dark:text-neutral-600 mb-4"
-          />
-          <p className="text-base font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-            Нет пар в этот день
-          </p>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">
-            Выберите другой день или неделю
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {dayPairs.map((slot) => (
-            <AdminPairSection
-              key={slot.pairNumber}
-              pairNumber={slot.pairNumber}
-              pair={slot.pair!}
-              students={sortedStudents}
-              date={selectedDate}
-              getAbsence={getAbsence}
-              onToggleAbsence={handleToggleAbsence}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-4">
+        {dayPairs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+            <CalendarOff
+              size={56}
+              strokeWidth={1.2}
+              className="text-neutral-300 dark:text-neutral-600 mb-4"
             />
-          ))}
-        </div>
-      )}
+            <p className="text-base font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+              Нет пар в этот день
+            </p>
+            <p className="text-sm text-neutral-400 dark:text-neutral-500">
+              Выберите другой день или неделю
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {dayPairs.map((slot) => (
+              <AdminPairSection
+                key={slot.pairNumber}
+                pairNumber={slot.pairNumber}
+                pair={slot.pair!}
+                students={sortedStudents}
+                date={selectedDate}
+                getAbsence={getAbsence}
+                onToggleAbsence={handleToggleAbsence}
+              />
+            ))}
+          </div>
+        )}
 
-      <AdminSummaryTable
-        students={sortedStudents}
-        studentSummaries={studentSummaries}
-      />
+        <AdminSummaryTable
+          students={sortedStudents}
+          studentSummaries={studentSummaries}
+        />
+      </div>
     </div>
   );
 }

@@ -60,24 +60,24 @@ function SummaryCard({
   excused: number;
   unexcused: number;
 }) {
+  const total = excused + unexcused;
+
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-3 space-y-1.5">
-      <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-3">
+      <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
         {label}
       </p>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-neutral-500 dark:text-neutral-400">Уваж.</span>
-          <span className={`font-semibold ${excused > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-neutral-300 dark:text-neutral-600'}`}>
-            {excused}
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-neutral-500 dark:text-neutral-400">Неуваж.</span>
-          <span className={`font-semibold ${unexcused > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-600'}`}>
-            {unexcused}
-          </span>
-        </div>
+      <p className={`text-2xl font-bold mb-1 ${total > 0 ? 'text-neutral-900 dark:text-neutral-100' : 'text-neutral-300 dark:text-neutral-600'}`}>
+        {total}
+      </p>
+      <div className="flex items-center gap-1.5 text-xs">
+        <span className={excused > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-neutral-300 dark:text-neutral-600'}>
+          {excused} уваж.
+        </span>
+        <span className="text-neutral-300 dark:text-neutral-600">·</span>
+        <span className={unexcused > 0 ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-600'}>
+          {unexcused} неуваж.
+        </span>
       </div>
     </div>
   );

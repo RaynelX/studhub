@@ -21,20 +21,6 @@ interface AttendancePairCardProps {
 // Конфигурация
 // ============================================================
 
-const ENTRY_TYPE_LABELS: Record<string, string> = {
-  lecture: 'Лекция',
-  seminar: 'Семинар',
-  practice: 'Практика',
-  other: 'Другое',
-};
-
-const ENTRY_TYPE_BADGE: Record<string, string> = {
-  lecture: 'bg-blue-100 text-blue-700 dark:bg-blue-500/30 dark:text-blue-300',
-  seminar: 'bg-purple-100 text-purple-700 dark:bg-purple-500/30 dark:text-purple-300',
-  practice: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/30 dark:text-emerald-300',
-  other: 'bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-neutral-300',
-};
-
 function getStatusBg(status: AttendanceStatus | undefined): string {
   if (!status) return '';
   if (status === 'present') return 'bg-green-50/50 dark:bg-green-950/20';
@@ -56,7 +42,6 @@ export function AttendancePairCard({
   const rippleRef = useTouchRipple();
   const bellSlot = getBellSlot(pairNumber);
   const timeLabel = bellSlot ? formatBellTime(bellSlot) : `${pairNumber} пара`;
-  const entryType = pair.entryType ?? 'other';
   const statusBg = getStatusBg(status);
 
   return (
@@ -74,15 +59,6 @@ export function AttendancePairCard({
             <Clock size={12} />
             {timeLabel}
           </span>
-          {pair.entryType && (
-            <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                ENTRY_TYPE_BADGE[entryType] ?? ENTRY_TYPE_BADGE.other
-              }`}
-            >
-              {ENTRY_TYPE_LABELS[entryType] ?? entryType}
-            </span>
-          )}
         </div>
 
         {/* Предмет */}

@@ -95,11 +95,10 @@ export function useAttendance() {
       weekDates.add(toISODate(addDays(monday, i)));
     }
 
-    // Даты текущего месяца
+    // Текущий месяц
     const year = today.getFullYear();
     const month = today.getMonth();
-    const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-    const todayStr = toISODate(today);
+    const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
     let weekExcused = 0;
     let weekUnexcused = 0;
@@ -117,7 +116,7 @@ export function useAttendance() {
         else weekUnexcused += HOURS_PER_PAIR;
       }
 
-      if (date >= monthStart && date <= todayStr) {
+      if (date.startsWith(monthPrefix)) {
         if (isExcused) monthExcused += HOURS_PER_PAIR;
         else monthUnexcused += HOURS_PER_PAIR;
       }

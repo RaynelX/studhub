@@ -19,7 +19,6 @@ export function AdminSummaryTable({
   students,
   studentSummaries,
 }: AdminSummaryTableProps) {
-  // Показываем только студентов с пропусками
   const studentsWithAbsences = useMemo(() => {
     return students.filter((s) => studentSummaries.has(s.id));
   }, [students, studentSummaries]);
@@ -36,44 +35,34 @@ export function AdminSummaryTable({
         </h3>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-neutral-800">
-              <th className="sticky left-0 bg-white dark:bg-neutral-900 text-left px-4 py-2 font-medium text-neutral-500 dark:text-neutral-400 min-w-[140px]">
-                Студент
-              </th>
-              <th className="px-3 py-2 font-medium text-amber-600 dark:text-amber-400 text-center whitespace-nowrap">
-                Нед. У
-              </th>
-              <th className="px-3 py-2 font-medium text-red-600 dark:text-red-400 text-center whitespace-nowrap">
-                Нед. Н
-              </th>
-              <th className="px-3 py-2 font-medium text-amber-600 dark:text-amber-400 text-center whitespace-nowrap">
-                Мес. У
-              </th>
-              <th className="px-3 py-2 font-medium text-red-600 dark:text-red-400 text-center whitespace-nowrap">
-                Мес. Н
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 dark:divide-neutral-800">
-            {studentsWithAbsences.map((student) => {
-              const s = studentSummaries.get(student.id);
-              return (
-                <tr key={student.id}>
-                  <td className="sticky left-0 bg-white dark:bg-neutral-900 px-4 py-2.5 text-neutral-800 dark:text-neutral-200 truncate max-w-[180px]">
-                    {student.full_name}
-                  </td>
-                  <CellValue value={s?.weekExcused ?? 0} color="amber" />
-                  <CellValue value={s?.weekUnexcused ?? 0} color="red" />
-                  <CellValue value={s?.monthExcused ?? 0} color="amber" />
-                  <CellValue value={s?.monthUnexcused ?? 0} color="red" />
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="divide-y divide-gray-100 dark:divide-neutral-800">
+        {studentsWithAbsences.map((student) => {
+          const s = studentSummaries.get(student.id)!;
+          const weekTotal = s.weekExcused + s.weekUnexcused;
+          const monthTotal = s.monthExcused + s.monthUnexcused;
+
+          return (
+            <div key={student.id} className="px-4 py-3">
+              <p className="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-1.5 truncate">
+                {student.full_name}
+              </p>
+              <div className="flex gap-4 text-xs">
+                <PeriodValue
+                  label="Неделя"
+                  total={weekTotal}
+                  excused={s.weekExcused}
+                  unexcused={s.weekUnexcused}
+                />
+                <PeriodValue
+                  label="Месяц"
+                  total={monthTotal}
+                  excused={s.monthExcused}
+                  unexcused={s.monthUnexcused}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -83,17 +72,28 @@ export function AdminSummaryTable({
 // Внутренние компоненты
 // ============================================================
 
-function CellValue({ value, color }: { value: number; color: 'amber' | 'red' }) {
-  const colorClass =
-    value > 0
-      ? color === 'amber'
-        ? 'text-amber-600 dark:text-amber-400 font-semibold'
-        : 'text-red-600 dark:text-red-400 font-semibold'
-      : 'text-neutral-300 dark:text-neutral-600';
-
+function PeriodValue({
+  label,
+  total,
+  excused,
+  unexcused,
+}: {
+  label: string;
+  total: number;
+  excused: number;
+  unexcused: number;
+}) {
   return (
-    <td className={`px-3 py-2.5 text-center ${colorClass}`}>
-      {value}
-    </td>
+    <div className="flex items-baseline gap-1.5">
+      <span className="text-neutral-500 dark:text-neutral-400">{label}:</span>
+      <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
+        {total}
+      </span>
+      <span className="text-neutral-400 dark:text-neutral-500">
+        (<span className={excused > 0 ? 'text-amber-600 dark:text-amber-400' : ''}>{excused}у</span>
+        {' · '}
+        <span className={unexcused > 0 ? 'text-red-600 dark:text-red-400' : ''}>{unexcused}н</span>)
+      </span>
+    </div>
   );
 }
