@@ -9,6 +9,7 @@ import type { AbsenceType } from '../hooks/use-admin-attendance';
 import { useWeekSchedule } from '../hooks/use-week-schedule';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
+import { useExitTransitionWait } from '../../../shared/hooks/use-exit-transition';
 import {
   getMonday,
   addDays,
@@ -29,6 +30,18 @@ export function AdminAttendanceView() {
   const [monday, setMonday] = useState(todayMonday);
   const [selectedDate, setSelectedDate] = useState(todayStr);
 
+  // Анимация смены дня
+  const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
+  const { displayedKey, entering: dayEntering } = useExitTransitionWait(selectedDate, 120);
+
+  const dayAnimClass = dayEntering
+    ? animDirection === 'right' ? 'anim-day-enter-right'
+    : animDirection === 'left'  ? 'anim-day-enter-left'
+    : 'anim-day-enter-fade'
+    : animDirection === 'right' ? 'anim-day-exit-left'
+    : animDirection === 'left'  ? 'anim-day-exit-right'
+    : 'anim-day-exit-fade';
+
   // Границы навигации
   const db = useDatabase();
   const { data: semesterData } = useRxCollection(db.semester);
@@ -47,6 +60,7 @@ export function AdminAttendanceView() {
 
   const goToPrevWeek = () => {
     if (!canGoPrev) return;
+    setAnimDirection('fade');
     const newMonday = addDays(monday, -7);
     setMonday(newMonday);
     const dayOffset = getDayOfWeek(new Date(selectedDate)) - 1;
@@ -55,6 +69,7 @@ export function AdminAttendanceView() {
 
   const goToNextWeek = () => {
     if (!canGoNext) return;
+    setAnimDirection('fade');
     const newMonday = addDays(monday, 7);
     setMonday(newMonday);
     const dayOffset = getDayOfWeek(new Date(selectedDate)) - 1;
@@ -63,12 +78,19 @@ export function AdminAttendanceView() {
     setSelectedDate(newDate);
   };
 
+  const handleSelectDate = (dateStr: string) => {
+    const newDay = getDayOfWeek(new Date(dateStr));
+    const curDay = getDayOfWeek(new Date(selectedDate));
+    setAnimDirection(newDay >= curDay ? 'right' : 'left');
+    setSelectedDate(dateStr);
+  };
+
   // Данные расписания
   const { weekSchedule, loading } = useWeekSchedule(monday);
 
   // Данные посещаемости
   const { getAbsence, setAbsence, clearAbsence, studentSummaries } =
-    useAdminAttendance();
+    useAdminAttendance(monday);
 
   // Сортированный список студентов (без удалённых)
   const sortedStudents = useMemo(() => {
@@ -77,13 +99,13 @@ export function AdminAttendanceView() {
       .sort((a, b) => a.full_name.localeCompare(b.full_name, 'ru'));
   }, [students]);
 
-  // Пары для выбранного дня
+  // Пары для отображаемого дня (с задержкой анимации)
   const dayPairs = useMemo(() => {
-    const slots = weekSchedule.get(selectedDate) ?? [];
+    const slots = weekSchedule.get(displayedKey) ?? [];
     return slots.filter(
       (s) => s.pair !== null && s.pair.status !== 'cancelled',
     );
-  }, [weekSchedule, selectedDate]);
+  }, [weekSchedule, displayedKey]);
 
   // Тогл: none → unexcused → excused → none
   const handleToggleAbsence = useCallback(
@@ -122,43 +144,46 @@ export function AdminAttendanceView() {
       <DayTabs
         monday={monday}
         selectedDate={selectedDate}
-        onSelectDate={setSelectedDate}
+        onSelectDate={handleSelectDate}
       />
 
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-4">
-        {dayPairs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <CalendarOff
-              size={56}
-              strokeWidth={1.2}
-              className="text-neutral-300 dark:text-neutral-600 mb-4"
-            />
-            <p className="text-base font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-              Нет пар в этот день
-            </p>
-            <p className="text-sm text-neutral-400 dark:text-neutral-500">
-              Выберите другой день или неделю
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {dayPairs.map((slot) => (
-              <AdminPairSection
-                key={slot.pairNumber}
-                pairNumber={slot.pairNumber}
-                pair={slot.pair!}
-                students={sortedStudents}
-                date={selectedDate}
-                getAbsence={getAbsence}
-                onToggleAbsence={handleToggleAbsence}
+        <div key={displayedKey} className={dayAnimClass}>
+          {dayPairs.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <CalendarOff
+                size={56}
+                strokeWidth={1.2}
+                className="text-neutral-300 dark:text-neutral-600 mb-4"
               />
-            ))}
-          </div>
-        )}
+              <p className="text-base font-medium text-neutral-500 dark:text-neutral-400 mb-1">
+                Нет пар в этот день
+              </p>
+              <p className="text-sm text-neutral-400 dark:text-neutral-500">
+                Выберите другой день или неделю
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {dayPairs.map((slot) => (
+                <AdminPairSection
+                  key={slot.pairNumber}
+                  pairNumber={slot.pairNumber}
+                  pair={slot.pair!}
+                  students={sortedStudents}
+                  date={displayedKey}
+                  getAbsence={getAbsence}
+                  onToggleAbsence={handleToggleAbsence}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         <AdminSummaryTable
           students={sortedStudents}
           studentSummaries={studentSummaries}
+          monday={monday}
         />
       </div>
     </div>

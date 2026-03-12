@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { getMonday, addDays, toISODate } from '../../schedule/utils/week-utils';
+import { addDays, toISODate } from '../../schedule/utils/week-utils';
 
 // ============================================================
 // Типы
@@ -62,7 +62,7 @@ function saveRecords(records: AdminAttendanceRecords): void {
 // Хук
 // ============================================================
 
-export function useAdminAttendance() {
+export function useAdminAttendance(viewedMonday: Date) {
   const [records, setRecords] = useState<AdminAttendanceRecords>(loadRecords);
 
   const setAbsence = useCallback(
@@ -95,17 +95,18 @@ export function useAdminAttendance() {
     [records],
   );
 
+  const viewedMondayStr = toISODate(viewedMonday);
+
   const studentSummaries = useMemo((): Map<string, StudentHoursSummary> => {
-    const today = new Date();
-    const monday = getMonday(today);
+    const monday = new Date(viewedMondayStr);
 
     const weekDates = new Set<string>();
     for (let i = 0; i < 6; i++) {
       weekDates.add(toISODate(addDays(monday, i)));
     }
 
-    const year = today.getFullYear();
-    const month = today.getMonth();
+    const year = monday.getFullYear();
+    const month = monday.getMonth();
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
     const map = new Map<string, StudentHoursSummary>();
@@ -135,7 +136,7 @@ export function useAdminAttendance() {
     }
 
     return map;
-  }, [records]);
+  }, [records, viewedMondayStr]);
 
   return { records, getAbsence, setAbsence, clearAbsence, studentSummaries };
 }

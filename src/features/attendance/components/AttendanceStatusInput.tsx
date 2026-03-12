@@ -55,7 +55,10 @@ export function AttendanceStatusInput({
           <button
             key={key}
             type="button"
-            onClick={() => (isActive ? onClear() : onChange(key))}
+            onClick={() => {
+              navigator.vibrate?.(10);
+              if (isActive) onClear(); else onChange(key);
+            }}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               isActive ? activeClass : INACTIVE
             }`}

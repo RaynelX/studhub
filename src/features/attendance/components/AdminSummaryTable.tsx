@@ -1,6 +1,17 @@
 import { useMemo } from 'react';
 import type { StudentDoc } from '../../../database/types';
 import type { StudentHoursSummary } from '../hooks/use-admin-attendance';
+import { formatWeekRange } from '../../schedule/utils/week-utils';
+
+// ============================================================
+// Утилиты
+// ============================================================
+
+const MONTH_NAMES: Record<number, string> = {
+  0: 'Январь', 1: 'Февраль', 2: 'Март', 3: 'Апрель',
+  4: 'Май', 5: 'Июнь', 6: 'Июль', 7: 'Август',
+  8: 'Сентябрь', 9: 'Октябрь', 10: 'Ноябрь', 11: 'Декабрь',
+};
 
 // ============================================================
 // Типы
@@ -9,6 +20,7 @@ import type { StudentHoursSummary } from '../hooks/use-admin-attendance';
 interface AdminSummaryTableProps {
   students: StudentDoc[];
   studentSummaries: Map<string, StudentHoursSummary>;
+  monday: Date;
 }
 
 // ============================================================
@@ -18,6 +30,7 @@ interface AdminSummaryTableProps {
 export function AdminSummaryTable({
   students,
   studentSummaries,
+  monday,
 }: AdminSummaryTableProps) {
   const studentsWithAbsences = useMemo(() => {
     return students.filter((s) => studentSummaries.has(s.id));
@@ -27,12 +40,18 @@ export function AdminSummaryTable({
     return null;
   }
 
+  const weekLabel = formatWeekRange(monday);
+  const monthLabel = MONTH_NAMES[monday.getMonth()];
+
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-800">
         <h3 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
           Сводка пропусков (ак. часы)
         </h3>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
+          {weekLabel} · {monthLabel}
+        </p>
       </div>
 
       <div className="divide-y divide-gray-100 dark:divide-neutral-800">

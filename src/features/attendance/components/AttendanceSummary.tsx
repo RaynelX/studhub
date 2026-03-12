@@ -1,4 +1,18 @@
 import type { AttendanceHoursSummary } from '../hooks/use-attendance';
+import {
+  addDays,
+  formatWeekRange,
+} from '../../schedule/utils/week-utils';
+
+// ============================================================
+// Утилиты
+// ============================================================
+
+const MONTH_NAMES: Record<number, string> = {
+  0: 'Январь', 1: 'Февраль', 2: 'Март', 3: 'Апрель',
+  4: 'Май', 5: 'Июнь', 6: 'Июль', 7: 'Август',
+  8: 'Сентябрь', 9: 'Октябрь', 10: 'Ноябрь', 11: 'Декабрь',
+};
 
 // ============================================================
 // Типы
@@ -6,18 +20,26 @@ import type { AttendanceHoursSummary } from '../hooks/use-attendance';
 
 interface AttendanceSummaryProps {
   summary: AttendanceHoursSummary;
+  monday: Date;
 }
 
 // ============================================================
 // Компонент
 // ============================================================
 
-export function AttendanceSummary({ summary }: AttendanceSummaryProps) {
+export function AttendanceSummary({ summary, monday }: AttendanceSummaryProps) {
   const hasData =
     summary.weekExcused > 0 ||
     summary.weekUnexcused > 0 ||
     summary.monthExcused > 0 ||
     summary.monthUnexcused > 0;
+
+  const saturday = addDays(monday, 5);
+  const weekLabel = formatWeekRange(monday).replace(
+    `${saturday.getDate() + 1}`,
+    `${saturday.getDate()}`,
+  );
+  const monthLabel = MONTH_NAMES[monday.getMonth()];
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent p-4 space-y-3">
@@ -32,12 +54,12 @@ export function AttendanceSummary({ summary }: AttendanceSummaryProps) {
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <SummaryCard
-            label="За неделю"
+            label={weekLabel}
             excused={summary.weekExcused}
             unexcused={summary.weekUnexcused}
           />
           <SummaryCard
-            label="За месяц"
+            label={monthLabel}
             excused={summary.monthExcused}
             unexcused={summary.monthUnexcused}
           />

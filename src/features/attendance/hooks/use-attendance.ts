@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { getMonday, addDays, toISODate } from '../../schedule/utils/week-utils';
+import { addDays, toISODate } from '../../schedule/utils/week-utils';
 
 // ============================================================
 // Типы
@@ -55,7 +55,7 @@ function saveRecords(records: AttendanceRecords): void {
 // Хук
 // ============================================================
 
-export function useAttendance() {
+export function useAttendance(viewedMonday: Date) {
   const [records, setRecords] = useState<AttendanceRecords>(loadRecords);
 
   const setStatus = useCallback(
@@ -85,19 +85,20 @@ export function useAttendance() {
     [records],
   );
 
-  const summary = useMemo((): AttendanceHoursSummary => {
-    const today = new Date();
-    const monday = getMonday(today);
+  const viewedMondayStr = toISODate(viewedMonday);
 
-    // Даты текущей недели (Пн–Сб)
+  const summary = useMemo((): AttendanceHoursSummary => {
+    const monday = new Date(viewedMondayStr);
+
+    // Даты просматриваемой недели (Пн–Сб)
     const weekDates = new Set<string>();
     for (let i = 0; i < 6; i++) {
       weekDates.add(toISODate(addDays(monday, i)));
     }
 
-    // Текущий месяц
-    const year = today.getFullYear();
-    const month = today.getMonth();
+    // Месяц, в который попадает просматриваемый понедельник
+    const year = monday.getFullYear();
+    const month = monday.getMonth();
     const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
     let weekExcused = 0;
@@ -123,7 +124,7 @@ export function useAttendance() {
     }
 
     return { weekExcused, weekUnexcused, monthExcused, monthUnexcused };
-  }, [records]);
+  }, [records, viewedMondayStr]);
 
   return { records, getStatus, setStatus, clearStatus, summary };
 }
