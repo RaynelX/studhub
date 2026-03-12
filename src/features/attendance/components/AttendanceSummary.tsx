@@ -1,8 +1,5 @@
 import type { AttendanceHoursSummary } from '../hooks/use-attendance';
-import {
-  addDays,
-  formatWeekRange,
-} from '../../schedule/utils/week-utils';
+import { formatWeekRangeSat } from '../../schedule/utils/week-utils';
 
 // ============================================================
 // Утилиты
@@ -34,11 +31,7 @@ export function AttendanceSummary({ summary, monday }: AttendanceSummaryProps) {
     summary.monthExcused > 0 ||
     summary.monthUnexcused > 0;
 
-  const saturday = addDays(monday, 5);
-  const weekLabel = formatWeekRange(monday).replace(
-    `${saturday.getDate() + 1}`,
-    `${saturday.getDate()}`,
-  );
+  const weekLabel = formatWeekRangeSat(monday);
   const monthLabel = MONTH_NAMES[monday.getMonth()];
 
   return (

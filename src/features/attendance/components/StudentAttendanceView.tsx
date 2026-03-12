@@ -6,8 +6,6 @@ import { AttendancePairCard } from './AttendancePairCard';
 import { AttendanceSummary } from './AttendanceSummary';
 import { useAttendance } from '../hooks/use-attendance';
 import { useWeekSchedule } from '../hooks/use-week-schedule';
-import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useExitTransitionWait } from '../../../shared/hooks/use-exit-transition';
 import {
   getMonday,
@@ -15,6 +13,7 @@ import {
   toISODate,
   getDayOfWeek,
   getWeekNumber,
+  parseLocalDate,
 } from '../../schedule/utils/week-utils';
 
 // ============================================================
@@ -26,8 +25,14 @@ export function StudentAttendanceView() {
   const todayMonday = useMemo(() => getMonday(today), [today]);
   const todayStr = useMemo(() => toISODate(today), [today]);
 
+  // Если сегодня воскресенье — начинаем с субботы текущей недели
+  const initialSelectedDate = useMemo(() => {
+    if (getDayOfWeek(today) === 7) return toISODate(addDays(today, -1));
+    return toISODate(today);
+  }, [today]);
+
   const [monday, setMonday] = useState(todayMonday);
-  const [selectedDate, setSelectedDate] = useState(todayStr);
+  const [selectedDate, setSelectedDate] = useState(initialSelectedDate);
 
   // Анимация смены дня
   const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
@@ -42,9 +47,36 @@ export function StudentAttendanceView() {
     : 'anim-day-exit-fade';
 
   // Границы навигации
-  const db = useDatabase();
-  const { data: semesterData } = useRxCollection(db.semester);
-  const semesterConfig = semesterData[0] ?? null;
+
+  const goToPrevWeek = () => {
+    if (!canGoPrev) return;
+    setAnimDirection('fade');
+    const newMonday = addDays(monday, -7);
+    setMonday(newMonday);
+    const dayOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
+    setSelectedDate(toISODate(addDays(newMonday, dayOffset)));
+  };
+
+  const goToNextWeek = () => {
+    if (!canGoNext) return;
+    setAnimDirection('fade');
+    const newMonday = addDays(monday, 7);
+    setMonday(newMonday);
+    const dayOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
+    let newDate = toISODate(addDays(newMonday, dayOffset));
+    if (newDate > todayStr) newDate = todayStr;
+    setSelectedDate(newDate);
+  };
+
+  const handleSelectDate = (dateStr: string) => {
+    const newDay = getDayOfWeek(parseLocalDate(dateStr));
+    const curDay = getDayOfWeek(parseLocalDate(selectedDate));
+    setAnimDirection(newDay >= curDay ? 'right' : 'left');
+    setSelectedDate(dateStr);
+  };
+
+  // Данные расписания
+  const { weekSchedule, loading, semesterConfig } = useWeekSchedule(monday);
 
   const weekNumber = semesterConfig
     ? getWeekNumber(monday, semesterConfig.start_date)
@@ -55,36 +87,6 @@ export function StudentAttendanceView() {
     : toISODate(monday) > toISODate(addDays(todayMonday, -28));
 
   const canGoNext = toISODate(monday) < toISODate(todayMonday);
-
-  const goToPrevWeek = () => {
-    if (!canGoPrev) return;
-    setAnimDirection('fade');
-    const newMonday = addDays(monday, -7);
-    setMonday(newMonday);
-    const dayOffset = getDayOfWeek(new Date(selectedDate)) - 1;
-    setSelectedDate(toISODate(addDays(newMonday, dayOffset)));
-  };
-
-  const goToNextWeek = () => {
-    if (!canGoNext) return;
-    setAnimDirection('fade');
-    const newMonday = addDays(monday, 7);
-    setMonday(newMonday);
-    const dayOffset = getDayOfWeek(new Date(selectedDate)) - 1;
-    let newDate = toISODate(addDays(newMonday, dayOffset));
-    if (newDate > todayStr) newDate = todayStr;
-    setSelectedDate(newDate);
-  };
-
-  const handleSelectDate = (dateStr: string) => {
-    const newDay = getDayOfWeek(new Date(dateStr));
-    const curDay = getDayOfWeek(new Date(selectedDate));
-    setAnimDirection(newDay >= curDay ? 'right' : 'left');
-    setSelectedDate(dateStr);
-  };
-
-  // Данные расписания
-  const { weekSchedule, loading } = useWeekSchedule(monday);
 
   // Данные посещаемости
   const { getStatus, setStatus, clearStatus, summary } = useAttendance(monday);

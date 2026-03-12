@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatWeekRange } from '../../schedule/utils/week-utils';
+import { formatWeekRangeSat } from '../../schedule/utils/week-utils';
 
 // ============================================================
 // Типы
@@ -43,7 +43,7 @@ export function WeekNavigator({
 
       <div className="text-center">
         <p className="text-base font-semibold text-gray-900 dark:text-neutral-100">
-          {formatWeekRange(monday)}
+          {formatWeekRangeSat(monday)}
         </p>
         {weekNumber != null && weekNumber > 0 && (
           <p className="text-xs text-gray-500 dark:text-neutral-400">
