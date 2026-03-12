@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { addDays, toISODate } from '../../schedule/utils/week-utils';
+import { addDays, toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 
 // ============================================================
 // Типы
@@ -88,7 +88,7 @@ export function useAttendance(viewedMonday: Date) {
   const viewedMondayStr = toISODate(viewedMonday);
 
   const summary = useMemo((): AttendanceHoursSummary => {
-    const monday = new Date(viewedMondayStr);
+    const monday = parseLocalDate(viewedMondayStr);
 
     // Даты просматриваемой недели (Пн–Сб)
     const weekDates = new Set<string>();

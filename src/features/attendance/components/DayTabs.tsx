@@ -5,6 +5,7 @@ import {
   isToday,
   getDayOfWeek,
   getMonday,
+  parseLocalDate,
 } from '../../schedule/utils/week-utils';
 import { DAY_NAMES_SHORT } from '../../../shared/constants/days';
 import { useFlipPill } from '../../../shared/hooks/use-flip-pill';
@@ -29,7 +30,7 @@ export function DayTabs({ monday, selectedDate, onSelectDate }: DayTabsProps) {
 
   // Определяем индекс выбранного дня для pill (0-6, -1 если не в этой неделе)
   const selectedDayIndex = (() => {
-    const sel = new Date(selectedDate);
+    const sel = parseLocalDate(selectedDate);
     const day = getDayOfWeek(sel);
     const isSunday = day === 7;
     const isCurrentWeek = getMonday(sel).getTime() === monday.getTime();
@@ -68,8 +69,8 @@ export function DayTabs({ monday, selectedDate, onSelectDate }: DayTabsProps) {
         const isDisabled = isSunday || isFuture;
         const isSelected =
           !isDisabled &&
-          getDayOfWeek(new Date(selectedDate)) === dayNum &&
-          getMonday(new Date(selectedDate)).getTime() === monday.getTime();
+          getDayOfWeek(parseLocalDate(selectedDate)) === dayNum &&
+          getMonday(parseLocalDate(selectedDate)).getTime() === monday.getTime();
         const isTodayDate = isToday(date);
 
         return (
