@@ -19,6 +19,23 @@
       ]
     },
     {
+      "source": "/push/onesignal/(.*)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/push/onesignal/"
+        }
+      ]
+    },
+    {
       "source": "/manifest.webmanifest",
       "headers": [
         {
@@ -55,6 +72,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/push/(.*)",
+      "destination": "/push/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
