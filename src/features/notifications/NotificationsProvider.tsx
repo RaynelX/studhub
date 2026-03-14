@@ -16,25 +16,19 @@ import { syncOnesignalTags } from './utils/onesignal-tags';
 // ============================================================
 
 export interface NotificationPrefs {
-  schedule: boolean;    // Изменения расписания и пар
-  events: boolean;      // События (контрольные, зачёты, экзамены)
-  deadlines: boolean;   // Дедлайны
-  homework: boolean;    // Домашние задания
-  reminders: boolean;   // Напоминания о предстоящих событиях/дедлайнах
+  schedule: boolean;
+  events: boolean;
+  deadlines: boolean;
+  homework: boolean;
+  reminders: boolean;
 }
 
 interface NotificationsContextValue {
-  /** true if the browser permission is 'granted' and PushSubscription is active */
   isSubscribed: boolean;
-  /** true if OneSignal has finished initializing */
   isReady: boolean;
-  /** Current per-category notification preferences */
   prefs: NotificationPrefs;
-  /** Enable all notifications — requests browser permission if not yet granted */
   enable: () => Promise<void>;
-  /** Disable all notifications (opt-out without revoking permission) */
   disable: () => Promise<void>;
-  /** Update a single preference; syncs tags immediately */
   updatePref: (key: keyof NotificationPrefs, value: boolean) => void;
 }
 
@@ -83,8 +77,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [prefs, setPrefs] = useState<NotificationPrefs>(loadPrefs);
 
-  // Prevent re-init on StrictMode double-mount
   const initRef = useRef(false);
+
+  // Храним актуальные значения в ref, чтобы не пересоздавать коллбэки
+  const prefsRef = useRef(prefs);
+  prefsRef.current = prefs;
+
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
 
   // ── Initialization ────────────────────────────────────────
 
@@ -103,66 +103,92 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     })
       .then(async () => {
         setIsReady(true);
+        console.log('[notifications] OneSignal initialized');
 
-        const subscribed =
-            OneSignal.Notifications.permission === true &&
-            OneSignal.User.PushSubscription.optedIn === true;
+        // Проверяем подписку
+        const permission = OneSignal.Notifications.permission;
+        const optedIn = OneSignal.User.PushSubscription.optedIn;
+        const subscribed = permission === true && optedIn === true;
+
+        console.log('[notifications] Permission:', permission, 'OptedIn:', optedIn);
         setIsSubscribed(subscribed);
 
-        // Sync tags for existing subscribers on every app load
         if (subscribed) {
-          await syncOnesignalTags(settings, prefs);
+          await syncOnesignalTags(settingsRef.current, prefsRef.current);
         }
 
-        // Keep isSubscribed in sync when subscription state changes
         OneSignal.User.PushSubscription.addEventListener(
           'change',
           (event: { current: { optedIn: boolean } }) => {
-            setIsSubscribed(event.current.optedIn);
+            const nowSubscribed = event.current.optedIn;
+            console.log('[notifications] Subscription changed:', nowSubscribed);
+            setIsSubscribed(nowSubscribed);
+
+            // При повторной подписке — синхронизируем теги
+            if (nowSubscribed) {
+              void syncOnesignalTags(settingsRef.current, prefsRef.current);
+            }
           },
         );
       })
-      .catch(() => {
-        // OneSignal unavailable (localhost HTTP, unsupported browser, etc.)
+      .catch((err) => {
+        console.error('[notifications] OneSignal init failed:', err);
         setIsReady(false);
       });
-    // settings and prefs intentionally omitted: init runs once
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Tag sync when settings or prefs change ────────────────
 
   useEffect(() => {
-    if (!isSubscribed) return;
+    if (!isSubscribed || !isReady) return;
+
+    console.log('[notifications] Settings or prefs changed, syncing tags...');
     void syncOnesignalTags(settings, prefs);
-  }, [settings, prefs, isSubscribed]);
+  }, [settings, prefs, isSubscribed, isReady]);
 
   // ── Actions ───────────────────────────────────────────────
 
   const enable = useCallback(async () => {
     if (!isReady) return;
 
-    const granted = await OneSignal.Notifications.requestPermission();
-    if (granted) {
-      await OneSignal.User.PushSubscription.optIn();
-      setIsSubscribed(true);
-      await syncOnesignalTags(settings, prefs);
+    try {
+      const granted = await OneSignal.Notifications.requestPermission();
+      console.log('[notifications] Permission result:', granted);
+
+      if (granted) {
+        await OneSignal.User.PushSubscription.optIn();
+        setIsSubscribed(true);
+        await syncOnesignalTags(settingsRef.current, prefsRef.current);
+      }
+    } catch (err) {
+      console.error('[notifications] Enable failed:', err);
     }
-  }, [isReady, settings, prefs]);
+  }, [isReady]);
 
   const disable = useCallback(async () => {
     if (!isReady) return;
-    await OneSignal.User.PushSubscription.optOut();
-    setIsSubscribed(false);
+
+    try {
+      await OneSignal.User.PushSubscription.optOut();
+      setIsSubscribed(false);
+    } catch (err) {
+      console.error('[notifications] Disable failed:', err);
+    }
   }, [isReady]);
 
-  const updatePref = useCallback((key: keyof NotificationPrefs, value: boolean) => {
-    setPrefs((prev) => {
-      const next = { ...prev, [key]: value };
-      savePrefs(next);
-      return next;
-    });
-  }, []);
+  const updatePref = useCallback(
+    (key: keyof NotificationPrefs, value: boolean) => {
+      setPrefs((prev) => {
+        const next = { ...prev, [key]: value };
+        savePrefs(next);
+        console.log(`[notifications] Pref "${key}" → ${value}`);
+        return next;
+      });
+      // useEffect [prefs] выше подхватит изменение и вызовет syncOnesignalTags
+    },
+    [],
+  );
 
   return (
     <NotificationsContext.Provider
