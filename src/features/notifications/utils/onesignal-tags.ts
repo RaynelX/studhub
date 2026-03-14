@@ -24,22 +24,6 @@ function buildTags(
   };
 }
 
-/**
- * Get the OneSignal subscription ID for the current browser.
- * This is the push subscription token that identifies this device.
- 
-function getSubscriptionId(): string | null | undefined {
-  try {
-    return OneSignal.User.PushSubscription.id;
-  } catch {
-    return null;
-  }
-}
-**/
-
-/**
- * Get the OneSignal onesignal_id (user-level ID).
- */
 function getOnesignalId(): string | null | undefined {
   try {
     return OneSignal.User.onesignalId;
@@ -48,20 +32,10 @@ function getOnesignalId(): string | null | undefined {
   }
 }
 
-/**
- * Update tags via OneSignal REST API directly,
- * bypassing the broken SDK addTags method.
- */
 async function updateTagsViaApi(tags: Record<string, string>): Promise<boolean> {
   const onesignalId = getOnesignalId();
-
   if (!onesignalId) {
     console.warn('[onesignal-tags] No onesignal_id available');
-    return false;
-  }
-
-  if (!ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) {
-    console.error('[onesignal-tags] Missing ONESIGNAL_APP_ID or ONESIGNAL_REST_API_KEY env vars');
     return false;
   }
 
@@ -74,7 +48,10 @@ async function updateTagsViaApi(tags: Record<string, string>): Promise<boolean> 
       'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
     },
     body: JSON.stringify({
-      tags,
+      // ★ ИСПРАВЛЕНИЕ: tags должны быть внутри properties
+      properties: {
+        tags,
+      },
     }),
   });
 
@@ -84,7 +61,6 @@ async function updateTagsViaApi(tags: Record<string, string>): Promise<boolean> 
     return false;
   }
 
-  console.log('[onesignal-tags] ✅ Tags updated via REST API');
   return true;
 }
 
@@ -94,79 +70,22 @@ async function flushTags(): Promise<void> {
   if (!args) return;
 
   const tags = buildTags(args.settings, args.prefs);
+  console.log('[onesignal-tags] Syncing tags:', tags);
 
-  // Стратегия: попробовать SDK, если 409 — использовать REST API
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      if (attempt === 1) {
-        // Попытка через SDK
-        console.log('[onesignal-tags] Attempt 1: SDK addTags', tags);
-        await OneSignal.User.addTags(tags);
-
-        // Ждём немного и проверяем, не было ли 409
-        // SDK не бросает ошибку на 409, поэтому ждём и проверяем
-        await new Promise((r) => setTimeout(r, 1000));
-
-        // Верификация: запрашиваем теги через API
-        const verified = await verifyTags(tags);
-        if (verified) {
-          console.log('[onesignal-tags] ✅ SDK addTags verified');
-          return;
-        }
-
-        console.warn('[onesignal-tags] SDK addTags not verified, falling back to REST API');
-      }
-
-      // Fallback: REST API
-      console.log('[onesignal-tags] Attempt 2: REST API', tags);
-      const success = await updateTagsViaApi(tags);
-      if (success) return;
-
-    } catch (err) {
-      console.warn(`[onesignal-tags] Attempt ${attempt} error:`, err);
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const success = await updateTagsViaApi(tags);
+    if (success) {
+      console.log('[onesignal-tags] ✅ Tags synced');
+      return;
+    }
+    if (attempt < 3) {
+      await new Promise((r) => setTimeout(r, 500 * attempt));
     }
   }
 
-  console.error('[onesignal-tags] ❌ All attempts failed');
+  console.error('[onesignal-tags] ❌ Failed after 3 attempts');
 }
 
-/**
- * Verify tags were actually saved by reading them back from OneSignal API.
- */
-async function verifyTags(expectedTags: Record<string, string>): Promise<boolean> {
-  const onesignalId = getOnesignalId();
-  if (!onesignalId || !ONESIGNAL_APP_ID || !ONESIGNAL_REST_API_KEY) return false;
-
-  try {
-    const url = `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/onesignal_id/${onesignalId}`;
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
-      },
-    });
-
-    if (!response.ok) return false;
-
-    const data = await response.json();
-    const serverTags = data?.properties?.tags ?? {};
-
-    // Check if at least the notif_ tags match
-    for (const [key, value] of Object.entries(expectedTags)) {
-      if (key.startsWith('notif_') && serverTags[key] !== value) {
-        console.log(`[onesignal-tags] Mismatch: ${key} expected="${value}" actual="${serverTags[key]}"`);
-        return false;
-      }
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Debounced tag sync.
- */
 export function syncOnesignalTags(
   settings: StudentSettings,
   prefs: NotificationPrefs,
