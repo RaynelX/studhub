@@ -27,7 +27,7 @@ function buildTags(
 /**
  * Get the OneSignal subscription ID for the current browser.
  * This is the push subscription token that identifies this device.
- */
+ 
 function getSubscriptionId(): string | null | undefined {
   try {
     return OneSignal.User.PushSubscription.id;
@@ -35,6 +35,7 @@ function getSubscriptionId(): string | null | undefined {
     return null;
   }
 }
+**/
 
 /**
  * Get the OneSignal onesignal_id (user-level ID).
