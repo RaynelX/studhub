@@ -48,10 +48,6 @@ const DEFAULT_PREFS: NotificationPrefs = {
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
-// ============================================================
-// Утилиты
-// ============================================================
-
 function loadPrefs(): NotificationPrefs {
   try {
     const raw = localStorage.getItem(PREFS_STORAGE_KEY);
@@ -78,11 +74,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<NotificationPrefs>(loadPrefs);
 
   const initRef = useRef(false);
-
-  // Храним актуальные значения в ref, чтобы не пересоздавать коллбэки
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
-
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
 
@@ -101,20 +94,18 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       serviceWorkerParam: { scope: '/push/onesignal/' },
       allowLocalhostAsSecureOrigin: true,
     })
-      .then(async () => {
+      .then(() => {
         setIsReady(true);
         console.log('[notifications] OneSignal initialized');
 
-        // Проверяем подписку
         const permission = OneSignal.Notifications.permission;
         const optedIn = OneSignal.User.PushSubscription.optedIn;
         const subscribed = permission === true && optedIn === true;
-
         console.log('[notifications] Permission:', permission, 'OptedIn:', optedIn);
         setIsSubscribed(subscribed);
 
         if (subscribed) {
-          await syncOnesignalTags(settingsRef.current, prefsRef.current);
+          syncOnesignalTags(settingsRef.current, prefsRef.current);
         }
 
         OneSignal.User.PushSubscription.addEventListener(
@@ -123,10 +114,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             const nowSubscribed = event.current.optedIn;
             console.log('[notifications] Subscription changed:', nowSubscribed);
             setIsSubscribed(nowSubscribed);
-
-            // При повторной подписке — синхронизируем теги
             if (nowSubscribed) {
-              void syncOnesignalTags(settingsRef.current, prefsRef.current);
+              syncOnesignalTags(settingsRef.current, prefsRef.current);
             }
           },
         );
@@ -142,24 +131,20 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isSubscribed || !isReady) return;
-
-    console.log('[notifications] Settings or prefs changed, syncing tags...');
-    void syncOnesignalTags(settings, prefs);
+    syncOnesignalTags(settings, prefs);
   }, [settings, prefs, isSubscribed, isReady]);
 
   // ── Actions ───────────────────────────────────────────────
 
   const enable = useCallback(async () => {
     if (!isReady) return;
-
     try {
       const granted = await OneSignal.Notifications.requestPermission();
       console.log('[notifications] Permission result:', granted);
-
       if (granted) {
         await OneSignal.User.PushSubscription.optIn();
         setIsSubscribed(true);
-        await syncOnesignalTags(settingsRef.current, prefsRef.current);
+        syncOnesignalTags(settingsRef.current, prefsRef.current);
       }
     } catch (err) {
       console.error('[notifications] Enable failed:', err);
@@ -168,7 +153,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   const disable = useCallback(async () => {
     if (!isReady) return;
-
     try {
       await OneSignal.User.PushSubscription.optOut();
       setIsSubscribed(false);
@@ -185,7 +169,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         console.log(`[notifications] Pref "${key}" → ${value}`);
         return next;
       });
-      // useEffect [prefs] выше подхватит изменение и вызовет syncOnesignalTags
     },
     [],
   );
@@ -198,10 +181,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     </NotificationsContext.Provider>
   );
 }
-
-// ============================================================
-// Хук
-// ============================================================
 
 export function useNotifications(): NotificationsContextValue {
   const ctx = useContext(NotificationsContext);
