@@ -27,6 +27,45 @@ import {
 } from './onesignal-api.ts';
 
 // ============================================================
+// Bell schedule (mirrors src/shared/constants/bell-schedule.ts)
+// ============================================================
+
+const BELL_TIMES: Record<number, string> = {
+  1: '08:30',
+  2: '10:05',
+  3: '11:50',
+  4: '13:25',
+  5: '15:10',
+};
+
+// ============================================================
+// Russian locale helpers
+// ============================================================
+
+const MONTH_NAMES: Record<number, string> = {
+  1: 'января', 2: 'февраля', 3: 'марта', 4: 'апреля',
+  5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа',
+  9: 'сентября', 10: 'октября', 11: 'ноября', 12: 'декабря',
+};
+
+/** "3 февраля" */
+function formatDayMonth(isoDate: string): string {
+  const d = new Date(isoDate + 'T00:00:00Z');
+  return `${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth() + 1]}`;
+}
+
+/** "2-я пара (10:05)" */
+function pairWithTime(num: number | null | undefined): string {
+  if (!num) return '';
+  const time = BELL_TIMES[num];
+  return time ? `${num}-я пара (${time})` : `${num}-я пара`;
+}
+
+function truncate(text: string, maxLen = 100): string {
+  return text.length <= maxLen ? text : text.slice(0, maxLen - 1) + '…';
+}
+
+// ============================================================
 // Types
 // ============================================================
 
@@ -36,6 +75,7 @@ interface EventRow {
   description: string | null;
   event_type: string;
   date: string;
+  pair_number: number | null;
   event_time: string | null;
   room: string | null;
   target_language: string;
@@ -69,13 +109,22 @@ Deno.serve(async (req: Request) => {
     return new Response('Method Not Allowed', { status: 405 });
   }
 
-  // Validate cron secret
-  const secret = Deno.env.get('CRON_SECRET');
-  if (secret) {
-    const incoming = req.headers.get('x-cron-secret');
-    if (incoming !== secret) {
-      return new Response('Unauthorized', { status: 401 });
-    }
+  // Validate auth: accept either x-cron-secret or a service-role Bearer token.
+  // This lets pg_net call the function using the standard Supabase Authorization
+  // header (no separate CRON_SECRET needed), while still supporting the dedicated
+  // secret for external callers.
+  const cronSecret = Deno.env.get('CRON_SECRET');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+  const incomingCronSecret = req.headers.get('x-cron-secret');
+  const authHeader = req.headers.get('authorization') ?? '';
+  const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+
+  const validCronSecret = cronSecret && incomingCronSecret === cronSecret;
+  const validServiceRole = serviceRoleKey && bearerToken === serviceRoleKey;
+
+  if (!validCronSecret && !validServiceRole) {
+    return new Response('Unauthorized', { status: 401 });
   }
 
   try {
@@ -108,7 +157,7 @@ async function sendTomorrowReminders(): Promise<void> {
   // ── Events ────────────────────────────────────────────────
   const { data: events, error: eventsError } = await supabase
     .from('events')
-    .select('id, title, description, event_type, date, event_time, room, target_language, target_eng_subgroup, target_oit_subgroup')
+    .select('id, title, description, event_type, date, pair_number, event_time, room, target_language, target_eng_subgroup, target_oit_subgroup')
     .eq('date', tomorrowStr)
     .eq('is_deleted', false);
 
@@ -182,26 +231,40 @@ function makeTargeting(
   return { filters: buildTargetFilters(lang, eng, oit, notifPrefTag) };
 }
 
-const EVENT_TYPE_PREFIX: Record<string, string> = {
-  control_work: '📝 Контрольная',
-  credit: '📋 Зачёт',
-  exam: '🎓 Экзамен',
-  consultation: '💬 Консультация',
-  usr: '📌',
-  other: '📌',
+const EVENT_TYPE_LABEL: Record<string, string> = {
+  control_work: 'контрольная',
+  credit:       'зачёт',
+  exam:         'экзамен',
+  consultation: 'консультация',
+  usr:          'событие',
+  other:        'событие',
 };
 
 async function sendEventReminder(event: EventRow): Promise<void> {
-  const typePrefix = EVENT_TYPE_PREFIX[event.event_type] ?? '📌';
-  const title = event.title || event.description || 'Событие';
-  const timePart = event.event_time
-    ? ` в ${event.event_time.slice(0, 5)}`
-    : '';
-  const roomPart = event.room ? `, ауд. ${event.room}` : '';
+  const typeLabel = EVENT_TYPE_LABEL[event.event_type] ?? 'событие';
+  // Capitalize first letter for heading
+  const typeLabelCap = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+  const title = event.title || event.description || '';
+
+  const heading = title
+    ? `🔔 Завтра ${typeLabel}: ${title}`
+    : `🔔 Завтра ${typeLabelCap}`;
+
+  // Body: pair + time, room, description
+  const pairStr = pairWithTime(event.pair_number);
+  const roomPart = event.room ? ` · ауд. ${event.room}` : '';
+  const firstLine = pairStr ? `${pairStr}${roomPart}` : '';
+  const description = event.description ?? '';
+
+  const bodyParts: string[] = [];
+  if (firstLine) bodyParts.push(firstLine);
+  if (description && description !== title) bodyParts.push(description);
+
+  const body = truncate(bodyParts.join('\n') || formatDayMonth(event.date));
 
   await sendOnesignalNotification({
-    headings: { en: `${typePrefix} Напоминание на завтра` },
-    contents: { en: `${title}${timePart}${roomPart}` },
+    headings: { en: heading },
+    contents: { en: body },
     url: '/more/calendar',
     ...makeTargeting(event, 'notif_reminders'),
   });
@@ -212,16 +275,22 @@ async function sendDeadlineReminder(
   subjectMap: Record<string, string>,
 ): Promise<void> {
   const subjectName = deadline.subject_id ? subjectMap[deadline.subject_id] : null;
-  const timePart = deadline.time ? ` до ${deadline.time.slice(0, 5)}` : '';
+  const timePart = deadline.time ? ` (${deadline.time.slice(0, 5)})` : '';
+  const dayMonth = formatDayMonth(deadline.date);
   const description = deadline.description ?? '';
 
-  const contentsBase = subjectName
-    ? `«${subjectName}»${timePart}${description ? ': ' + description : ''}`
-    : `${description || 'Сдать работу'}${timePart}`;
+  const heading = subjectName
+    ? `🔔 Дедлайн завтра: ${subjectName}`
+    : '🔔 Дедлайн завтра';
+
+  const dueLine = `До ${dayMonth}${timePart}`;
+  const body = description
+    ? truncate(`${dueLine} — ${description}`)
+    : dueLine;
 
   await sendOnesignalNotification({
-    headings: { en: '⚠️ Дедлайн завтра' },
-    contents: { en: contentsBase.length > 80 ? contentsBase.slice(0, 79) + '…' : contentsBase },
+    headings: { en: heading },
+    contents: { en: body },
     url: '/more/calendar',
     ...makeTargeting(deadline, 'notif_reminders'),
   });

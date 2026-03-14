@@ -105,8 +105,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         setIsReady(true);
 
         const subscribed =
-          OneSignal.Notifications.permission &&
-          Boolean(OneSignal.User.PushSubscription.id);
+            OneSignal.Notifications.permission === true &&
+            OneSignal.User.PushSubscription.optedIn === true;
         setIsSubscribed(subscribed);
 
         // Sync tags for existing subscribers on every app load
