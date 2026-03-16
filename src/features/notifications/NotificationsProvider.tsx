@@ -108,17 +108,20 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           syncOnesignalTags(settingsRef.current, prefsRef.current);
         }
 
-        OneSignal.User.PushSubscription.addEventListener(
-          'change',
-          (event: { current: { optedIn: boolean } }) => {
-            const nowSubscribed = event.current.optedIn;
-            console.log('[notifications] Subscription changed:', nowSubscribed);
-            setIsSubscribed(nowSubscribed);
-            if (nowSubscribed) {
-              syncOnesignalTags(settingsRef.current, prefsRef.current);
-            }
-          },
-        );
+        const subscriptionChangeHandler = (event: { current: { optedIn: boolean } }) => {
+          const nowSubscribed = event.current.optedIn;
+          console.log('[notifications] Subscription changed:', nowSubscribed);
+          setIsSubscribed(nowSubscribed);
+          if (nowSubscribed) {
+            syncOnesignalTags(settingsRef.current, prefsRef.current);
+          }
+        };
+
+        OneSignal.User.PushSubscription.addEventListener('change', subscriptionChangeHandler);
+
+        return () => {
+          OneSignal.User.PushSubscription.removeEventListener('change', subscriptionChangeHandler);
+        };
       })
       .catch((err) => {
         console.error('[notifications] OneSignal init failed:', err);
