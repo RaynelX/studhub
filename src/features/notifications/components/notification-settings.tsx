@@ -132,6 +132,7 @@ function MasterToggle({
       ref={rippleRef}
       onClick={() => void handleToggle()}
       disabled={!isReady}
+      aria-pressed={isSubscribed}
       className={`relative w-full flex items-center gap-3 py-1 rounded-xl text-left transition-opacity
         ${!isReady ? 'opacity-50 pointer-events-none' : ''}`}
     >
