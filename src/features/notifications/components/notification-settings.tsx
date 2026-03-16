@@ -184,6 +184,7 @@ function CategoryRow({
       ref={rippleRef}
       onClick={() => onToggle(!enabled)}
       className="relative w-full flex items-center gap-3 py-3 text-left"
+      aria-pressed={enabled}
     >
       <div
         className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center
