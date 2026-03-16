@@ -24,6 +24,7 @@ import { PageHeaderProvider } from './providers/PageHeaderProvider';
 import { AdminProvider } from '../features/admin/AdminProvider';
 import { AdminToastProvider } from '../features/admin/components/ui/admin-toast';
 import { ProtectedRoute } from '../features/admin/components/protected-route';
+import { NotificationsProvider } from '../features/notifications/NotificationsProvider';
 
 export function App() {
   return (
@@ -51,9 +52,11 @@ export function App() {
                 <Route
                   element={
                     <SettingsProvider>
-                      <PageHeaderProvider>
-                        <MainLayout />
-                      </PageHeaderProvider>
+                      <NotificationsProvider>
+                        <PageHeaderProvider>
+                          <MainLayout />
+                        </PageHeaderProvider>
+                      </NotificationsProvider>
                     </SettingsProvider>
                   }
                 >
