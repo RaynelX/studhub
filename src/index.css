@@ -162,6 +162,68 @@
 }
 
 /* ============================================================
+   Swipe gesture — boundary bounce feedback
+   Triggered when the user swipes but the semester boundary blocks nav.
+   A brief elastic nudge in the swipe direction, then snaps back.
+   ============================================================ */
+
+@keyframes swipe-bounce-left {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(-12px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes swipe-bounce-right {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(12px); }
+  100% { transform: translateX(0); }
+}
+
+.anim-swipe-bounce-left {
+  animation: swipe-bounce-left 280ms var(--spring-snappy) both;
+}
+
+.anim-swipe-bounce-right {
+  animation: swipe-bounce-right 280ms var(--spring-snappy) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-swipe-bounce-left,
+  .anim-swipe-bounce-right {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Swipe hint chip — one-time onboarding nudge shown below nav
+   ============================================================ */
+
+@keyframes hint-appear {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hint-dismiss {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+
+.anim-hint-appear {
+  animation: hint-appear 220ms var(--spring-gentle) both;
+}
+
+.anim-hint-dismiss {
+  animation: hint-dismiss 180ms var(--ease-fast) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-hint-appear,
+  .anim-hint-dismiss {
+    animation: none;
+  }
+}
+
+/* ============================================================
    Touch ripple — radial highlight at the touch point
    ============================================================ */
 

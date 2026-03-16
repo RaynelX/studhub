@@ -1,5 +1,7 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useHorizontalSwipe } from '../../shared/hooks/use-horizontal-swipe';
+import type { SwipeDirection } from '../../shared/hooks/use-horizontal-swipe';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
 import { useDayDeadlines } from '../../features/schedule/hooks/use-day-deadlines';
 import { DaySchedule } from '../../features/schedule/components/DaySchedule';
@@ -31,6 +33,13 @@ import { HomeworkSheet } from '../../features/admin/components/homework-sheet';
 import { UndoToast } from '../../features/admin/components/undo-toast';
 import { AdminFab } from '../../features/admin/components/admin-fab';
 import { useCancelPair } from '../../features/admin/hooks/use-cancel-pair';
+
+// ============================================================
+// Module-level constants (outside component to avoid lint warnings)
+// ============================================================
+
+const DOUBLE_TAP_MS = 350;
+const HINT_KEY = 'studhub_swipe_hint_seen';
 
 // ============================================================
 // Компонент страницы
@@ -74,14 +83,14 @@ export function SchedulePage() {
 
   // Навигация по неделям — при смене недели всегда переходим на понедельник,
   // чтобы пользователь видел изменения (расписание часто одинаковое для одного дня).
-  const goToPrevWeek = () => { if (canGoPrev) { setAnimDirection('fade'); setSelectedDate(addDays(monday, -7)); } };
-  const goToNextWeek = () => { if (canGoNext) { setAnimDirection('fade'); setSelectedDate(addDays(monday, 7)); } };
-  const goToDay = (dayOffset: number) => {
+  const goToPrevWeek = useCallback(() => { if (canGoPrev) { setAnimDirection('fade'); setSelectedDate(addDays(monday, -7)); } }, [canGoPrev, monday]);
+  const goToNextWeek = useCallback(() => { if (canGoNext) { setAnimDirection('fade'); setSelectedDate(addDays(monday, 7)); } }, [canGoNext, monday]);
+  const goToDay = useCallback((dayOffset: number) => {
     const newDay = dayOffset + 1;
     const curDay = getDayOfWeek(selectedDate);
     setAnimDirection(newDay >= curDay ? 'right' : 'left');
     setSelectedDate(addDays(monday, dayOffset));
-  };
+  }, [selectedDate, monday]);
 
   // Ref для контейнера дней (для FLIP pill)
   const dayTabsRef = useRef<HTMLDivElement>(null);
@@ -204,6 +213,171 @@ export function SchedulePage() {
     setHomeworkViewOpen(true);
   };
 
+  // ============================================================
+  // Gesture state & logic
+  // ============================================================
+
+  // Any admin sheet or the homework view being open should disable swipes
+  const anySheetOpen =
+    actionSheetOpen ||
+    overrideSheetOpen ||
+    eventSheetOpen ||
+    deadlineSheetOpen ||
+    homeworkSheetOpen ||
+    homeworkViewOpen;
+
+  // Refs for DOM bounce animation on the day-content and week-header containers
+  const dayContentRef = useRef<HTMLDivElement>(null);
+  const weekHeaderRef = useRef<HTMLDivElement>(null);
+
+  const triggerBounce = useCallback(
+    (container: HTMLDivElement | null, direction: SwipeDirection) => {
+      if (!container) return;
+      const cls =
+        direction === 'left'
+          ? 'anim-swipe-bounce-left'
+          : 'anim-swipe-bounce-right';
+      container.classList.remove('anim-swipe-bounce-left', 'anim-swipe-bounce-right');
+      // Force reflow so the animation restarts even if same class
+      void container.offsetWidth;
+      container.classList.add(cls);
+      container.addEventListener(
+        'animationend',
+        () => container.classList.remove(cls),
+        { once: true },
+      );
+    },
+    [],
+  );
+
+  // ---------- Day-area swipe callbacks ----------
+  const handleDaySwipe = useCallback(
+    (dir: SwipeDirection) => {
+      const curOffset = getDayOfWeek(selectedDate) - 1; // 0-based Mon=0..Sat=5
+      if (dir === 'left') {
+        const nextOffset = curOffset + 1;
+        if (nextOffset > 5) {
+          if (canGoNext) {
+            setAnimDirection('right');
+            setSelectedDate(addDays(addDays(monday, 7), 0));
+          } else {
+            triggerBounce(dayContentRef.current, 'left');
+          }
+        } else {
+          goToDay(nextOffset);
+        }
+      } else {
+        const prevOffset = curOffset - 1;
+        if (prevOffset < 0) {
+          if (canGoPrev) {
+            setAnimDirection('left');
+            setSelectedDate(addDays(addDays(monday, -7), 5));
+          } else {
+            triggerBounce(dayContentRef.current, 'right');
+          }
+        } else {
+          goToDay(prevOffset);
+        }
+      }
+    },
+    [selectedDate, monday, canGoNext, canGoPrev, goToDay, triggerBounce],
+  );
+
+  const handleDaySwipeBlocked = useCallback(
+    (dir: SwipeDirection) => triggerBounce(dayContentRef.current, dir),
+    [triggerBounce],
+  );
+
+  const daySwipeHandlers = useHorizontalSwipe({
+    disabled: anySheetOpen || loading,
+    onSwipe: handleDaySwipe,
+    onBlocked: handleDaySwipeBlocked,
+  });
+
+  // ---------- Week-header swipe callbacks ----------
+  const handleWeekSwipe = useCallback(
+    (dir: SwipeDirection) => {
+      if (dir === 'left') {
+        if (canGoNext) {
+          goToNextWeek();
+        } else {
+          triggerBounce(weekHeaderRef.current, 'left');
+        }
+      } else {
+        if (canGoPrev) {
+          goToPrevWeek();
+        } else {
+          triggerBounce(weekHeaderRef.current, 'right');
+        }
+      }
+    },
+    [canGoNext, canGoPrev, goToNextWeek, goToPrevWeek, triggerBounce],
+  );
+
+  const handleWeekSwipeBlocked = useCallback(
+    (dir: SwipeDirection) => triggerBounce(weekHeaderRef.current, dir),
+    [triggerBounce],
+  );
+
+  const weekSwipeHandlers = useHorizontalSwipe({
+    disabled: anySheetOpen,
+    onSwipe: handleWeekSwipe,
+    onBlocked: handleWeekSwipeBlocked,
+  });
+
+  // ---------- Double-tap on week header → jump to today ----------
+  const lastTapRef = useRef(0);
+
+  const handleWeekHeaderTap = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+      lastTapRef.current = 0;
+      const today = new Date();
+      const todayDow = getDayOfWeek(today);
+      // If today is within semester or we have no config, jump there
+      const targetDate = todayDow === 7 ? addDays(today, 1) : today;
+      const targetMonday = getMonday(targetDate);
+      const inBounds =
+        (!semesterStartMonday || targetMonday >= semesterStartMonday) &&
+        (!semesterEndMonday || targetMonday <= semesterEndMonday);
+      if (inBounds) {
+        setAnimDirection('fade');
+        setSelectedDate(targetDate);
+      }
+    } else {
+      lastTapRef.current = now;
+    }
+  }, [semesterStartMonday, semesterEndMonday]);
+
+  // ---------- One-time swipe hint ----------
+  const [hintVisible, setHintVisible] = useState(() => {
+    try {
+      return !localStorage.getItem(HINT_KEY);
+    } catch {
+      return false;
+    }
+  });
+  const [hintDismissing, setHintDismissing] = useState(false);
+
+  const dismissHint = useCallback(() => {
+    setHintDismissing(true);
+    setTimeout(() => {
+      setHintVisible(false);
+    }, 200);
+    try {
+      localStorage.setItem(HINT_KEY, '1');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Auto-dismiss hint after 4 seconds
+  useEffect(() => {
+    if (!hintVisible) return;
+    const t = setTimeout(dismissHint, 4000);
+    return () => clearTimeout(t);
+  }, [hintVisible, dismissHint]);
+
   // Определяем CSS класс анимации
   const dayAnimClass = dayEntering
     ? animDirection === 'right' ? 'anim-day-enter-right'
@@ -217,8 +391,13 @@ export function SchedulePage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Навигация по неделям */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800">
+      {/* Навигация по неделям — свайп влево/вправо меняет неделю, двойной тап → сегодня */}
+      <div
+        ref={weekHeaderRef}
+        {...weekSwipeHandlers}
+        onClick={handleWeekHeaderTap}
+        className="shrink-0 flex items-center justify-between px-4 py-3 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-neutral-800"
+      >
         <button
           onClick={goToPrevWeek}
           disabled={!canGoPrev}
@@ -302,8 +481,22 @@ export function SchedulePage() {
         })}
       </div>
 
-      {/* Содержимое дня */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4">
+      {/* Содержимое дня — свайп влево/вправо меняет день */}
+      <div
+        ref={dayContentRef}
+        data-swipe-scroll
+        {...daySwipeHandlers}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4"
+      >
+        {/* Одноразовая подсказка о свайпах */}
+        {hintVisible && (
+          <div
+            className={`flex items-center justify-center gap-2 mb-3 px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs select-none cursor-pointer ${hintDismissing ? 'anim-hint-dismiss' : 'anim-hint-appear'}`}
+            onClick={dismissHint}
+          >
+            <span>← Свайп для смены дня&nbsp;&nbsp;·&nbsp;&nbsp;Свайп по шапке для смены недели →</span>
+          </div>
+        )}
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <p className="text-gray-500 dark:text-neutral-400">Загрузка...</p>
