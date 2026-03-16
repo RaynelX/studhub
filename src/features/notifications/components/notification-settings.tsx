@@ -3,8 +3,6 @@ import { useNotifications, type NotificationPrefs } from '../NotificationsProvid
 import { Section } from '../../../shared/ui/Section';
 import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 import { IosInstallPrompt } from './ios-install-prompt';
-import { useState } from 'react';  // DEBUG
-import { getTagsDebugLog } from '../utils/onesignal-tags';  // DEBUG
 
 // ============================================================
 // Категории уведомлений
@@ -47,52 +45,6 @@ const CATEGORIES: {
     icon: AlarmClock,
   },
 ];
-
-/**
- * DEBUG
- */
-function TagsDebugPanel() {
-  const [logs, setLogs] = useState<string[]>([]);
-
-  return (
-    <div style={{ marginTop: 16 }}>
-      <button
-        onClick={() => setLogs(getTagsDebugLog())}
-        style={{
-          padding: '8px 16px',
-          background: '#333',
-          color: '#0f0',
-          border: 'none',
-          borderRadius: 8,
-          fontFamily: 'monospace',
-          fontSize: 12,
-        }}
-      >
-        🔍 Show Debug Log
-      </button>
-
-      {logs.length > 0 && (
-        <pre
-          style={{
-            marginTop: 8,
-            padding: 12,
-            background: '#1a1a1a',
-            color: '#0f0',
-            borderRadius: 8,
-            fontSize: 11,
-            fontFamily: 'monospace',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-all',
-            maxHeight: 300,
-            overflow: 'auto',
-          }}
-        >
-          {logs.join('\n')}
-        </pre>
-      )}
-    </div>
-  );
-}
 
 // ============================================================
 // Основной компонент
@@ -146,8 +98,6 @@ export function NotificationSettings() {
           </div>
         )}
       </div>
-
-      <TagsDebugPanel />  {/* DEBUG */}
     </Section>
   );
 }
