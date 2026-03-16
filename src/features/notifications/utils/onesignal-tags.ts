@@ -4,25 +4,35 @@ import type { NotificationPrefs } from '../NotificationsProvider';
 
 const ONESIGNAL_APP_ID = import.meta.env.VITE_ONESIGNAL_APP_ID as string;
 const ONESIGNAL_REST_API_KEY = import.meta.env.VITE_ONESIGNAL_REST_API_KEY as string;
-
-const MIGRATION_KEY = 'onesignal_tags_v2_migrated';
+const MIGRATION_KEY = 'onesignal_tags_v3';
 
 let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
-let latestArgs: {
-  settings: StudentSettings;
-  prefs: NotificationPrefs;
-} | null = null;
+let latestArgs: { settings: StudentSettings; prefs: NotificationPrefs } | null = null;
 
-// Debug log
 const debugLog: string[] = [];
 export function getTagsDebugLog(): string[] {
   return [...debugLog];
 }
+
 function log(msg: string): void {
   const entry = `[${new Date().toLocaleTimeString()}] ${msg}`;
   console.log('[onesignal-tags]', msg);
   debugLog.push(entry);
-  if (debugLog.length > 20) debugLog.shift();
+  if (debugLog.length > 30) debugLog.shift();
+}
+
+/**
+ * Encode prefs as 5-char string: "11010"
+ * Position: 0=schedule, 1=events, 2=deadlines, 3=homework, 4=reminders
+ */
+function encodePrefs(prefs: NotificationPrefs): string {
+  return [
+    prefs.schedule  ? '1' : '0',
+    prefs.events    ? '1' : '0',
+    prefs.deadlines ? '1' : '0',
+    prefs.homework  ? '1' : '0',
+    prefs.reminders ? '1' : '0',
+  ].join('');
 }
 
 function buildTags(
@@ -30,12 +40,8 @@ function buildTags(
   prefs: NotificationPrefs,
 ): Record<string, string> {
   return {
-    target: `${settings.language}_${settings.eng_subgroup ?? 'x'}_${settings.oit_subgroup}`,
-    ns: prefs.schedule ? '1' : '0',
-    ne: prefs.events ? '1' : '0',
-    nd: prefs.deadlines ? '1' : '0',
-    nh: prefs.homework ? '1' : '0',
-    nr: prefs.reminders ? '1' : '0',
+    t: `${settings.language}_${settings.eng_subgroup ?? 'x'}_${settings.oit_subgroup}`,
+    n: encodePrefs(prefs),
   };
 }
 
@@ -45,6 +51,52 @@ function getOnesignalId(): string | null | undefined {
   } catch {
     return null;
   }
+}
+
+async function patchTags(
+  onesignalId: string,
+  tags: Record<string, string>,
+): Promise<{ ok: boolean; status: number; body: string }> {
+  const url = `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/onesignal_id/${onesignalId}`;
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
+    },
+    body: JSON.stringify({ properties: { tags } }),
+  });
+  const body = await response.text();
+  return { ok: response.ok, status: response.status, body };
+}
+
+async function deleteOldTags(onesignalId: string): Promise<boolean> {
+  log('Deleting old tags...');
+  const result = await patchTags(onesignalId, {
+    language: '',
+    eng_subgroup: '',
+    oit_subgroup: '',
+    notif_schedule: '',
+    notif_events: '',
+    notif_deadlines: '',
+    notif_homework: '',
+    notif_reminders: '',
+    test_tag: '',
+    target: '',
+    ns: '',
+    ne: '',
+    nd: '',
+    nh: '',
+    nr: '',
+    t0: '',
+    t1: '',
+    t2: '',
+    t3: '',
+    t4: '',
+    t5: '',
+  });
+  log(`Delete: ${result.status}`);
+  return result.ok || result.status === 202;
 }
 
 async function updateTagsViaApi(
@@ -58,54 +110,29 @@ async function updateTagsViaApi(
 
   log(`onesignal_id: ${onesignalId}`);
 
-  const url = `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/onesignal_id/${onesignalId}`;
-
-  // Если ещё не мигрировали — удаляем старые теги
   const needsMigration = !localStorage.getItem(MIGRATION_KEY);
-  const allTags: Record<string, string> = needsMigration
-    ? {
-        // Удаляем старые ключи
-        language: '',
-        eng_subgroup: '',
-        oit_subgroup: '',
-        notif_schedule: '',
-        notif_events: '',
-        notif_deadlines: '',
-        notif_homework: '',
-        notif_reminders: '',
-        test_tag: '',
-        // Устанавливаем новые
-        ...tags,
-      }
-    : tags;
 
-  try {
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Basic ${ONESIGNAL_REST_API_KEY}`,
-      },
-      body: JSON.stringify({
-        properties: { tags: allTags },
-      }),
-    });
+  if (needsMigration) {
+    const deleted = await deleteOldTags(onesignalId);
+    if (!deleted) {
+      log('❌ Failed to delete old tags');
+      return false;
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
 
-    const text = await response.text();
-    log(`PATCH ${response.status}: ${text}`);
+  const result = await patchTags(onesignalId, tags);
+  log(`PATCH ${result.status}: ${result.body}`);
 
-    if (!response.ok) return false;
-
+  if (result.ok || result.status === 202) {
     if (needsMigration) {
       localStorage.setItem(MIGRATION_KEY, '1');
-      log('Migration complete — old tags removed');
+      log('Migration complete');
     }
-
     return true;
-  } catch (err) {
-    log(`❌ Error: ${err}`);
-    return false;
   }
+
+  return false;
 }
 
 async function flushTags(): Promise<void> {
@@ -124,7 +151,7 @@ async function flushTags(): Promise<void> {
     }
     if (attempt < 3) {
       log(`Retry ${attempt + 1}...`);
-      await new Promise((r) => setTimeout(r, 500 * attempt));
+      await new Promise((r) => setTimeout(r, 1000 * attempt));
     }
   }
 
