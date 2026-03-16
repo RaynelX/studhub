@@ -8,6 +8,21 @@ const ONESIGNAL_REST_API_KEY = import.meta.env.VITE_ONESIGNAL_REST_API_KEY as st
 let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
 let latestArgs: { settings: StudentSettings; prefs: NotificationPrefs } | null = null;
 
+// ★ Диагностический лог — видимый на любом устройстве
+const debugLog: string[] = [];
+
+export function getTagsDebugLog(): string[] {
+  return [...debugLog];
+}
+
+function log(msg: string): void {
+  const entry = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  console.log('[onesignal-tags]', msg);
+  debugLog.push(entry);
+  // Храним последние 20 записей
+  if (debugLog.length > 20) debugLog.shift();
+}
+
 function buildTags(
   settings: StudentSettings,
   prefs: NotificationPrefs,
@@ -35,33 +50,46 @@ function getOnesignalId(): string | null | undefined {
 async function updateTagsViaApi(tags: Record<string, string>): Promise<boolean> {
   const onesignalId = getOnesignalId();
   if (!onesignalId) {
-    console.warn('[onesignal-tags] No onesignal_id available');
+    log(`❌ No onesignal_id available`);
     return false;
   }
+
+  log(`onesignal_id: ${onesignalId}`);
 
   const url = `https://api.onesignal.com/apps/${ONESIGNAL_APP_ID}/users/by/onesignal_id/${onesignalId}`;
 
-  const response = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
-    },
-    body: JSON.stringify({
-      // ★ ИСПРАВЛЕНИЕ: tags должны быть внутри properties
-      properties: {
-        tags,
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`,
       },
-    }),
-  });
+      body: JSON.stringify({
+        properties: {
+          tags,
+        },
+      }),
+    });
 
-  if (!response.ok) {
     const text = await response.text();
-    console.error(`[onesignal-tags] REST API error ${response.status}: ${text}`);
+    log(`PATCH ${response.status}: ${text}`);
+
+    if (!response.ok) return false;
+
+    // Верификация
+    const checkResponse = await fetch(url, {
+      headers: { 'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}` },
+    });
+    const checkData = await checkResponse.json();
+    const serverTags = checkData?.properties?.tags;
+    log(`Verify tags: ${JSON.stringify(serverTags)}`);
+
+    return true;
+  } catch (err) {
+    log(`❌ Fetch error: ${err}`);
     return false;
   }
-
-  return true;
 }
 
 async function flushTags(): Promise<void> {
@@ -70,20 +98,21 @@ async function flushTags(): Promise<void> {
   if (!args) return;
 
   const tags = buildTags(args.settings, args.prefs);
-  console.log('[onesignal-tags] Syncing tags:', tags);
+  log(`Syncing: ${JSON.stringify(tags)}`);
 
   for (let attempt = 1; attempt <= 3; attempt++) {
     const success = await updateTagsViaApi(tags);
     if (success) {
-      console.log('[onesignal-tags] ✅ Tags synced');
+      log('✅ Done');
       return;
     }
     if (attempt < 3) {
+      log(`Retry ${attempt + 1}...`);
       await new Promise((r) => setTimeout(r, 500 * attempt));
     }
   }
 
-  console.error('[onesignal-tags] ❌ Failed after 3 attempts');
+  log('❌ All attempts failed');
 }
 
 export function syncOnesignalTags(
