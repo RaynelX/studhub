@@ -87,12 +87,16 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (!appId || initRef.current) return;
     initRef.current = true;
 
+    const allowLocalhost =
+      import.meta.env.DEV ||
+      ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+
     OneSignal.init({
       appId,
       ...(safariWebId ? { safari_web_id: safariWebId } : {}),
       serviceWorkerPath: '/push/onesignal/OneSignalSDKWorker.js',
       serviceWorkerParam: { scope: '/push/onesignal/' },
-      allowLocalhostAsSecureOrigin: true,
+      allowLocalhostAsSecureOrigin: allowLocalhost,
     })
       .then(() => {
         setIsReady(true);
