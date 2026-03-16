@@ -44,6 +44,13 @@ async function patchTags(
   onesignalId: string,
   tags: Record<string, string>,
 ): Promise<boolean> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error(
+      '[onesignal-tags] Missing Supabase environment variables VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY; skipping tag update.',
+    );
+    return false;
+  }
+
   const response = await fetch(
     `${SUPABASE_URL}/functions/v1/onesignal-update-tags`,
     {
