@@ -90,7 +90,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     OneSignal.init({
       appId,
       ...(safariWebId ? { safari_web_id: safariWebId } : {}),
-      serviceWorkerPath: 'push/onesignal/OneSignalSDKWorker.js',
+      serviceWorkerPath: '/push/onesignal/OneSignalSDKWorker.js',
       serviceWorkerParam: { scope: '/push/onesignal/' },
       allowLocalhostAsSecureOrigin: true,
     })
