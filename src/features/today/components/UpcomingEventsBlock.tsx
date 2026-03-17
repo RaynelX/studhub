@@ -18,6 +18,7 @@ interface Props {
 
 export function UpcomingEventsBlock({ events }: Props) {
   const rippleRef = useTouchRipple();
+  const showAllButtonRef = useTouchRipple<HTMLButtonElement>();
   const [sheetOpen, setSheetOpen] = useState(false);
   if (events.length === 0) return null;
 
@@ -29,6 +30,7 @@ export function UpcomingEventsBlock({ events }: Props) {
           Ближайшие события
         </h3>
         <button
+          ref={showAllButtonRef}
           onClick={() => setSheetOpen(true)}
           className="text-sm text-blue-600 dark:text-blue-400 font-medium active:opacity-70 transition-opacity"
         >

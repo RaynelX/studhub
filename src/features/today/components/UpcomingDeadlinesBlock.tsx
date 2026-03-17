@@ -9,6 +9,7 @@ interface Props {
 
 export function UpcomingDeadlinesBlock({ deadlines }: Props) {
   const rippleRef = useTouchRipple();
+  const showAllButtonRef = useTouchRipple<HTMLButtonElement>();
   const [sheetOpen, setSheetOpen] = useState(false);
   if (deadlines.length === 0) return null;
 
@@ -20,6 +21,7 @@ export function UpcomingDeadlinesBlock({ deadlines }: Props) {
           Ближайшие дедлайны
         </h3>
         <button
+          ref={showAllButtonRef}
           onClick={() => setSheetOpen(true)}
           className="text-sm text-amber-600 dark:text-amber-400 font-medium active:opacity-70 transition-opacity"
         >
