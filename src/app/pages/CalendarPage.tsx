@@ -6,6 +6,7 @@ import { useCalendarData } from '../../features/calendar/hooks/use-calendar-data
 import { CalendarGrid } from '../../features/calendar/components/CalendarGrid';
 import { useHorizontalSwipe } from '../../shared/hooks/use-horizontal-swipe';
 import type { SwipeDirection } from '../../shared/hooks/use-horizontal-swipe';
+import { parseLocalDate } from '../../features/schedule/utils/week-utils';
 
 export function CalendarPage() {
   useSetPageHeader({ title: 'Календарь', backTo: '/more' });
@@ -23,8 +24,8 @@ export function CalendarPage() {
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
 
   // Semester boundaries (by month)
-  const semesterStart = semesterConfig ? new Date(semesterConfig.start_date) : null;
-  const semesterEnd = semesterConfig ? new Date(semesterConfig.end_date) : null;
+  const semesterStart = semesterConfig ? parseLocalDate(semesterConfig.start_date) : null;
+  const semesterEnd = semesterConfig ? parseLocalDate(semesterConfig.end_date) : null;
 
   const canGoPrev = !semesterStart || year > semesterStart.getFullYear() ||
     (year === semesterStart.getFullYear() && month > semesterStart.getMonth());

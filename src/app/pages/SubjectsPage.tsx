@@ -1,16 +1,15 @@
 import { useState } from 'react';
-import { ArrowDownAZ, Hash, Clock, Percent } from 'lucide-react';
+import { ArrowDownAZ, Hash, Percent } from 'lucide-react';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useSubjectDetails } from '../../features/subjects/hooks/use-subject-details';
 import { SubjectCard } from '../../features/subjects/components/SubjectCard';
 import type { SubjectDetails } from '../../features/subjects/hooks/use-subject-details';
 
-type SortMode = 'alpha' | 'count' | 'next' | 'progress';
+type SortMode = 'alpha' | 'count' | 'progress';
 
 const SORT_OPTIONS: { mode: SortMode; icon: typeof ArrowDownAZ; label: string }[] = [
   { mode: 'alpha', icon: ArrowDownAZ, label: 'А–Я' },
   { mode: 'count', icon: Hash, label: 'Кол-во' },
-  { mode: 'next', icon: Clock, label: 'Ближайшая' },
   { mode: 'progress', icon: Percent, label: 'Прогресс' },
 ];
 
@@ -79,14 +78,6 @@ function sortSubjects(subjects: SubjectDetails[], mode: SortMode): SubjectDetail
 
     case 'count':
       return copy.sort((a, b) => b.progress.total - a.progress.total);
-
-    case 'next':
-      return copy.sort((a, b) => {
-        if (!a.nextPairDate && !b.nextPairDate) return 0;
-        if (!a.nextPairDate) return 1;
-        if (!b.nextPairDate) return -1;
-        return a.nextPairDate.localeCompare(b.nextPairDate);
-      });
 
     case 'progress':
       return copy.sort((a, b) => b.progress.percent - a.progress.percent);

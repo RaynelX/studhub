@@ -139,8 +139,13 @@ export function StudentAttendanceView() {
             triggerBounce(dayContentRef.current, 'left');
           }
         } else {
+          const nextDateStr = toISODate(addDays(monday, nextOffset));
+          if (nextDateStr > todayStr) {
+            triggerBounce(dayContentRef.current, 'left');
+            return;
+          }
           setAnimDirection('right');
-          setSelectedDate(toISODate(addDays(monday, nextOffset)));
+          setSelectedDate(nextDateStr);
         }
       } else {
         const prevOffset = curOffset - 1;

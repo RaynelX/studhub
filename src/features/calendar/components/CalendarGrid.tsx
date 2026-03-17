@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DayCell } from './DayCell';
 import { DayDetailSheet } from './DayDetailSheet';
 import type { CalendarDayData } from '../hooks/use-calendar-data';
+import { toISODate } from '../../schedule/utils/week-utils';
 
 const WEEKDAY_HEADERS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
@@ -83,7 +84,7 @@ export function CalendarGrid({ year, month, days, onPrevMonth, onNextMonth, onGo
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const cells = buildGridCells(year, month);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = toISODate(new Date());
   const selectedData = selectedDate ? (days.get(selectedDate) ?? EMPTY_DAY) : EMPTY_DAY;
 
   return (
