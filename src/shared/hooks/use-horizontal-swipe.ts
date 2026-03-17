@@ -1,7 +1,8 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useEffect } from 'react';
 
 export type SwipeDirection = 'left' | 'right';
-export type SwipeBlockedReason = 'boundary' | 'loading' | 'disabled' | 'scroll';
+/** Reason passed to `onBlocked`. Currently only `'boundary'` is emitted. */
+export type SwipeBlockedReason = 'boundary';
 
 interface TouchPoint {
   x: number;
@@ -11,7 +12,11 @@ interface TouchPoint {
 export interface HorizontalSwipeOptions {
   /** Called when a swipe is committed. `left` = forward, `right` = back */
   onSwipe: (direction: SwipeDirection) => void;
-  /** Called when a swipe gesture is rejected (e.g. boundary reached) */
+  /**
+   * Called when a gesture is committed but the `blocked` flag is set, meaning
+   * the swipe was recognized but intentionally suppressed (e.g. boundary reached).
+   * Only called with reason `'boundary'`.
+   */
   onBlocked?: (direction: SwipeDirection, reason: SwipeBlockedReason) => void;
   /** Set true to completely inhibit gesture tracking (e.g. sheet open, loading) */
   disabled?: boolean;
@@ -74,6 +79,12 @@ export function useHorizontalSwipe({
   const cooldownRef = useRef(false);
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const resetGestureState = useCallback(() => {
+    isDraggingRef.current = false;
+    axisLockedRef.current = null;
+    historyRef.current = [];
+  }, []);
+
   const onTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (disabled || cooldownRef.current) return;
@@ -100,6 +111,10 @@ export function useHorizontalSwipe({
   const onTouchMove = useCallback(
     (e: React.TouchEvent) => {
       if (!isDraggingRef.current) return;
+      if (disabled) {
+        resetGestureState();
+        return;
+      }
 
       const touch = e.touches[0];
       const dx = touch.clientX - startXRef.current;
@@ -130,12 +145,17 @@ export function useHorizontalSwipe({
         e.preventDefault();
       }
     },
-    [axisLockRatio],
+    [disabled, axisLockRatio, resetGestureState],
   );
 
   const onTouchEnd = useCallback(() => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
+
+    if (disabled) {
+      resetGestureState();
+      return;
+    }
 
     const locked = axisLockedRef.current;
     axisLockedRef.current = null;
@@ -171,6 +191,8 @@ export function useHorizontalSwipe({
 
     onSwipe(direction);
   }, [
+    disabled,
+    resetGestureState,
     distanceThreshold,
     velocityThreshold,
     cooldownMs,
@@ -178,6 +200,23 @@ export function useHorizontalSwipe({
     onSwipe,
     onBlocked,
   ]);
+
+  // Reset in-progress gesture state when `disabled` turns on mid-gesture
+  useEffect(() => {
+    if (disabled) {
+      resetGestureState();
+    }
+  }, [disabled, resetGestureState]);
+
+  // Clear pending cooldown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current !== null) {
+        clearTimeout(cooldownTimerRef.current);
+        cooldownRef.current = false;
+      }
+    };
+  }, []);
 
   return { onTouchStart, onTouchMove, onTouchEnd };
 }
