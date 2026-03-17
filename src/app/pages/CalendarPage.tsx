@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
 import { useDatabase } from '../providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { useCalendarData } from '../../features/calendar/hooks/use-calendar-data';
 import { CalendarGrid } from '../../features/calendar/components/CalendarGrid';
+import { useHorizontalSwipe } from '../../shared/hooks/use-horizontal-swipe';
+import type { SwipeDirection } from '../../shared/hooks/use-horizontal-swipe';
 
 export function CalendarPage() {
   useSetPageHeader({ title: 'Календарь', backTo: '/more' });
@@ -32,27 +34,56 @@ export function CalendarPage() {
   const goToPrevMonth = () => {
     if (!canGoPrev) return;
     if (month === 0) {
-      setYear(year - 1);
+      setYear(y => y - 1);
       setMonth(11);
     } else {
-      setMonth(month - 1);
+      setMonth(m => m - 1);
     }
   };
 
   const goToNextMonth = () => {
     if (!canGoNext) return;
     if (month === 11) {
-      setYear(year + 1);
+      setYear(y => y + 1);
       setMonth(0);
     } else {
-      setMonth(month + 1);
+      setMonth(m => m + 1);
     }
   };
 
   const goToToday = () => {
-    setYear(now.getFullYear());
-    setMonth(now.getMonth());
+    const today = new Date();
+    setYear(today.getFullYear());
+    setMonth(today.getMonth());
   };
+
+  // Swipe for month switching: left = next month, right = prev month
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const triggerBounce = useCallback(
+    (direction: SwipeDirection) => {
+      const el = containerRef.current;
+      if (!el) return;
+      const cls = direction === 'left' ? 'anim-swipe-bounce-left' : 'anim-swipe-bounce-right';
+      el.classList.remove('anim-swipe-bounce-left', 'anim-swipe-bounce-right');
+      void el.offsetWidth;
+      el.classList.add(cls);
+      el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+    },
+    [],
+  );
+
+  const swipeHandlers = useHorizontalSwipe({
+    onSwipe: (dir) => {
+      if (dir === 'left') {
+        if (!canGoNext) { triggerBounce('left'); return; }
+        goToNextMonth();
+      } else {
+        if (!canGoPrev) { triggerBounce('right'); return; }
+        goToPrevMonth();
+      }
+    },
+  });
 
   if (loading) {
     return (
@@ -63,7 +94,11 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden">
+    <div
+      ref={containerRef}
+      {...swipeHandlers}
+      className="h-full overflow-y-auto overflow-x-hidden"
+    >
       <CalendarGrid
         year={year}
         month={month}

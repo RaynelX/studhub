@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { CalendarOff } from 'lucide-react';
 import { WeekNavigator } from './WeekNavigator';
 import { DayTabs } from './DayTabs';
@@ -9,6 +9,8 @@ import { useWeekSchedule } from '../hooks/use-week-schedule';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useExitTransitionWait } from '../../../shared/hooks/use-exit-transition';
+import { useHorizontalSwipe } from '../../../shared/hooks/use-horizontal-swipe';
+import type { SwipeDirection } from '../../../shared/hooks/use-horizontal-swipe';
 import {
   getMonday,
   addDays,
@@ -17,6 +19,8 @@ import {
   getWeekNumber,
   parseLocalDate,
 } from '../../schedule/utils/week-utils';
+
+const DOUBLE_TAP_MS = 350;
 
 // ============================================================
 // Компонент
@@ -52,34 +56,8 @@ export function AdminAttendanceView() {
   const db = useDatabase();
   const { data: students } = useRxCollection(db.students);
 
-  const goToPrevWeek = () => {
-    if (!canGoPrev) return;
-    setAnimDirection('fade');
-    const newMonday = addDays(monday, -7);
-    setMonday(newMonday);
-    const dayOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
-    setSelectedDate(toISODate(addDays(newMonday, dayOffset)));
-  };
-
-  const goToNextWeek = () => {
-    if (!canGoNext) return;
-    setAnimDirection('fade');
-    const newMonday = addDays(monday, 7);
-    setMonday(newMonday);
-    const dayOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
-    let newDate = toISODate(addDays(newMonday, dayOffset));
-    if (newDate > todayStr) newDate = todayStr;
-    setSelectedDate(newDate);
-  };
-
-  const handleSelectDate = (dateStr: string) => {
-    const newDay = getDayOfWeek(parseLocalDate(dateStr));
-    const curDay = getDayOfWeek(parseLocalDate(selectedDate));
-    setAnimDirection(newDay >= curDay ? 'right' : 'left');
-    setSelectedDate(dateStr);
-  };
-
-  // Данные расписания
+  // Данные расписания — объявлены до функций навигации, чтобы canGoPrev/canGoNext
+  // были доступны в deps массивах useCallback
   const { weekSchedule, loading, semesterConfig } = useWeekSchedule(monday);
 
   const weekNumber = semesterConfig
@@ -91,6 +69,34 @@ export function AdminAttendanceView() {
     : toISODate(monday) > toISODate(addDays(todayMonday, -28));
 
   const canGoNext = toISODate(monday) < toISODate(todayMonday);
+
+  // Навигация
+  const goToPrevWeek = useCallback(() => {
+    if (!canGoPrev) return;
+    setAnimDirection('fade');
+    const newMonday = addDays(monday, -7);
+    setMonday(newMonday);
+    const dayOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
+    setSelectedDate(toISODate(addDays(newMonday, dayOffset)));
+  }, [canGoPrev, monday, selectedDate]);
+
+  const goToNextWeek = useCallback(() => {
+    if (!canGoNext) return;
+    setAnimDirection('fade');
+    const newMonday = addDays(monday, 7);
+    setMonday(newMonday);
+    const dayOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
+    let newDate = toISODate(addDays(newMonday, dayOffset));
+    if (newDate > todayStr) newDate = todayStr;
+    setSelectedDate(newDate);
+  }, [canGoNext, monday, selectedDate, todayStr]);
+
+  const handleSelectDate = useCallback((dateStr: string) => {
+    const newDay = getDayOfWeek(parseLocalDate(dateStr));
+    const curDay = getDayOfWeek(parseLocalDate(selectedDate));
+    setAnimDirection(newDay >= curDay ? 'right' : 'left');
+    setSelectedDate(dateStr);
+  }, [selectedDate]);
 
   // Данные посещаемости
   const { getAbsence, setAbsence, clearAbsence, studentSummaries } =
@@ -126,6 +132,125 @@ export function AdminAttendanceView() {
     [getAbsence, setAbsence, clearAbsence],
   );
 
+  // ============================================================
+  // Gesture navigation
+  // ============================================================
+
+  const dayContentRef = useRef<HTMLDivElement>(null);
+  const weekHeaderRef = useRef<HTMLDivElement>(null);
+
+  const triggerBounce = useCallback(
+    (container: HTMLDivElement | null, direction: SwipeDirection) => {
+      if (!container) return;
+      const cls = direction === 'left' ? 'anim-swipe-bounce-left' : 'anim-swipe-bounce-right';
+      container.classList.remove('anim-swipe-bounce-left', 'anim-swipe-bounce-right');
+      void container.offsetWidth;
+      container.classList.add(cls);
+      container.addEventListener('animationend', () => container.classList.remove(cls), { once: true });
+    },
+    [],
+  );
+
+  const handleDaySwipe = useCallback(
+    (dir: SwipeDirection) => {
+      const curOffset = getDayOfWeek(parseLocalDate(selectedDate)) - 1;
+      if (dir === 'left') {
+        const nextOffset = curOffset + 1;
+        if (nextOffset > 5) {
+          if (canGoNext) {
+            const newMonday = addDays(monday, 7);
+            setAnimDirection('right');
+            setMonday(newMonday);
+            let newDate = toISODate(newMonday);
+            if (newDate > todayStr) newDate = todayStr;
+            setSelectedDate(newDate);
+          } else {
+            triggerBounce(dayContentRef.current, 'left');
+          }
+        } else {
+          setAnimDirection('right');
+          setSelectedDate(toISODate(addDays(monday, nextOffset)));
+        }
+      } else {
+        const prevOffset = curOffset - 1;
+        if (prevOffset < 0) {
+          if (canGoPrev) {
+            const newMonday = addDays(monday, -7);
+            setAnimDirection('left');
+            setMonday(newMonday);
+            setSelectedDate(toISODate(addDays(newMonday, 5)));
+          } else {
+            triggerBounce(dayContentRef.current, 'right');
+          }
+        } else {
+          setAnimDirection('left');
+          setSelectedDate(toISODate(addDays(monday, prevOffset)));
+        }
+      }
+    },
+    [selectedDate, monday, canGoNext, canGoPrev, triggerBounce, todayStr],
+  );
+
+  const handleDaySwipeBlocked = useCallback(
+    (dir: SwipeDirection) => triggerBounce(dayContentRef.current, dir),
+    [triggerBounce],
+  );
+
+  const daySwipeHandlers = useHorizontalSwipe({
+    disabled: loading,
+    onSwipe: handleDaySwipe,
+    onBlocked: handleDaySwipeBlocked,
+  });
+
+  const handleWeekSwipe = useCallback(
+    (dir: SwipeDirection) => {
+      if (dir === 'left') {
+        if (canGoNext) {
+          goToNextWeek();
+        } else {
+          triggerBounce(weekHeaderRef.current, 'left');
+        }
+      } else {
+        if (canGoPrev) {
+          goToPrevWeek();
+        } else {
+          triggerBounce(weekHeaderRef.current, 'right');
+        }
+      }
+    },
+    [canGoNext, canGoPrev, goToNextWeek, goToPrevWeek, triggerBounce],
+  );
+
+  const handleWeekSwipeBlocked = useCallback(
+    (dir: SwipeDirection) => triggerBounce(weekHeaderRef.current, dir),
+    [triggerBounce],
+  );
+
+  const weekSwipeHandlers = useHorizontalSwipe({
+    disabled: loading,
+    onSwipe: handleWeekSwipe,
+    onBlocked: handleWeekSwipeBlocked,
+  });
+
+  // Double-tap on week header → jump to today
+  const lastTapRef = useRef(0);
+
+  const handleWeekHeaderTap = useCallback(
+    (e: React.MouseEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return;
+      const now = Date.now();
+      if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+        lastTapRef.current = 0;
+        setAnimDirection('fade');
+        setMonday(todayMonday);
+        setSelectedDate(initialSelectedDate);
+      } else {
+        lastTapRef.current = now;
+      }
+    },
+    [todayMonday, initialSelectedDate],
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -136,14 +261,16 @@ export function AdminAttendanceView() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <WeekNavigator
-        monday={monday}
-        onPrev={goToPrevWeek}
-        onNext={goToNextWeek}
-        canGoPrev={canGoPrev}
-        canGoNext={canGoNext}
-        weekNumber={weekNumber}
-      />
+      <div ref={weekHeaderRef} {...weekSwipeHandlers} onClick={handleWeekHeaderTap} className="shrink-0">
+        <WeekNavigator
+          monday={monday}
+          onPrev={goToPrevWeek}
+          onNext={goToNextWeek}
+          canGoPrev={canGoPrev}
+          canGoNext={canGoNext}
+          weekNumber={weekNumber}
+        />
+      </div>
 
       <DayTabs
         monday={monday}
@@ -151,7 +278,12 @@ export function AdminAttendanceView() {
         onSelectDate={handleSelectDate}
       />
 
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-4">
+      <div
+        ref={dayContentRef}
+        data-swipe-scroll
+        {...daySwipeHandlers}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 space-y-4"
+      >
         <div key={displayedKey} className={dayAnimClass}>
           {dayPairs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
