@@ -14,7 +14,9 @@ import {
   ArrowRight,
   Rocket,
   LayoutDashboard,
+  Share,
 } from 'lucide-react';
+import { BottomSheet } from '../../shared/ui/BottomSheet';
 import type { StudentSettings } from './SettingsProvider';
 
 /* ────────────────────────────── types ────────────────────────────── */
@@ -44,20 +46,39 @@ const FEATURES = [
   { icon: Bell, title: 'Уведомления', desc: 'Push-напоминания о парах' },
 ];
 
-/* ────────────────────────────── helpers ──────────────────────────── */
+/* ────────────────────────────── platform helpers ─────────────────── */
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+function getIsIos(): boolean {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
+function getIsStandalone(): boolean {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    ('standalone' in navigator &&
+      (navigator as unknown as { standalone: boolean }).standalone === true)
+  );
+}
+
+/* ────────────────────────────── useInstallPrompt ─────────────────── */
+
 function useInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showIosGuide, setShowIosGuide] = useState(false);
+
+  const isIos = getIsIos();
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    if (getIsStandalone()) {
       setIsInstalled(true);
       return;
     }
@@ -66,12 +87,10 @@ function useInstallPrompt() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
-
     const installedHandler = () => setIsInstalled(true);
 
     window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('appinstalled', installedHandler);
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', installedHandler);
@@ -79,20 +98,33 @@ function useInstallPrompt() {
   }, []);
 
   const install = useCallback(async () => {
-    if (!deferredPrompt) return false;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
-      setDeferredPrompt(null);
+    if (deferredPrompt) {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setDeferredPrompt(null);
+      }
+      return;
     }
-    return outcome === 'accepted';
-  }, [deferredPrompt]);
+    if (isIos) {
+      setShowIosGuide(true);
+    }
+  }, [deferredPrompt, isIos]);
 
-  return { canInstall: !!deferredPrompt && !isInstalled, install, isInstalled };
+  const canInstall =
+    (!isInstalled && !!deferredPrompt) || (!isInstalled && isIos && !getIsStandalone());
+
+  return {
+    canInstall,
+    install,
+    isInstalled,
+    showIosGuide,
+    closeIosGuide: () => setShowIosGuide(false),
+  };
 }
 
-/* ────────────────────────────── main ─────────────────────────────── */
+/* ────────────────────────────── main component ──────────────────── */
 
 export function SettingsSetup({ onComplete }: Props) {
   const [language, setLanguage] = useState<Language | null>(null);
@@ -101,30 +133,25 @@ export function SettingsSetup({ onComplete }: Props) {
 
   const needsEngSubgroup = language === 'en';
 
-  // Steps: welcome → language → (engSub?) → oit → features
   const steps = buildSteps(needsEngSubgroup);
   const [stepIndex, setStepIndex] = useState(0);
   const currentStep = steps[stepIndex];
 
-  // Slide direction for animation
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [animating, setAnimating] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const DURATION = 400; // ms — match CSS
+  const DURATION = 400;
 
-  // When language changes away from 'en', clear eng subgroup
   useEffect(() => {
     if (language !== 'en') setEngSubgroup(null);
   }, [language]);
 
-  // Rebuild steps when needsEngSubgroup changes — if we're past the eng step, adjust index
   const prevStepsRef = useRef(steps);
   useEffect(() => {
     const prev = prevStepsRef.current;
     const next = steps;
     if (prev.length !== next.length && stepIndex > 0) {
-      // find current step id in new array
       const curId = prev[stepIndex];
       const newIdx = next.indexOf(curId);
       if (newIdx >= 0 && newIdx !== stepIndex) {
@@ -164,12 +191,16 @@ export function SettingsSetup({ onComplete }: Props) {
     [animating],
   );
 
-  useEffect(() => () => { if (timeoutRef.current !== null) clearTimeout(timeoutRef.current); }, []);
+  useEffect(
+    () => () => {
+      if (timeoutRef.current !== null) clearTimeout(timeoutRef.current);
+    },
+    [],
+  );
 
   const handleNext = () => {
     if (!canGoNext) return;
     if (currentStep === 'features') {
-      // Final — submit
       if (!language || !oitSubgroup) return;
       onComplete({
         language,
@@ -185,8 +216,6 @@ export function SettingsSetup({ onComplete }: Props) {
     if (stepIndex > 0) navigate('back');
   };
 
-  /* ──────────── render helpers ──────────── */
-
   const slideClass = animating
     ? direction === 'forward'
       ? 'onb-slide-out-left'
@@ -195,7 +224,6 @@ export function SettingsSetup({ onComplete }: Props) {
 
   return (
     <>
-      {/* CSS — injected once */}
       <OnboardingStyles />
 
       <div
@@ -205,7 +233,7 @@ export function SettingsSetup({ onComplete }: Props) {
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
-        {/* ── header ── */}
+        {/* header */}
         <div className="h-12 flex items-center px-4 shrink-0">
           {stepIndex > 0 && (
             <button
@@ -219,7 +247,7 @@ export function SettingsSetup({ onComplete }: Props) {
           )}
         </div>
 
-        {/* ── content ── */}
+        {/* content */}
         <div className="flex-1 flex items-center justify-center px-6">
           <div className={`w-full max-w-sm ${slideClass}`} key={`${currentStep}-${stepIndex}`}>
             {currentStep === 'welcome' && <StepWelcome />}
@@ -229,14 +257,12 @@ export function SettingsSetup({ onComplete }: Props) {
             {currentStep === 'engSubgroup' && (
               <StepEngSubgroup value={engSubgroup} onChange={setEngSubgroup} />
             )}
-            {currentStep === 'oit' && (
-              <StepOit value={oitSubgroup} onChange={setOitSubgroup} />
-            )}
+            {currentStep === 'oit' && <StepOit value={oitSubgroup} onChange={setOitSubgroup} />}
             {currentStep === 'features' && <StepFeatures />}
           </div>
         </div>
 
-        {/* ── footer: button + dots ── */}
+        {/* footer */}
         <div className="shrink-0 px-6 pb-6 space-y-5">
           <button
             disabled={!canGoNext || animating}
@@ -290,10 +316,10 @@ function buildSteps(needsEng: boolean): StepId[] {
   return s;
 }
 
-/* ────────────────────────────── step components ──────────────────── */
+/* ────────────────────────────── step: welcome ───────────────────── */
 
 function StepWelcome() {
-  const { canInstall, install } = useInstallPrompt();
+  const { canInstall, install, showIosGuide, closeIosGuide } = useInstallPrompt();
 
   return (
     <div className="text-center space-y-6">
@@ -315,9 +341,52 @@ function StepWelcome() {
           Добавить на экран «Домой»
         </button>
       )}
+
+      {/* iOS install guide — uses existing BottomSheet */}
+      <BottomSheet open={showIosGuide} onClose={closeIosGuide} title="Установка на iPhone">
+        <div className="space-y-5">
+          {/* Step 1 */}
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400">
+              1
+            </div>
+            <div className="text-sm text-neutral-700 dark:text-neutral-300 pt-1.5 leading-relaxed">
+              Нажмите{' '}
+              <Share
+                size={16}
+                className="inline-block align-text-bottom text-blue-600 dark:text-blue-400 mx-0.5"
+              />{' '}
+              <span className="font-semibold">«Поделиться»</span> в нижней панели Safari
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400">
+              2
+            </div>
+            <div className="text-sm text-neutral-700 dark:text-neutral-300 pt-1.5 leading-relaxed">
+              Прокрутите список вниз и нажмите{' '}
+              <span className="font-semibold">«На экран «Домой»»</span>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400">
+              3
+            </div>
+            <div className="text-sm text-neutral-700 dark:text-neutral-300 pt-1.5 leading-relaxed">
+              Нажмите <span className="font-semibold">«Добавить»</span> в правом верхнем углу
+            </div>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
+
+/* ────────────────────────────── step: language ───────────────────── */
 
 function StepLanguage({
   value,
@@ -350,6 +419,8 @@ function StepLanguage({
   );
 }
 
+/* ────────────────────────────── step: eng subgroup ──────────────── */
+
 function StepEngSubgroup({
   value,
   onChange,
@@ -381,6 +452,8 @@ function StepEngSubgroup({
   );
 }
 
+/* ────────────────────────────── step: oit ────────────────────────── */
+
 function StepOit({
   value,
   onChange,
@@ -411,6 +484,8 @@ function StepOit({
     </div>
   );
 }
+
+/* ────────────────────────────── step: features ──────────────────── */
 
 function StepFeatures() {
   return (
@@ -479,7 +554,6 @@ function OptionCard({
 function OnboardingStyles() {
   return (
     <style>{`
-      /* ── slide animations ── */
       .onb-slide-in {
         animation: onb-enter .4s cubic-bezier(.36, .07, .19, .97) both;
       }
@@ -503,7 +577,6 @@ function OnboardingStyles() {
         to   { opacity: 0; transform: translateX(30%); }
       }
 
-      /* wave hand */
       .animate-wave {
         display: inline-block;
         animation: wave-hand 1.8s ease-in-out infinite;
