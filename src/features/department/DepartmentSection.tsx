@@ -108,7 +108,7 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
             {teacher.email && (
               <a
                 href={`mailto:${teacher.email}`}
-                className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+                className="inline-flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
               >
                 <Mail size={15} className="shrink-0" />
                 <span>{teacher.email}</span>
@@ -117,7 +117,7 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
             {teacher.phone && (
               <a
                 href={`tel:${teacher.phone}`}
-                className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+                className="inline-flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
               >
                 <Phone size={15} className="shrink-0" />
                 <span>{teacher.phone}</span>
@@ -128,7 +128,7 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
                 href={`https://t.me/${teacher.telegram.replace('@', '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+                className="inline-flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
               >
                 <Send size={15} className="shrink-0" />
                 <span>{teacher.telegram}</span>

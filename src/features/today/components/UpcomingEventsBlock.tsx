@@ -39,7 +39,7 @@ export function UpcomingEventsBlock({ events }: Props) {
       {/* Карточка */}
       <div ref={rippleRef} className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 transform-gpu active:scale-[0.98] transition-transform duration-75">
         <div>
-          {events.map((event) => (
+          {events.slice(0, 3).map((event) => (
             <EventRow key={event.id} event={event} />
           ))}
         </div>

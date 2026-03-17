@@ -10,8 +10,8 @@ interface Props {
 }
 
 const TYPE_BADGE: Record<string, { label: string; className: string }> = {
-  lecture:   { label: 'Лек.',  className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/40 dark:text-blue-300' },
-  seminar:   { label: 'Сем.',  className: 'bg-green-100 text-green-700 dark:bg-green-500/40 dark:text-green-300' },
+  lecture:   { label: 'Лек.',  className: 'bg-green-100 text-green-700 dark:bg-green-500/40 dark:text-green-300' },
+  seminar:   { label: 'Сем.',  className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/40 dark:text-blue-300' },
   practice:  { label: 'Пр.',   className: 'bg-orange-100 text-orange-700 dark:bg-orange-500/40 dark:text-orange-300' },
   other:     { label: 'Др.',   className: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-300/40 dark:text-neutral-300' },
 };

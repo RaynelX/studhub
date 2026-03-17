@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate, addDays } from '../../schedule/utils/week-utils';
+import { toISODate } from '../../schedule/utils/week-utils';
 
 export interface UpcomingDeadline {
   id: string;
@@ -11,8 +11,6 @@ export interface UpcomingDeadline {
   dateLabel: string;
   timeLabel: string;
 }
-
-const DAYS_AHEAD = 7;
 
 export function useUpcomingDeadlines(): {
   deadlines: UpcomingDeadline[];
@@ -31,11 +29,10 @@ export function useUpcomingDeadlines(): {
 
     const today = new Date();
     const todayStr = toISODate(today);
-    const endStr = toISODate(addDays(today, DAYS_AHEAD));
     const subjectMap = new Map(subjects.map((s) => [s.id, s]));
 
     const filtered = deadlines.filter((d) => {
-      if (d.date < todayStr || d.date > endStr) return false;
+      if (d.date < todayStr) return false;
       const langOk =
         d.target_language === 'all' || d.target_language === settings.language;
       const engOk =

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate, addDays } from '../../schedule/utils/week-utils';
+import { toISODate } from '../../schedule/utils/week-utils';
 
 export interface UpcomingEvent {
   id: string;
@@ -12,8 +12,6 @@ export interface UpcomingEvent {
   dateLabel: string;
   timeLabel: string;
 }
-
-const DAYS_AHEAD = 7;
 
 export function useUpcomingEvents(): {
   events: UpcomingEvent[];
@@ -32,11 +30,10 @@ export function useUpcomingEvents(): {
 
     const today = new Date();
     const todayStr = toISODate(today);
-    const endStr = toISODate(addDays(today, DAYS_AHEAD));
     const subjectMap = new Map(subjects.map((s) => [s.id, s]));
 
     const filtered = events.filter((e) => {
-      if (e.date < todayStr || e.date > endStr) return false;
+      if (e.date < todayStr) return false;
       const langOk =
         e.target_language === 'all' || e.target_language === settings.language;
       const engOk =
