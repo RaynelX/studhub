@@ -358,10 +358,11 @@ export function SchedulePage() {
     }
   });
   const [hintDismissing, setHintDismissing] = useState(false);
+  const hintDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dismissHint = useCallback(() => {
     setHintDismissing(true);
-    setTimeout(() => {
+    hintDismissTimerRef.current = setTimeout(() => {
       setHintVisible(false);
     }, 200);
     try {
@@ -369,6 +370,15 @@ export function SchedulePage() {
     } catch {
       // ignore
     }
+  }, []);
+
+  // Clear dismiss timer on unmount
+  useEffect(() => {
+    return () => {
+      if (hintDismissTimerRef.current !== null) {
+        clearTimeout(hintDismissTimerRef.current);
+      }
+    };
   }, []);
 
   // Auto-dismiss hint after 4 seconds
@@ -490,12 +500,13 @@ export function SchedulePage() {
       >
         {/* Одноразовая подсказка о свайпах */}
         {hintVisible && (
-          <div
-            className={`flex items-center justify-center gap-2 mb-3 px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs select-none cursor-pointer ${hintDismissing ? 'anim-hint-dismiss' : 'anim-hint-appear'}`}
+          <button
+            type="button"
+            className={`w-full flex items-center justify-center gap-2 mb-3 px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs select-none cursor-pointer ${hintDismissing ? 'anim-hint-dismiss' : 'anim-hint-appear'}`}
             onClick={dismissHint}
           >
             <span>← Свайп для смены дня&nbsp;&nbsp;·&nbsp;&nbsp;Свайп по шапке для смены недели →</span>
-          </div>
+          </button>
         )}
         {loading ? (
           <div className="flex items-center justify-center py-16">
