@@ -83,7 +83,7 @@ function formatShortDate(dateStr: string, todayStr: string): string {
   if (diffDays === 1) return 'Завтра';
 
   return new Intl.DateTimeFormat('ru-RU', {
-    day: 'numeric',
-    month: 'short',
+    day: '2-digit',
+    month: '2-digit',
   }).format(date);
 }

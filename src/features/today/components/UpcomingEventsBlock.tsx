@@ -58,7 +58,7 @@ function EventRow({ event }: { event: UpcomingEvent }) {
   return (
     <div className="flex gap-2 py-2">
       {/* Дата */}
-      <span className="text-sm text-neutral-400 dark:text-neutral-500 w-16 shrink-0 pt-0.5">
+      <span className="text-xs text-neutral-400 dark:text-neutral-500 w-11 shrink-0 pt-0.5 tabular-nums">
         {event.dateLabel}
       </span>
 

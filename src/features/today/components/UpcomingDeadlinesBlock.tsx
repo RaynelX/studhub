@@ -46,7 +46,7 @@ export function UpcomingDeadlinesBlock({ deadlines }: Props) {
 function DeadlineRow({ deadline }: { deadline: UpcomingDeadline }) {
   return (
     <div className="flex items-baseline gap-3 py-2">
-      <span className="text-sm text-neutral-400 dark:text-neutral-500 w-14 shrink-0 tabular-nums">
+      <span className="text-xs text-neutral-400 dark:text-neutral-500 w-11 shrink-0 tabular-nums">
         {deadline.dateLabel}
       </span>
 

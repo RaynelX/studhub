@@ -6,9 +6,6 @@ export interface TeacherFormData {
   fullName: string;
   position: string;
   email: string;
-  phone: string;
-  telegram: string;
-  preferredContact: string;
   consultationInfo: string;
 }
 
@@ -24,9 +21,6 @@ function buildInitial(teacher?: TeacherDoc | null): TeacherFormData {
     fullName: teacher?.full_name ?? '',
     position: teacher?.position ?? '',
     email: teacher?.email ?? '',
-    phone: teacher?.phone ?? '',
-    telegram: teacher?.telegram ?? '',
-    preferredContact: teacher?.preferred_contact ?? '',
     consultationInfo: teacher?.consultation_info ?? '',
   };
 }
@@ -104,8 +98,8 @@ export function TeacherForm({ open, onClose, onSubmit, editTeacher }: TeacherFor
           />
         </div>
 
-        {/* Email + phone */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Email */}
+        <div>
           <div>
             <label className={labelCls}>Email</label>
             <input
@@ -113,40 +107,6 @@ export function TeacherForm({ open, onClose, onSubmit, editTeacher }: TeacherFor
               value={form.email}
               onChange={(e) => update('email', e.target.value)}
               placeholder="teacher@bsu.by"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>Телефон</label>
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
-              placeholder="+375 …"
-              className={inputCls}
-            />
-          </div>
-        </div>
-
-        {/* Telegram + preferred contact */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={labelCls}>Telegram</label>
-            <input
-              type="text"
-              value={form.telegram}
-              onChange={(e) => update('telegram', e.target.value)}
-              placeholder="@username"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className={labelCls}>Предпочт. способ связи</label>
-            <input
-              type="text"
-              value={form.preferredContact}
-              onChange={(e) => update('preferredContact', e.target.value)}
-              placeholder="email / telegram / …"
               className={inputCls}
             />
           </div>

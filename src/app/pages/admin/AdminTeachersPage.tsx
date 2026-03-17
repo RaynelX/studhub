@@ -29,7 +29,6 @@ export function AdminTeachersPage() {
       name: (t: TeacherDoc) => t.full_name,
       position: (t: TeacherDoc) => t.position ?? '',
       email: (t: TeacherDoc) => t.email ?? '',
-      telegram: (t: TeacherDoc) => t.telegram ?? '',
     }),
     [],
   );
@@ -61,9 +60,6 @@ export function AdminTeachersPage() {
         full_name: data.fullName,
         position: data.position || null,
         email: data.email || null,
-        phone: data.phone || null,
-        telegram: data.telegram || null,
-        preferred_contact: data.preferredContact || null,
         consultation_info: data.consultationInfo || null,
       };
 
@@ -126,7 +122,6 @@ export function AdminTeachersPage() {
                   <SortableTh column="name" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">ФИО</SortableTh>
                   <SortableTh column="position" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Должность</SortableTh>
                   <SortableTh column="email" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Email</SortableTh>
-                  <SortableTh column="telegram" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Telegram</SortableTh>
                   <th className="px-5 py-3 whitespace-nowrap">Консультации</th>
                   <th className="px-5 py-3 w-24" />
                 </tr>
@@ -149,9 +144,6 @@ export function AdminTeachersPage() {
                           {teacher.email}
                         </a>
                       ) : '—'}
-                    </td>
-                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
-                      {teacher.telegram || '—'}
                     </td>
                     <td className="px-5 py-3 text-neutral-500 dark:text-neutral-400 max-w-[200px] truncate">
                       {teacher.consultation_info || '—'}
