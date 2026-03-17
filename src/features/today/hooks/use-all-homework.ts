@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate, addDays } from '../../schedule/utils/week-utils';
+import { toISODate, addDays, parseLocalDate } from '../../schedule/utils/week-utils';
 import { BELL_SCHEDULE } from '../../../shared/constants/bell-schedule';
 
 export interface AllHomework {
@@ -67,7 +67,7 @@ export function useAllHomework(): {
 
     const result: AllHomework[] = sorted.map((hw) => {
       const subject = subjectMap.get(hw.subject_id);
-      const hwDate = new Date(hw.date);
+      const hwDate = parseLocalDate(hw.date);
 
       return {
         id: hw.id,
@@ -114,8 +114,8 @@ function isPairEnded(dateStr: string, pairNumber: number, now: Date): boolean {
 function formatHomeworkDate(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return 'Сегодня';
 
-  const date = new Date(dateStr);
-  const today = new Date(todayStr);
+  const date = parseLocalDate(dateStr);
+  const today = parseLocalDate(todayStr);
   const diffDays = Math.round(
     (date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );

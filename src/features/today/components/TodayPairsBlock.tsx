@@ -195,23 +195,28 @@ function PairsCard({
           </p>
         )}
 
-        {pairs.map((slot, i) => {
-          const isPast = (showCurrentPair && (currentIndex >= 0 ? i < currentIndex : false)) as boolean;
-          const isCurrent = (showCurrentPair && i === currentIndex) as boolean;
-          const isBeforeBreak = (showCurrentPair && breakStatus && i === pairs.indexOf(breakStatus.nextSlot) - 1) as boolean;
-          const isAfterBreak = (showCurrentPair && breakStatus && i === pairs.indexOf(breakStatus.nextSlot)) as boolean;
+        {(() => {
+          const nextSlotIndex = showCurrentPair && breakStatus
+            ? pairs.indexOf(breakStatus.nextSlot)
+            : -1;
+          return pairs.map((slot, i) => {
+            const isPast = (showCurrentPair && (currentIndex >= 0 ? i < currentIndex : false)) as boolean;
+            const isCurrent = (showCurrentPair && i === currentIndex) as boolean;
+            const isBeforeBreak = (nextSlotIndex >= 0 && i === nextSlotIndex - 1) as boolean;
+            const isAfterBreak = (nextSlotIndex >= 0 && i === nextSlotIndex) as boolean;
 
-          return (
-            <CompactPairRow
-              key={slot.pairNumber}
-              slot={slot}
-              isPast={isPast}
-              isCurrent={isCurrent}
-              isBeforeBreak={isBeforeBreak}
-              isAfterBreak={isAfterBreak}
-            />
-          );
-        })}
+            return (
+              <CompactPairRow
+                key={slot.pairNumber}
+                slot={slot}
+                isPast={isPast}
+                isCurrent={isCurrent}
+                isBeforeBreak={isBeforeBreak}
+                isAfterBreak={isAfterBreak}
+              />
+            );
+          });
+        })()}
       </div>
     </div>
   );

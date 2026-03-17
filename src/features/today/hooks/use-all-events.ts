@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate } from '../../schedule/utils/week-utils';
+import { toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 import type { EventType } from '../../../database/types';
 
 export interface AllEvent {
@@ -64,7 +64,7 @@ export function useAllEvents(): {
         ? teacherMap.get(event.teacher_id)
         : undefined;
 
-      const eventDate = new Date(event.date);
+      const eventDate = parseLocalDate(event.date);
 
       return {
         id: event.id,
@@ -92,8 +92,8 @@ export function useAllEvents(): {
 function formatEventDate(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return 'Сегодня';
 
-  const date = new Date(dateStr);
-  const today = new Date(todayStr);
+  const date = parseLocalDate(dateStr);
+  const today = parseLocalDate(todayStr);
   const diffDays = Math.round(
     (date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );
