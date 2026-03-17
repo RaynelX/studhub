@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate } from '../../schedule/utils/week-utils';
+import { toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 
 export interface UpcomingEvent {
   id: string;
@@ -74,8 +74,8 @@ export function useUpcomingEvents(): {
 function formatShortDate(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return 'Сегодня';
 
-  const date = new Date(dateStr);
-  const today = new Date(todayStr);
+  const date = parseLocalDate(dateStr);
+  const today = parseLocalDate(todayStr);
   const diffDays = Math.round(
     (date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );

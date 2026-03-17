@@ -109,7 +109,7 @@ export function SettingsSetup({ onComplete }: Props) {
   // Slide direction for animation
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [animating, setAnimating] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const DURATION = 400; // ms — match CSS
 
@@ -164,7 +164,7 @@ export function SettingsSetup({ onComplete }: Props) {
     [animating],
   );
 
-  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+  useEffect(() => () => { if (timeoutRef.current !== null) clearTimeout(timeoutRef.current); }, []);
 
   const handleNext = () => {
     if (!canGoNext) return;
