@@ -342,9 +342,13 @@ function StepWelcome() {
         </button>
       )}
 
-      {/* iOS install guide — uses existing BottomSheet */}
-      <BottomSheet open={showIosGuide} onClose={closeIosGuide} title="Установка на iPhone" height='40dvh'>
-        <div className="space-y-5">
+      <BottomSheet
+        open={showIosGuide}
+        onClose={closeIosGuide}
+        title="Установка на iPhone"
+        maxHeight="50dvh"
+      >
+        <div className="space-y-5 pb-4">
           {/* Step 1 */}
           <div className="flex items-start gap-3">
             <div className="shrink-0 w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400">
