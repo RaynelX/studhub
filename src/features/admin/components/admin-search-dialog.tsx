@@ -85,8 +85,7 @@ export function AdminSearchDialog() {
       if (t.is_deleted) continue;
       if (
         t.full_name.toLowerCase().includes(q) ||
-        (t.email ?? '').toLowerCase().includes(q) ||
-        (t.telegram ?? '').toLowerCase().includes(q)
+        (t.email ?? '').toLowerCase().includes(q)
       ) {
         items.push({
           id: t.id,

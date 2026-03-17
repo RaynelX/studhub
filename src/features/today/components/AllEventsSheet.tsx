@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { BottomSheet } from '../../../shared/ui/BottomSheet';
 import { useAllEvents } from '../hooks/use-all-events';
 import type { AllEvent } from '../hooks/use-all-events';
 import type { EventType } from '../../../database/types';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 // Цвета идентичны EVENT_TYPE_CONFIG из PairCard.tsx
 const EVENT_TYPE_CONFIG: Record<
@@ -60,7 +61,7 @@ export function AllEventsSheet({ open, onClose }: Props) {
       {/* Фильтры — flex wrap */}
       <div className="flex flex-wrap gap-2 pb-3">
         {FILTER_OPTIONS.map((opt) => (
-          <button
+          <RippleButton
             key={opt.value}
             onClick={() => setFilter(opt.value)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
@@ -70,7 +71,7 @@ export function AllEventsSheet({ open, onClose }: Props) {
             }`}
           >
             {opt.label}
-          </button>
+          </RippleButton>
         ))}
       </div>
 
@@ -85,12 +86,12 @@ export function AllEventsSheet({ open, onClose }: Props) {
             {filter === 'all' ? 'Нет предстоящих событий' : 'Нет событий этого типа'}
           </p>
           {filter !== 'all' && (
-            <button
+            <RippleButton
               onClick={() => setFilter('all')}
               className="text-sm text-blue-600 dark:text-blue-400 font-medium active:opacity-70 transition-opacity"
             >
               Показать все события
-            </button>
+            </RippleButton>
           )}
         </div>
       ) : (
@@ -115,9 +116,10 @@ export function AllEventsSheet({ open, onClose }: Props) {
 
 function EventCard({ event }: { event: AllEvent }) {
   const config = EVENT_TYPE_CONFIG[event.eventType] ?? EVENT_TYPE_CONFIG.other;
+  const rippleRef = useTouchRipple();
 
   return (
-    <div className={`rounded-xl border border-gray-200 dark:border-neutral-800/50 ${config.bg} ${config.darkBg} p-4`}>
+    <div ref={rippleRef} className={`rounded-xl border border-gray-200 dark:border-neutral-800/50 ${config.bg} ${config.darkBg} p-4 transform-gpu active:scale-[0.98] transition-transform duration-75`}>
       {/* Бейдж + время */}
       <div className="flex items-center justify-between mb-1.5">
         <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${config.badge}`}>
@@ -152,5 +154,25 @@ function EventCard({ event }: { event: AllEvent }) {
         </div>
       )}
     </div>
+  );
+}
+
+interface RippleButtonProps {
+  onClick: () => void;
+  className: string;
+  children: ReactNode;
+}
+
+function RippleButton({ onClick, className, children }: RippleButtonProps) {
+  const rippleRef = useTouchRipple<HTMLButtonElement>();
+
+  return (
+    <button
+      ref={rippleRef}
+      onClick={onClick}
+      className={`transform-gpu active:scale-[0.98] transition-transform duration-75 ${className}`}
+    >
+      {children}
+    </button>
   );
 }

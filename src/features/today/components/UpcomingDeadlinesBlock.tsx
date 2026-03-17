@@ -9,6 +9,7 @@ interface Props {
 
 export function UpcomingDeadlinesBlock({ deadlines }: Props) {
   const rippleRef = useTouchRipple();
+  const showAllButtonRef = useTouchRipple<HTMLButtonElement>();
   const [sheetOpen, setSheetOpen] = useState(false);
   if (deadlines.length === 0) return null;
 
@@ -20,6 +21,7 @@ export function UpcomingDeadlinesBlock({ deadlines }: Props) {
           Ближайшие дедлайны
         </h3>
         <button
+          ref={showAllButtonRef}
           onClick={() => setSheetOpen(true)}
           className="text-sm text-amber-600 dark:text-amber-400 font-medium active:opacity-70 transition-opacity"
         >
@@ -30,7 +32,7 @@ export function UpcomingDeadlinesBlock({ deadlines }: Props) {
       {/* Карточка */}
       <div ref={rippleRef} className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 transform-gpu active:scale-[0.98] transition-transform duration-75">
         <div>
-          {deadlines.map((dl) => (
+          {deadlines.slice(0, 3).map((dl) => (
             <DeadlineRow key={dl.id} deadline={dl} />
           ))}
         </div>
@@ -44,7 +46,7 @@ export function UpcomingDeadlinesBlock({ deadlines }: Props) {
 function DeadlineRow({ deadline }: { deadline: UpcomingDeadline }) {
   return (
     <div className="flex items-baseline gap-3 py-2">
-      <span className="text-sm text-neutral-400 dark:text-neutral-500 w-14 shrink-0 tabular-nums">
+      <span className="text-xs text-neutral-400 dark:text-neutral-500 w-11 shrink-0 tabular-nums">
         {deadline.dateLabel}
       </span>
 

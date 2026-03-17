@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate, addDays } from '../../schedule/utils/week-utils';
+import { toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 
 export interface UpcomingEvent {
   id: string;
@@ -12,8 +12,6 @@ export interface UpcomingEvent {
   dateLabel: string;
   timeLabel: string;
 }
-
-const DAYS_AHEAD = 7;
 
 export function useUpcomingEvents(): {
   events: UpcomingEvent[];
@@ -32,11 +30,10 @@ export function useUpcomingEvents(): {
 
     const today = new Date();
     const todayStr = toISODate(today);
-    const endStr = toISODate(addDays(today, DAYS_AHEAD));
     const subjectMap = new Map(subjects.map((s) => [s.id, s]));
 
     const filtered = events.filter((e) => {
-      if (e.date < todayStr || e.date > endStr) return false;
+      if (e.date < todayStr) return false;
       const langOk =
         e.target_language === 'all' || e.target_language === settings.language;
       const engOk =
@@ -77,8 +74,8 @@ export function useUpcomingEvents(): {
 function formatShortDate(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return 'Сегодня';
 
-  const date = new Date(dateStr);
-  const today = new Date(todayStr);
+  const date = parseLocalDate(dateStr);
+  const today = parseLocalDate(todayStr);
   const diffDays = Math.round(
     (date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );
@@ -86,7 +83,7 @@ function formatShortDate(dateStr: string, todayStr: string): string {
   if (diffDays === 1) return 'Завтра';
 
   return new Intl.DateTimeFormat('ru-RU', {
-    day: 'numeric',
-    month: 'short',
+    day: '2-digit',
+    month: '2-digit',
   }).format(date);
 }

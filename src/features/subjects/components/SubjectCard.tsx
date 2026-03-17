@@ -99,7 +99,7 @@ export function SubjectCard({ data }: Props) {
               href={subject.sdo_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+              className="flex w-fit max-w-full items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
               <Link size={16} className="shrink-0" />
@@ -113,7 +113,7 @@ export function SubjectCard({ data }: Props) {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+              className="flex w-fit max-w-full items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
               onClick={(e) => e.stopPropagation()}
             >
               <Link size={16} className="shrink-0" />

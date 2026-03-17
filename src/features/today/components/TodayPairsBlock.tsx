@@ -10,8 +10,8 @@ interface Props {
 }
 
 const TYPE_BADGE: Record<string, { label: string; className: string }> = {
-  lecture:   { label: 'Лек.',  className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/40 dark:text-blue-300' },
-  seminar:   { label: 'Сем.',  className: 'bg-green-100 text-green-700 dark:bg-green-500/40 dark:text-green-300' },
+  lecture:   { label: 'Лек.',  className: 'bg-green-100 text-green-700 dark:bg-green-500/40 dark:text-green-300' },
+  seminar:   { label: 'Сем.',  className: 'bg-blue-100 text-blue-700 dark:bg-blue-500/40 dark:text-blue-300' },
   practice:  { label: 'Пр.',   className: 'bg-orange-100 text-orange-700 dark:bg-orange-500/40 dark:text-orange-300' },
   other:     { label: 'Др.',   className: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-300/40 dark:text-neutral-300' },
 };
@@ -32,6 +32,15 @@ interface CurrentPairStatus {
   progressPercent: number;
   remainingMinutes: number;
   remainingLabel: string;
+  progressClassName: string;
+}
+
+interface BreakStatus {
+  isInBreak: true;
+  nextSlot: DaySlot;
+  remainingMinutes: number;
+  remainingLabel: string;
+  progressPercent: number;
   progressClassName: string;
 }
 
@@ -84,9 +93,12 @@ function PairsCard({
   const currentMinutes = useCurrentMinutes();
   const rippleRef = useTouchRipple();
 
+  // Проверяем, находимся ли в перерыве
+  const breakStatus = showCurrentPair ? getBreakStatus(pairs, currentMinutes) : null;
+
   // Определяем текущую пару
   let currentIndex = -1;
-  if (showCurrentPair) {
+  if (showCurrentPair && !breakStatus) {
     currentIndex = pairs.findIndex((slot) => {
       const [sh, sm] = slot.startTime.split(':').map(Number);
       const [eh, em] = slot.endTime.split(':').map(Number);
@@ -120,75 +132,154 @@ function PairsCard({
                  transform-gpu active:scale-[0.98] transition-transform duration-75"
       onClick={() => navigate('/schedule')}
     >
-      {/* Текущая пара — крупный блок */}
-      {currentSlot?.pair && (
-        <div className="p-4 pb-3 border-b border-gray-100 dark:border-neutral-800">
-          <p className="text-xs font-medium text-neutral-400 dark:text-neutral-500 mb-1">
-            Сейчас · {currentSlot.pairNumber} пара
-          </p>
+      {/* Отображаем либо текущую пару, либо перерыв */}
+      {breakStatus ? (
+        <BreakBlock breakStatus={breakStatus} />
+      ) : (
+        <>
+          {/* Текущая пара — крупный блок */}
+          {currentSlot?.pair && (
+            <div className="p-4 pb-3 border-b border-gray-100 dark:border-neutral-800">
+              <p className="text-xs font-medium text-neutral-400 dark:text-neutral-500 mb-1">
+                Сейчас · {currentSlot.pairNumber} пара
+              </p>
 
-          <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-            {currentSlot.pair.subjectName}
-          </p>
+              <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                {currentSlot.pair.subjectName}
+              </p>
 
-          <div className="flex items-center gap-2 mt-1">
-            {currentSlot.pair.teacherName && (
-              <span className="text-sm text-neutral-600 dark:text-neutral-300">
-                {currentSlot.pair.teacherName}
-              </span>
-            )}
-            {currentSlot.pair.room && (
-              <span className="text-sm text-neutral-400 dark:text-neutral-500 ml-auto">
-                {currentSlot.pair.room === 'ДОТ' ? 'ДОТ' : `ауд. ${currentSlot.pair.room}`}
-              </span>
-            )}
-          </div>
+              <div className="flex items-center gap-2 mt-1">
+                {currentSlot.pair.teacherName && (
+                  <span className="text-sm text-neutral-600 dark:text-neutral-300">
+                    {currentSlot.pair.teacherName}
+                  </span>
+                )}
+                {currentSlot.pair.room && (
+                  <span className="text-sm text-neutral-400 dark:text-neutral-500 ml-auto">
+                    {currentSlot.pair.room === 'ДОТ' ? 'ДОТ' : `ауд. ${currentSlot.pair.room}`}
+                  </span>
+                )}
+              </div>
 
-          {/* Оставшееся время */}
-          {currentStatus && (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
-              {currentStatus.remainingLabel}
-            </p>
+              {/* Оставшееся время */}
+              {currentStatus && (
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                  {currentStatus.remainingLabel}
+                </p>
+              )}
+
+              {/* Прогресс-бар */}
+              <div className="mt-2 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full anim-progress-bar ${currentStatus?.progressClassName ?? 'bg-blue-500 dark:bg-blue-400'}`}
+                  style={{ width: `${currentStatus?.progressPercent ?? 0}%` }}
+                />
+              </div>
+
+              {/* Следующая пара */}
+              {currentNextLabel && (
+                <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-2">
+                  {currentNextLabel}
+                </p>
+              )}
+            </div>
           )}
-
-          {/* Прогресс-бар */}
-          <div className="mt-2 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full anim-progress-bar ${currentStatus?.progressClassName ?? 'bg-blue-500 dark:bg-blue-400'}`}
-              style={{ width: `${currentStatus?.progressPercent ?? 0}%` }}
-            />
-          </div>
-
-          {/* Следующая пара */}
-          {currentNextLabel && (
-            <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-2">
-              {currentNextLabel}
-            </p>
-          )}
-        </div>
+        </>
       )}
 
       {/* Список пар */}
       <div className="px-4 py-2">
-        {!currentSlot && (
+        {!currentSlot && !breakStatus && (
           <p className="text-xs font-medium text-neutral-400 dark:text-neutral-500 mb-1 pt-1">
             {subtitle}
           </p>
         )}
 
-        {pairs.map((slot, i) => {
-          const isPast = showCurrentPair && currentIndex >= 0 && i < currentIndex;
-          const isCurrent = showCurrentPair && i === currentIndex;
+        {(() => {
+          const nextSlotIndex = showCurrentPair && breakStatus
+            ? pairs.indexOf(breakStatus.nextSlot)
+            : -1;
+          return pairs.map((slot, i) => {
+            const isPast = (showCurrentPair && (currentIndex >= 0 ? i < currentIndex : false)) as boolean;
+            const isCurrent = (showCurrentPair && i === currentIndex) as boolean;
+            const isBeforeBreak = (nextSlotIndex >= 0 && i === nextSlotIndex - 1) as boolean;
+            const isAfterBreak = (nextSlotIndex >= 0 && i === nextSlotIndex) as boolean;
 
-          return (
-            <CompactPairRow
-              key={slot.pairNumber}
-              slot={slot}
-              isPast={isPast}
-              isCurrent={isCurrent}
-            />
-          );
-        })}
+            return (
+              <CompactPairRow
+                key={slot.pairNumber}
+                slot={slot}
+                isPast={isPast}
+                isCurrent={isCurrent}
+                isBeforeBreak={isBeforeBreak}
+                isAfterBreak={isAfterBreak}
+              />
+            );
+          });
+        })()}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Блок перерыва между парами
+// ============================================================
+
+function BreakBlock({ breakStatus }: { breakStatus: BreakStatus }) {
+  const nextSlot = breakStatus.nextSlot;
+  const nextPair = nextSlot.pair;
+
+  if (!nextPair) return null;
+
+  const isEvent = nextPair.status === 'event';
+  const badge = isEvent && nextPair.eventType
+    ? EVENT_BADGE[nextPair.eventType] ?? EVENT_BADGE.other
+    : nextPair.entryType
+      ? TYPE_BADGE[nextPair.entryType] ?? TYPE_BADGE.other
+      : null;
+
+  return (
+    <div className="p-4 pb-3 border-b border-gray-100 dark:border-neutral-800">
+      <p className="text-xs font-medium text-neutral-400 dark:text-neutral-500 mb-2">
+        Перерыв · {nextSlot.pairNumber} пара начинается
+      </p>
+
+      <div className="flex items-center gap-2 mb-2">
+        {badge && (
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded shrink-0 ${badge.className}`}>
+            {badge.label}
+          </span>
+        )}
+        <p className="text-lg font-bold text-neutral-900 dark:text-neutral-100 flex-1">
+          {nextPair.subjectName}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {nextPair.teacherName && (
+          <span className="text-sm text-neutral-600 dark:text-neutral-300">
+            {nextPair.teacherName}
+          </span>
+        )}
+        {nextPair.room && (
+          <span className="text-sm text-neutral-400 dark:text-neutral-500 ml-auto">
+            {nextPair.room === 'ДОТ' ? 'ДОТ' : `ауд. ${nextPair.room}`}
+          </span>
+        )}
+      </div>
+
+      {/* Оставшееся время до следующей пары */}
+      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+        {breakStatus.remainingLabel}
+      </p>
+
+      {/* Прогресс-бар перерыва */}
+      <div className="mt-2 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full anim-progress-bar ${breakStatus.progressClassName}`}
+          style={{ width: `${breakStatus.progressPercent}%` }}
+        />
       </div>
     </div>
   );
@@ -202,10 +293,14 @@ function CompactPairRow({
   slot,
   isPast,
   isCurrent,
+  isBeforeBreak,
+  isAfterBreak,
 }: {
   slot: DaySlot;
   isPast: boolean;
   isCurrent: boolean;
+  isBeforeBreak?: boolean;
+  isAfterBreak?: boolean;
 }) {
   if (!slot.pair) return null;
   const pair = slot.pair;
@@ -225,6 +320,8 @@ function CompactPairRow({
         ${isCancelled ? 'opacity-40' : ''}
         ${isPast ? 'opacity-30' : ''}
         ${isCurrent ? 'opacity-50' : ''}
+        ${isBeforeBreak ? 'opacity-50' : ''}
+        ${isAfterBreak ? 'opacity-50' : ''}
       `}
     >
       {/* Номер */}
@@ -380,4 +477,33 @@ function calculateProgress(currentMinutes: number, startMinutes: number, endMinu
 
   const elapsed = Math.min(Math.max(currentMinutes - startMinutes, 0), total);
   return Math.round((elapsed / total) * 100);
+}
+
+function getBreakStatus(
+  pairs: DaySlot[],
+  currentMinutes: number,
+): BreakStatus | null {
+  for (let i = 0; i < pairs.length - 1; i++) {
+    const currentSlot = pairs[i];
+    const nextSlot = pairs[i + 1];
+
+    if (!currentSlot || !nextSlot) continue;
+
+    const [eh, em] = currentSlot.endTime.split(':').map(Number);
+    const breakStartMinutes = eh * 60 + em;
+    const breakEndMinutes = toMinutes(nextSlot.startTime);
+
+    if (currentMinutes >= breakStartMinutes && currentMinutes < breakEndMinutes) {
+      return {
+        isInBreak: true,
+        nextSlot,
+        remainingMinutes: breakEndMinutes - currentMinutes,
+        remainingLabel: `Перерыв ${breakEndMinutes - currentMinutes} мин · до ${nextSlot.startTime}`,
+        progressPercent: calculateProgress(currentMinutes, breakStartMinutes, breakEndMinutes),
+        progressClassName: 'bg-amber-500 dark:bg-amber-400',
+      };
+    }
+  }
+
+  return null;
 }

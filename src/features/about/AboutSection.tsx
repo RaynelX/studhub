@@ -7,7 +7,7 @@ const GITHUB_URL = 'https://github.com/RaynelX/studhub';
 const CHANGELOG: { version: string; date: string; changes: string[] }[] = [
   {
     version: '1.0.0',
-    date: '15.03.2026',
+    date: '17.03.2026',
     changes: [
       'Полная переработка приложения с нуля',
       'Тёмная тема',
@@ -58,7 +58,7 @@ export function AboutSection() {
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+            className="inline-flex self-start items-center gap-2 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
           >
             <Github size={16} />
             <span>GitHub</span>
@@ -68,7 +68,7 @@ export function AboutSection() {
             href={`${GITHUB_URL}/issues`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+            className="inline-flex self-start items-center gap-2 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
           >
             <ExternalLink size={16} />
             <span>Сообщить об ошибке</span>

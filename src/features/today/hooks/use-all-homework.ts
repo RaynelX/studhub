@@ -5,20 +5,21 @@ import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { toISODate, addDays, parseLocalDate } from '../../schedule/utils/week-utils';
 import { BELL_SCHEDULE } from '../../../shared/constants/bell-schedule';
 
-export interface ActiveHomework {
+export interface AllHomework {
   id: string;
   subjectName: string;
-  subjectId: string;
   content: string;
-  assignedDate: string;
-  pairNumber: number;
+  date: string;
   dateLabel: string;
+  dayNumber: string;
+  dayOfWeek: string;
+  pairNumber: number;
 }
 
 const DAYS_AHEAD = 30;
 
-export function useActiveHomework(): {
-  homework: ActiveHomework[];
+export function useAllHomework(): {
+  homework: AllHomework[];
   loading: boolean;
 } {
   const db = useDatabase();
@@ -37,7 +38,6 @@ export function useActiveHomework(): {
     const endStr = toISODate(addDays(now, DAYS_AHEAD));
     const subjectMap = new Map(subjects.map((s) => [s.id, s]));
 
-    // Filter homeworks: only show for pairs that haven't ended yet
     const filtered = homeworks.filter((hw) => {
       if (hw.is_deleted) return false;
       
@@ -59,21 +59,25 @@ export function useActiveHomework(): {
       return langOk && engOk && oitOk;
     });
 
-    // Sort by date ascending (closest first), limit to 5
-    const sorted = [...filtered]
-      .sort((a, b) => a.date.localeCompare(b.date) || a.pair_number - b.pair_number)
-      .slice(0, 5);
+    const sorted = [...filtered].sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        a.pair_number - b.pair_number,
+    );
 
-    const result: ActiveHomework[] = sorted.map((hw) => {
+    const result: AllHomework[] = sorted.map((hw) => {
       const subject = subjectMap.get(hw.subject_id);
+      const hwDate = parseLocalDate(hw.date);
+
       return {
         id: hw.id,
-        subjectName: subject?.short_name ?? subject?.name ?? 'Предмет',
-        subjectId: hw.subject_id,
+        subjectName: subject?.name ?? subject?.short_name ?? 'Предмет',
         content: hw.content,
-        assignedDate: hw.date,
+        date: hw.date,
+        dateLabel: formatHomeworkDate(hw.date, todayStr),
+        dayNumber: String(hwDate.getDate()),
+        dayOfWeek: hwDate.toLocaleDateString('ru-RU', { weekday: 'short' }).toUpperCase(),
         pairNumber: hw.pair_number,
-        dateLabel: formatShortDate(hw.date, todayStr),
       };
     });
 
@@ -107,7 +111,7 @@ function isPairEnded(dateStr: string, pairNumber: number, now: Date): boolean {
   return false;
 }
 
-function formatShortDate(dateStr: string, todayStr: string): string {
+function formatHomeworkDate(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return 'Сегодня';
 
   const date = parseLocalDate(dateStr);
@@ -119,7 +123,8 @@ function formatShortDate(dateStr: string, todayStr: string): string {
   if (diffDays === 1) return 'Завтра';
 
   return new Intl.DateTimeFormat('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
   }).format(date);
 }

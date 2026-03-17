@@ -44,9 +44,6 @@ export interface TeacherDoc {
   full_name: string;
   position?: string;
   email?: string;
-  phone?: string;
-  telegram?: string;
-  preferred_contact?: string;
   consultation_info?: string;
   created_at: string;
   updated_at: string;

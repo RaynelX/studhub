@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { BottomSheet } from '../../../shared/ui/BottomSheet';
 import { useAllDeadlines } from '../hooks/use-all-deadlines';
 import type { AllDeadline } from '../hooks/use-all-deadlines';
+import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 
 interface Props {
   open: boolean;
@@ -59,8 +60,10 @@ export function AllDeadlinesSheet({ open, onClose }: Props) {
 }
 
 function DeadlineSheetCard({ deadline }: { deadline: AllDeadline }) {
+  const rippleRef = useTouchRipple();
+
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-neutral-800/50 bg-amber-50 dark:bg-amber-950/40 p-4">
+    <div ref={rippleRef} className="rounded-xl border border-gray-200 dark:border-neutral-800/50 bg-amber-50 dark:bg-amber-950/40 p-4 transform-gpu active:scale-[0.98] transition-transform duration-75">
       <div className="flex items-center justify-between">
         <p className="text-base font-semibold text-gray-900 dark:text-neutral-100">
           {deadline.subjectName ?? 'Без предмета'}

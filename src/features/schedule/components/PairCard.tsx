@@ -12,8 +12,8 @@ const ENTRY_TYPE_CONFIG: Record<
   string,
   { label: string; badge: string; border: string }
 > = {
-  lecture:  { label: 'Лекция',    badge: 'bg-blue-100 text-blue-700 dark:bg-blue-500/40 dark:text-blue-300',     border: 'border-l-blue-500' },
-  seminar: { label: 'Семинар',   badge: 'bg-green-100 text-green-700 dark:bg-green-500/40 dark:text-green-300',   border: 'border-l-green-500' },
+  lecture:  { label: 'Лекция',    badge: 'bg-green-100 text-green-700 dark:bg-green-500/40 dark:text-green-300',   border: 'border-l-green-500' },
+  seminar: { label: 'Семинар',   badge: 'bg-blue-100 text-blue-700 dark:bg-blue-500/40 dark:text-blue-300',     border: 'border-l-blue-500' },
   practice:{ label: 'Практика',  badge: 'bg-orange-100 text-orange-700 dark:bg-orange-500/40 dark:text-orange-300', border: 'border-l-orange-500' },
   other:   { label: 'Другое',    badge: 'bg-gray-100 text-gray-600 dark:bg-gray-500/40 dark:text-gray-300',     border: 'border-l-gray-400' },
 };
@@ -74,11 +74,7 @@ export function PairCard({ pair, startTime, endTime, date, onLongPress, isAdmin,
 
   const borderColor = isCancelled
     ? 'border-l-red-300'
-    : pair.status === 'replaced'
-      ? 'border-l-yellow-500'
-      : pair.status === 'added'
-        ? 'border-l-emerald-500'
-        : typeConfig?.border ?? 'border-l-gray-300';
+    : typeConfig?.border ?? 'border-l-gray-300';
 
   const bgColor = isEvent && eventConfig
     ? `${eventConfig.bg} ${eventConfig.darkBg}`

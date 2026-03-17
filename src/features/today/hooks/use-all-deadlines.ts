@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useSettings } from '../../settings/SettingsProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
-import { toISODate } from '../../schedule/utils/week-utils';
+import { toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 
 export interface AllDeadline {
   id: string;
@@ -55,7 +55,7 @@ export function useAllDeadlines(): {
         ? subjectMap.get(dl.subject_id)
         : undefined;
 
-      const dlDate = new Date(dl.date);
+      const dlDate = parseLocalDate(dl.date);
 
       return {
         id: dl.id,
@@ -78,8 +78,8 @@ export function useAllDeadlines(): {
 function formatDeadlineDate(dateStr: string, todayStr: string): string {
   if (dateStr === todayStr) return 'Сегодня';
 
-  const date = new Date(dateStr);
-  const today = new Date(todayStr);
+  const date = parseLocalDate(dateStr);
+  const today = parseLocalDate(todayStr);
   const diffDays = Math.round(
     (date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000),
   );
@@ -87,8 +87,7 @@ function formatDeadlineDate(dateStr: string, todayStr: string): string {
   if (diffDays === 1) return 'Завтра';
 
   return new Intl.DateTimeFormat('ru-RU', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
+    day: '2-digit',
+    month: '2-digit',
   }).format(date);
 }

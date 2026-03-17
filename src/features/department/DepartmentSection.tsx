@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, Mail, Phone, Send, Clock } from 'lucide-react';
+import { ChevronDown, Mail, Clock } from 'lucide-react';
 import { useDatabase } from '../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../database/hooks/use-rx-collection';
 import { useTouchRipple } from '../../shared/hooks/use-touch-ripple';
@@ -63,7 +63,7 @@ export function DepartmentSection() {
 
 function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
     const [expanded, setExpanded] = useState(false);
-    const hasContacts = !!(teacher.email || teacher.phone || teacher.telegram || teacher.consultation_info);
+  const hasContacts = !!(teacher.email || teacher.consultation_info);
     const rippleRef = useTouchRipple<HTMLDivElement>({ stopPropagation: true });
   
     return (
@@ -108,30 +108,10 @@ function TeacherRow({ teacher }: { teacher: TeacherDoc }) {
             {teacher.email && (
               <a
                 href={`mailto:${teacher.email}`}
-                className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
+                className="flex w-fit items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
               >
                 <Mail size={15} className="shrink-0" />
                 <span>{teacher.email}</span>
-              </a>
-            )}
-            {teacher.phone && (
-              <a
-                href={`tel:${teacher.phone}`}
-                className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
-              >
-                <Phone size={15} className="shrink-0" />
-                <span>{teacher.phone}</span>
-              </a>
-            )}
-            {teacher.telegram && (
-              <a
-                href={`https://t.me/${teacher.telegram.replace('@', '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 text-sm text-blue-600 dark:text-blue-400 active:opacity-70 transition-opacity"
-              >
-                <Send size={15} className="shrink-0" />
-                <span>{teacher.telegram}</span>
               </a>
             )}
             {teacher.consultation_info && (

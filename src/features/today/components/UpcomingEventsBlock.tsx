@@ -18,6 +18,7 @@ interface Props {
 
 export function UpcomingEventsBlock({ events }: Props) {
   const rippleRef = useTouchRipple();
+  const showAllButtonRef = useTouchRipple<HTMLButtonElement>();
   const [sheetOpen, setSheetOpen] = useState(false);
   if (events.length === 0) return null;
 
@@ -29,6 +30,7 @@ export function UpcomingEventsBlock({ events }: Props) {
           Ближайшие события
         </h3>
         <button
+          ref={showAllButtonRef}
           onClick={() => setSheetOpen(true)}
           className="text-sm text-blue-600 dark:text-blue-400 font-medium active:opacity-70 transition-opacity"
         >
@@ -39,7 +41,7 @@ export function UpcomingEventsBlock({ events }: Props) {
       {/* Карточка */}
       <div ref={rippleRef} className="relative bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent px-4 py-2 transform-gpu active:scale-[0.98] transition-transform duration-75">
         <div>
-          {events.map((event) => (
+          {events.slice(0, 3).map((event) => (
             <EventRow key={event.id} event={event} />
           ))}
         </div>
@@ -56,7 +58,7 @@ function EventRow({ event }: { event: UpcomingEvent }) {
   return (
     <div className="flex gap-2 py-2">
       {/* Дата */}
-      <span className="text-sm text-neutral-400 dark:text-neutral-500 w-16 shrink-0 pt-0.5">
+      <span className="text-xs text-neutral-400 dark:text-neutral-500 w-11 shrink-0 pt-0.5 tabular-nums">
         {event.dateLabel}
       </span>
 
