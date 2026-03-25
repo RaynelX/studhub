@@ -7,7 +7,7 @@ const GITHUB_URL = 'https://github.com/RaynelX/studhub';
 const CHANGELOG: { version: string; date: string; changes: string[] }[] = [
   {
     version: '1.0.1',
-    date: '27.03.2026',
+    date: '25.03.2026',
     changes: [
       'Редизайн нижней шторки',
       'Редизайн панели оценивания на вкладке Сессия',

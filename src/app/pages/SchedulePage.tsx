@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useHorizontalSwipe } from '../../shared/hooks/use-horizontal-swipe';
 import type { SwipeDirection } from '../../shared/hooks/use-horizontal-swipe';
 import { useDaySchedule } from '../../features/schedule/hooks/use-day-schedule';
@@ -41,11 +42,44 @@ import { useCancelPair } from '../../features/admin/hooks/use-cancel-pair';
 const DOUBLE_TAP_MS = 350;
 const HINT_KEY = 'studhub_swipe_hint_seen';
 
+function parseScheduleDateParam(search: string): Date | null {
+  const params = new URLSearchParams(search);
+  const rawDate = params.get('date');
+
+  if (!rawDate || !/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+    return null;
+  }
+
+  const [year, month, day] = rawDate.split('-').map(Number);
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
 // ============================================================
 // Компонент страницы
 // ============================================================
 
 export function SchedulePage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const routeDate = useMemo(() => parseScheduleDateParam(location.search), [location.search]);
+  const routeDateConsumedRef = useRef(false);
+
+  // Направление анимации при смене дня — задаётся в обработчиках навигации
+  const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
+
   const db = useDatabase();
   const { data: semesterData } = useRxCollection(db.semester);
   const semesterConfig = semesterData[0] ?? null;
@@ -57,9 +91,35 @@ export function SchedulePage() {
 
   // Если сегодня воскресенье — по умолчанию показываем понедельник следующей недели
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    if (routeDate) {
+      return routeDate;
+    }
+
     const today = new Date();
     return getDayOfWeek(today) === 7 ? addDays(today, 1) : today;
   });
+
+  useEffect(() => {
+    if (!routeDate || routeDateConsumedRef.current) {
+      return;
+    }
+
+    routeDateConsumedRef.current = true;
+    setAnimDirection('fade');
+    setSelectedDate(routeDate);
+
+    const params = new URLSearchParams(location.search);
+    params.delete('date');
+    const nextSearch = params.toString();
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : '',
+      },
+      { replace: true },
+    );
+  }, [routeDate, location.pathname, location.search, navigate]);
 
   const monday = getMonday(selectedDate);
   const weekRange = formatWeekRange(monday);
@@ -77,9 +137,6 @@ export function SchedulePage() {
 
   const canGoPrev = !semesterStartMonday || monday.getTime() > semesterStartMonday.getTime();
   const canGoNext = !semesterEndMonday || monday.getTime() < semesterEndMonday.getTime();
-
-  // Направление анимации при смене дня — задаётся в обработчиках навигации
-  const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
 
   // Навигация по неделям — при смене недели всегда переходим на понедельник,
   // чтобы пользователь видел изменения (расписание часто одинаковое для одного дня).

@@ -54,12 +54,17 @@ export function TodayPairsBlock({ data }: Props) {
   }
 
   if ((!data.hasPairsToday || data.allPairsFinished) && data.nextDay) {
+    const nextDayTarget = data.allPairsFinished
+      ? `/schedule?date=${formatRouteDate(data.nextDay.date)}`
+      : '/schedule';
+
     return (
       <Section title={data.allPairsFinished ? 'Пары закончились · далее' : 'Сегодня пар нет · далее'}>
         <PairsCard
           pairs={data.nextDay.pairs}
           subtitle={`${data.nextDay.dayName}, ${formatDate(data.nextDay.date)}`}
           showCurrentPair={false}
+          targetPath={nextDayTarget}
         />
       </Section>
     );
@@ -71,6 +76,7 @@ export function TodayPairsBlock({ data }: Props) {
         pairs={data.todayPairs}
         subtitle={`${data.todayPairs.length} ${pluralPairs(data.todayPairs.length)} сегодня`}
         showCurrentPair={true}
+        targetPath="/schedule"
       />
     </Section>
   );
@@ -84,10 +90,12 @@ function PairsCard({
   pairs,
   subtitle,
   showCurrentPair,
+  targetPath,
 }: {
   pairs: DaySlot[];
   subtitle: string;
   showCurrentPair: boolean;
+  targetPath: string;
 }) {
   const navigate = useNavigate();
   const currentMinutes = useCurrentMinutes();
@@ -130,7 +138,7 @@ function PairsCard({
       ref={rippleRef}
       className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden cursor-pointer
                  transform-gpu active:scale-[0.98] transition-transform duration-75"
-      onClick={() => navigate('/schedule')}
+      onClick={() => navigate(targetPath)}
     >
       {/* Отображаем либо текущую пару, либо перерыв */}
       {breakStatus ? (
@@ -399,6 +407,13 @@ function formatDate(date: Date): string {
     day: 'numeric',
     month: 'long',
   }).format(date);
+}
+
+function formatRouteDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function pluralPairs(n: number): string {
