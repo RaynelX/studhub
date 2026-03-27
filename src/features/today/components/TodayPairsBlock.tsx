@@ -4,6 +4,7 @@ import type { DaySlot } from '../../schedule/utils/schedule-builder';
 import { useCurrentMinutes } from '../hooks/use-current-time';
 import { useTouchRipple } from '../../../shared/hooks/use-touch-ripple';
 import { getBellSlot } from '../../../shared/constants/bell-schedule';
+import { toISODate } from '../../schedule/utils/week-utils';
 
 interface Props {
   data: TodayScheduleData;
@@ -17,7 +18,7 @@ const TYPE_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 const EVENT_BADGE: Record<string, { label: string; className: string }> = {
-  usr:           { label: 'УСР',    className: 'bg-violet-100 text-violet-700 dark:bg-violet-500/40500/40 dark:text-violet-300' },
+  usr:           { label: 'УСР',    className: 'bg-violet-100 text-violet-700 dark:bg-violet-500/40 dark:text-violet-300' },
   control_work:  { label: 'КР',     className: 'bg-red-100 text-red-700 dark:bg-red-500/40 dark:text-red-300' },
   credit:        { label: 'Зачёт',  className: 'bg-teal-100 text-teal-700 dark:bg-teal-500/40 dark:text-teal-300' },
   exam:          { label: 'Экз.',   className: 'bg-rose-100 text-rose-700 dark:bg-rose-500/40 dark:text-rose-300' },
@@ -54,12 +55,15 @@ export function TodayPairsBlock({ data }: Props) {
   }
 
   if ((!data.hasPairsToday || data.allPairsFinished) && data.nextDay) {
+    const nextDayTarget = `/schedule?date=${toISODate(data.nextDay.date)}`;
+
     return (
       <Section title={data.allPairsFinished ? 'Пары закончились · далее' : 'Сегодня пар нет · далее'}>
         <PairsCard
           pairs={data.nextDay.pairs}
           subtitle={`${data.nextDay.dayName}, ${formatDate(data.nextDay.date)}`}
           showCurrentPair={false}
+          targetPath={nextDayTarget}
         />
       </Section>
     );
@@ -71,6 +75,7 @@ export function TodayPairsBlock({ data }: Props) {
         pairs={data.todayPairs}
         subtitle={`${data.todayPairs.length} ${pluralPairs(data.todayPairs.length)} сегодня`}
         showCurrentPair={true}
+        targetPath="/schedule"
       />
     </Section>
   );
@@ -84,10 +89,12 @@ function PairsCard({
   pairs,
   subtitle,
   showCurrentPair,
+  targetPath,
 }: {
   pairs: DaySlot[];
   subtitle: string;
   showCurrentPair: boolean;
+  targetPath: string;
 }) {
   const navigate = useNavigate();
   const currentMinutes = useCurrentMinutes();
@@ -130,7 +137,7 @@ function PairsCard({
       ref={rippleRef}
       className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-transparent overflow-hidden cursor-pointer
                  transform-gpu active:scale-[0.98] transition-transform duration-75"
-      onClick={() => navigate('/schedule')}
+      onClick={() => navigate(targetPath)}
     >
       {/* Отображаем либо текущую пару, либо перерыв */}
       {breakStatus ? (

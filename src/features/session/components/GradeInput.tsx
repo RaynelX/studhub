@@ -18,17 +18,17 @@ interface GradeInputProps {
 // Конфигурация — цвета кружков по оценке (1–10)
 // ============================================================
 
-const GRADE_COLORS: Record<number, string> = {
-  1:  'bg-red-500',
-  2:  'bg-red-500',
-  3:  'bg-red-500',
-  4:  'bg-orange-500',
-  5:  'bg-orange-500',
-  6:  'bg-orange-500',
-  7:  'bg-yellow-500',
-  8:  'bg-yellow-500',
-  9:  'bg-green-500',
-  10: 'bg-green-500',
+const GRADE_STYLES: Record<number, string> = {
+  1: 'bg-red-200 text-red-950 dark:bg-red-600/40 dark:text-red-400',
+  2: 'bg-red-200 text-red-950 dark:bg-red-600/40 dark:text-red-400',
+  3: 'bg-red-200 text-red-950 dark:bg-red-600/40 dark:text-red-400',
+  4: 'bg-orange-200 text-orange-950 dark:bg-orange-600/40 dark:text-orange-400',
+  5: 'bg-orange-200 text-orange-950 dark:bg-orange-600/40 dark:text-orange-400',
+  6: 'bg-orange-200 text-orange-950 dark:bg-orange-600/40 dark:text-orange-400',
+  7: 'bg-amber-200 text-amber-950 dark:bg-amber-600/45 dark:text-amber-400',
+  8: 'bg-amber-200 text-amber-950 dark:bg-amber-600/45 dark:text-amber-400',
+  9: 'bg-emerald-200 text-emerald-950 dark:bg-emerald-600/40 dark:text-emerald-400',
+  10: 'bg-emerald-200 text-emerald-950 dark:bg-emerald-600/40 dark:text-emerald-400',
 };
 
 const INACTIVE =
@@ -72,9 +72,9 @@ export function GradeInput({ eventType, value, onChange, onClear }: GradeInputPr
       <button
         type="button"
         onClick={() => setPickerOpen(!pickerOpen)}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
           numericValue
-            ? `${GRADE_COLORS[numericValue]} text-white`
+            ? GRADE_STYLES[numericValue]
             : INACTIVE
         }`}
       >
@@ -82,13 +82,14 @@ export function GradeInput({ eventType, value, onChange, onClear }: GradeInputPr
       </button>
 
       {/* Грид кружков */}
-      {pickerOpen && (
-        <div className="flex flex-wrap gap-2 pt-1">
+      <div className="grid-expandable" data-expanded={pickerOpen}>
+        <div className="grid-expandable-inner">
+          <div className="flex flex-wrap gap-2 pt-2">
           {/* Сброс */}
           <GradeCircle
-            label={<X size={14} strokeWidth={2.5} />}
+            label={<X size={20} strokeWidth={2.5} />}
             active={false}
-            color="bg-neutral-400 dark:bg-neutral-600"
+            color="bg-neutral-300 text-neutral-600 dark:bg-neutral-700 dark:text-neutral-300"
             onClick={() => { onClear(); setPickerOpen(false); }}
           />
           {/* 1–10 */}
@@ -97,12 +98,13 @@ export function GradeInput({ eventType, value, onChange, onClear }: GradeInputPr
               key={n}
               label={String(n)}
               active={numericValue === n}
-              color={GRADE_COLORS[n]}
+              color={GRADE_STYLES[n]}
               onClick={() => { onChange(n); setPickerOpen(false); }}
             />
           ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -126,8 +128,8 @@ function GradeCircle({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center justify-center w-9 h-9 rounded-full text-xs font-bold transition-all ${color} text-white ${
-        active ? 'ring-2 ring-offset-1 ring-blue-500 dark:ring-offset-neutral-900' : 'opacity-80 active:scale-95'
+      className={`flex items-center justify-center w-10 h-10 rounded-full text-lg font-bold transition-all ${color} ${
+        active ? 'ring-2 ring-offset-1 ring-blue-500 dark:ring-offset-neutral-900' : 'opacity-85 active:scale-95'
       }`}
     >
       {label}
