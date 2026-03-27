@@ -51,10 +51,6 @@ function parseScheduleDateParam(search: string): Date | null {
   }
 
   const [year, month, day] = rawDate.split('-').map(Number);
-  if (!year || !month || !day) {
-    return null;
-  }
-
   const date = new Date(year, month - 1, day);
   if (
     date.getFullYear() !== year ||
@@ -75,7 +71,7 @@ export function SchedulePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const routeDate = useMemo(() => parseScheduleDateParam(location.search), [location.search]);
-  const routeDateConsumedRef = useRef(false);
+  const routeDateConsumedRef = useRef<string | null>(null);
 
   // Направление анимации при смене дня — задаётся в обработчиках навигации
   const [animDirection, setAnimDirection] = useState<'right' | 'left' | 'fade'>('fade');
@@ -100,15 +96,22 @@ export function SchedulePage() {
   });
 
   useEffect(() => {
-    if (!routeDate || routeDateConsumedRef.current) {
+    const params = new URLSearchParams(location.search);
+    const rawDate = params.get('date');
+
+    if (!routeDate) {
+      routeDateConsumedRef.current = null;
       return;
     }
 
-    routeDateConsumedRef.current = true;
+    if (routeDateConsumedRef.current === rawDate) {
+      return;
+    }
+
+    routeDateConsumedRef.current = rawDate;
     setAnimDirection('fade');
     setSelectedDate(routeDate);
 
-    const params = new URLSearchParams(location.search);
     params.delete('date');
     const nextSearch = params.toString();
 
