@@ -11,6 +11,7 @@ import type {
 import { calculateEndDate, countTotalPairs } from '../utils/schedule-calculator';
 import { findConflicts } from '../utils/conflict-detector';
 import type { Conflict } from '../utils/conflict-detector';
+import { MIN_PAIR_NUMBER, MAX_PAIR_NUMBER } from '../../../shared/constants/bell-schedule';
 
 // ============================================================
 // Types
@@ -137,8 +138,8 @@ export function useSchedulePlanner(
     (effectiveDateTo ?? '') !== '' &&
     step2.dayOfWeek >= 1 &&
     step2.dayOfWeek <= 6 &&
-    step2.pairNumber >= 1 &&
-    step2.pairNumber <= 5;
+    step2.pairNumber >= MIN_PAIR_NUMBER &&
+    step2.pairNumber <= MAX_PAIR_NUMBER;
 
   function reset() {
     setStep(0);

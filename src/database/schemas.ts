@@ -10,6 +10,18 @@ import type {
   SemesterConfigDoc,
   HomeworkDoc,
 } from './types';
+import { MIN_PAIR_NUMBER, MAX_PAIR_NUMBER } from '../shared/constants/bell-schedule';
+
+/**
+ * Диапазон номера пары берётся из BELL_SCHEDULE, чтобы схема не отставала
+ * от расписания звонков (раньше был захардкожен maximum: 5 и записи
+ * с 6-й по 8-ю пару отбрасывались валидатором при синхронизации).
+ */
+const pairNumberField = {
+  type: 'integer',
+  minimum: MIN_PAIR_NUMBER,
+  maximum: MAX_PAIR_NUMBER,
+} as const;
 
 // ============================================================
 // SUBJECTS
@@ -68,13 +80,13 @@ const teachersSchema: RxJsonSchema<TeacherDoc> = {
 // ============================================================
 
 const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
     id: { type: 'string', maxLength: 36 },
     day_of_week: { type: 'integer', minimum: 1, maximum: 6 },
-    pair_number: { type: 'integer', minimum: 1, maximum: 5 },
+    pair_number: pairNumberField,
     subject_id: { type: 'string' },
     entry_type: {
       type: 'string',
@@ -117,13 +129,13 @@ const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
 // ============================================================
 
 const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
     id: { type: 'string', maxLength: 36 },
     date: { type: 'string' },
-    pair_number: { type: 'integer', minimum: 1, maximum: 5 },
+    pair_number: pairNumberField,
     override_type: {
       type: 'string',
       enum: ['cancel', 'replace', 'add'],
@@ -164,7 +176,7 @@ const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
 // ============================================================
 
 const eventsSchema: RxJsonSchema<EventDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -181,7 +193,7 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
     subject_id: { type: 'string' },
     teacher_id: { type: 'string' },
     date: { type: 'string' },
-    pair_number: { type: 'integer', minimum: 1, maximum: 5 },
+    pair_number: pairNumberField,
     event_time: { type: 'string' },
     room: { type: 'string' },
     target_language: {
@@ -299,14 +311,14 @@ const semesterSchema: RxJsonSchema<SemesterConfigDoc> = {
 // ============================================================
 
 const homeworksSchema: RxJsonSchema<HomeworkDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
     id: { type: 'string', maxLength: 36 },
     subject_id: { type: 'string' },
     date: { type: 'string' },
-    pair_number: { type: 'integer', minimum: 1, maximum: 5 },
+    pair_number: pairNumberField,
     content: { type: 'string' },
     target_language: {
       type: 'string',

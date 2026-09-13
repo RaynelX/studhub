@@ -15,6 +15,10 @@ export const BELL_SCHEDULE: readonly BellSlot[] = [
   { pairNumber: 8, startTime: '19:30', endTime: '20:50' },
 ] as const;
 
+/** Границы допустимого номера пары — единственный источник правды для схем и форм. */
+export const MIN_PAIR_NUMBER = BELL_SCHEDULE[0].pairNumber;
+export const MAX_PAIR_NUMBER = BELL_SCHEDULE[BELL_SCHEDULE.length - 1].pairNumber;
+
 export function getBellSlot(pairNumber: number): BellSlot | undefined {
   return BELL_SCHEDULE.find(s => s.pairNumber === pairNumber);
 }

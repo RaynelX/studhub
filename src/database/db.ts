@@ -1,8 +1,19 @@
 import { createRxDatabase, addRxPlugin } from 'rxdb';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
+import { RxDBMigrationSchemaPlugin } from 'rxdb/plugins/migration-schema';
 import { schemas } from './schemas';
 import type { AppDatabase } from './types';
-import type { RxStorage } from 'rxdb';
+import type { MigrationStrategies, RxStorage } from 'rxdb';
+
+addRxPlugin(RxDBMigrationSchemaPlugin);
+
+/**
+ * v0 → v1: расширен допустимый диапазон pair_number (5 → 8 пар).
+ * Сами документы не меняются — локальная база лишь кэш Supabase.
+ */
+const widenedPairRange: MigrationStrategies = {
+  1: (doc) => doc,
+};
 
 let dbPromise: Promise<AppDatabase> | null = null;
 
@@ -32,13 +43,13 @@ async function createDatabase(): Promise<AppDatabase> {
   await db.addCollections({
     subjects: { schema: schemas.subjects },
     teachers: { schema: schemas.teachers },
-    schedule: { schema: schemas.schedule },
-    overrides: { schema: schemas.overrides },
-    events: { schema: schemas.events },
+    schedule: { schema: schemas.schedule, migrationStrategies: widenedPairRange },
+    overrides: { schema: schemas.overrides, migrationStrategies: widenedPairRange },
+    events: { schema: schemas.events, migrationStrategies: widenedPairRange },
     deadlines: { schema: schemas.deadlines },
     students: { schema: schemas.students },
     semester: { schema: schemas.semester },
-    homeworks: { schema: schemas.homeworks },
+    homeworks: { schema: schemas.homeworks, migrationStrategies: widenedPairRange },
   });
 
   console.log('[DB] Database initialized with collections:', Object.keys(db.collections));

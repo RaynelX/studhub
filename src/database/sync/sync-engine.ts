@@ -37,7 +37,10 @@ const SYNC_CONFIGS: CollectionSyncConfig[] = [
   { rxdbName: 'homeworks', supabaseTable: 'homeworks',           hasIsDeleted: true },
 ];
 
-const LAST_SYNC_KEY = 'student_hub_last_sync-01';
+// Версия ключа поднята с -01: прошлые сборки отбрасывали записи с 6-й по 8-ю пару,
+// но всё равно двигали timestamp вперёд, поэтому инкрементальный pull их уже не вернёт.
+// Смена ключа даёт одноразовый полный pull на каждом клиенте.
+const LAST_SYNC_KEY = 'student_hub_last_sync-02';
 
 // ============================================================
 // Утилиты
@@ -114,14 +117,23 @@ export class SyncEngine {
         console.log('[Sync] Initial sync (first launch)');
       }
 
-      await Promise.race([this.syncAllCollections(since), timeout]);
+      const allOk = await Promise.race([this.syncAllCollections(since), timeout]);
 
-      this.setLastSyncAt(syncTimestamp);
+      // Timestamp двигаем только при полном успехе: иначе изменения, пропущенные
+      // упавшей коллекцией, навсегда останутся за границей инкрементального pull.
+      if (allOk) {
+        this.setLastSyncAt(syncTimestamp);
+      }
+
       this.status$.next({
         state: 'success',
-        lastSyncAt: syncTimestamp,
+        lastSyncAt: this.getLastSyncAt(),
       });
-      console.log('[Sync] Completed successfully');
+      console.log(
+        allOk
+          ? '[Sync] Completed successfully'
+          : '[Sync] Completed with errors — timestamp not advanced, will retry in full',
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       console.error('[Sync] Failed:', message);
@@ -139,7 +151,8 @@ export class SyncEngine {
   // Синхронизация всех коллекций
   // ----------------------------------------------------------
 
-  private async syncAllCollections(since: string | null): Promise<void> {
+  /** @returns true, если все коллекции синхронизировались без ошибок */
+  private async syncAllCollections(since: string | null): Promise<boolean> {
     const errors: string[] = [];
 
     for (const config of SYNC_CONFIGS) {
@@ -160,7 +173,10 @@ export class SyncEngine {
     // Если часть упала — логируем, но не падаем
     if (errors.length > 0) {
       console.warn(`[Sync] Partial sync: ${errors.length} collection(s) failed`);
+      return false;
     }
+
+    return true;
   }
 
   // ----------------------------------------------------------
