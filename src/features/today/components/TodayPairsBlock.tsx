@@ -26,14 +26,10 @@ const EVENT_BADGE: Record<string, { label: string; className: string }> = {
   other:         { label: 'Соб.',   className: 'bg-purple-100 text-purple-700 dark:bg-purple-500/40 dark:text-purple-300' },
 };
 
-type CurrentPairPhase = 'first-half' | 'inner-break' | 'second-half';
-
 interface CurrentPairStatus {
-  phase: CurrentPairPhase;
   progressPercent: number;
   remainingMinutes: number;
   remainingLabel: string;
-  progressClassName: string;
 }
 
 interface BreakStatus {
@@ -129,7 +125,7 @@ function PairsCard({
   }
 
   const currentNextLabel = currentStatus
-    ? getCurrentNextLabel(currentStatus.phase, currentSlot, nextSlot, breakMinutes)
+    ? getCurrentNextLabel(nextSlot, breakMinutes)
     : null;
 
   return (
@@ -178,7 +174,7 @@ function PairsCard({
               {/* Прогресс-бар */}
               <div className="mt-2 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full anim-progress-bar ${currentStatus?.progressClassName ?? 'bg-blue-500 dark:bg-blue-400'}`}
+                  className="h-full rounded-full anim-progress-bar bg-blue-500 dark:bg-blue-400"
                   style={{ width: `${currentStatus?.progressPercent ?? 0}%` }}
                 />
               </div>
@@ -419,53 +415,19 @@ function getCurrentPairStatus(slot: DaySlot, currentMinutes: number): CurrentPai
   if (!bell) return null;
 
   const startMinutes = toMinutes(bell.startTime);
-  const breakStartMinutes = toMinutes(bell.breakStart);
-  const breakEndMinutes = toMinutes(bell.breakEnd);
   const endMinutes = toMinutes(bell.endTime);
 
-  if (currentMinutes < breakStartMinutes) {
-    return {
-      phase: 'first-half',
-      progressPercent: calculateProgress(currentMinutes, startMinutes, breakStartMinutes),
-      remainingMinutes: breakStartMinutes - currentMinutes,
-      remainingLabel: `Осталось ${breakStartMinutes - currentMinutes} мин · до ${bell.breakStart}`,
-      progressClassName: 'bg-blue-500 dark:bg-blue-400',
-    };
-  }
-
-  if (currentMinutes < breakEndMinutes) {
-    return {
-      phase: 'inner-break',
-      progressPercent: calculateProgress(currentMinutes, breakStartMinutes, breakEndMinutes),
-      remainingMinutes: breakEndMinutes - currentMinutes,
-      remainingLabel: `Перерыв ${breakEndMinutes - currentMinutes} мин · до ${bell.breakEnd}`,
-      progressClassName: 'bg-amber-500 dark:bg-amber-400',
-    };
-  }
-
   return {
-    phase: 'second-half',
-    progressPercent: calculateProgress(currentMinutes, breakEndMinutes, endMinutes),
+    progressPercent: calculateProgress(currentMinutes, startMinutes, endMinutes),
     remainingMinutes: endMinutes - currentMinutes,
     remainingLabel: `Осталось ${endMinutes - currentMinutes} мин · до ${bell.endTime}`,
-    progressClassName: 'bg-blue-500 dark:bg-blue-400',
   };
 }
 
 function getCurrentNextLabel(
-  phase: CurrentPairPhase,
-  currentSlot: DaySlot | null,
   nextSlot: DaySlot | null,
   breakMinutes: number | null,
 ): string | null {
-  if (phase === 'first-half') {
-    return 'Далее: перерыв 5 мин';
-  }
-
-  if (phase === 'inner-break') {
-    return currentSlot?.pair ? `Далее: ${currentSlot.pair.subjectName}` : 'Далее: вторая половина пары';
-  }
-
   if (nextSlot?.pair && breakMinutes !== null) {
     return `Далее: ${nextSlot.pair.subjectName} · перерыв ${breakMinutes} мин`;
   }
