@@ -213,7 +213,11 @@ export function StudentAttendanceView() {
 
   const handleWeekHeaderTap = useCallback(
     (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest('button')) return;
+      // Стрелки переключения недель не входят в зону жеста
+      if ((e.target as HTMLElement).closest('button')) {
+        lastTapRef.current = 0;
+        return;
+      }
       const now = Date.now();
       if (now - lastTapRef.current < DOUBLE_TAP_MS) {
         lastTapRef.current = 0;
