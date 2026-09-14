@@ -1,5 +1,5 @@
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { buildDaySchedule, type DayEvents } from '../utils/schedule-builder';
 
@@ -8,7 +8,7 @@ export function useDaySchedule(date: Date): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: entries, loading: l1 } = useRxCollection(db.schedule);
   const { data: overrides, loading: l2 } = useRxCollection(db.overrides);
@@ -17,7 +17,7 @@ export function useDaySchedule(date: Date): {
   const { data: teachers, loading: l5 } = useRxCollection(db.teachers);
   const { data: semesterData, loading: l6 } = useRxCollection(db.semester);
 
-  const loading = l1 || l2 || l3 || l4 || l5 || l6;
+  const loading = targetingLoading || l1 || l2 || l3 || l4 || l5 || l6;
 
   if (loading) {
     return { schedule: { slots: [], floatingEvents: [] }, loading: true };
@@ -25,7 +25,7 @@ export function useDaySchedule(date: Date): {
 
   const schedule = buildDaySchedule({
     date,
-    settings,
+    isForStudent,
     entries,
     overrides,
     events,

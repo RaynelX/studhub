@@ -1,4 +1,6 @@
 import type { ScheduleEntryDoc, WeekParity } from '../../../database/types';
+import { targetsOverlap } from '../../../shared/targeting/match';
+import type { SubgroupIndex } from '../../../shared/targeting/types';
 
 // ============================================================
 // Types
@@ -21,9 +23,7 @@ export interface EntryCandidate {
   date_from: string;
   date_to: string;
   week_parity: WeekParity;
-  target_language: string;
-  target_eng_subgroup: string;
-  target_oit_subgroup: string;
+  target_subgroup_ids: string[];
   /** If editing an existing entry, exclude it from conflict checks */
   excludeId?: string;
 }
@@ -45,6 +45,7 @@ export interface EntryCandidate {
 export function findConflicts(
   existingEntries: ScheduleEntryDoc[],
   candidate: EntryCandidate,
+  index: SubgroupIndex,
 ): Conflict[] {
   const conflicts: Conflict[] = [];
 
@@ -70,7 +71,7 @@ export function findConflicts(
     if (!paritiesOverlap(entry.week_parity, candidate.week_parity)) continue;
 
     // 5. Subgroup overlap
-    if (!subgroupsOverlap(entry, candidate)) continue;
+    if (!targetsOverlap(entry.target_subgroup_ids, candidate.target_subgroup_ids, index)) continue;
 
     conflicts.push({
       existingEntry: entry,
@@ -97,41 +98,6 @@ function dateRangesOverlap(
 function paritiesOverlap(a: WeekParity, b: WeekParity): boolean {
   if (a === 'all' || b === 'all') return true;
   return a === b;
-}
-
-function subgroupsOverlap(
-  a: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },
-  b: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },
-): boolean {
-  // Language check
-  if (a.target_language !== 'all' && b.target_language !== 'all' && a.target_language !== b.target_language) {
-    return false;
-  }
-
-  // English subgroup check (only relevant when both target English or one targets 'all')
-  const bothEnglishRelevant =
-    (a.target_language === 'all' || a.target_language === 'en') &&
-    (b.target_language === 'all' || b.target_language === 'en');
-
-  if (
-    bothEnglishRelevant &&
-    a.target_eng_subgroup !== 'all' &&
-    b.target_eng_subgroup !== 'all' &&
-    a.target_eng_subgroup !== b.target_eng_subgroup
-  ) {
-    return false;
-  }
-
-  // OIT subgroup check
-  if (
-    a.target_oit_subgroup !== 'all' &&
-    b.target_oit_subgroup !== 'all' &&
-    a.target_oit_subgroup !== b.target_oit_subgroup
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 const DAY_NAMES: Record<number, string> = {

@@ -9,6 +9,7 @@ import {
 } from 'react';
 import OneSignal from 'react-onesignal';
 import { useSettings } from '../settings/SettingsProvider';
+import { useSubgroups } from '../targeting/SubgroupsProvider';
 import { syncOnesignalTags } from './utils/onesignal-tags';
 
 // ============================================================
@@ -68,6 +69,7 @@ function savePrefs(prefs: NotificationPrefs): void {
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { settings } = useSettings();
+  const { categories, subgroups } = useSubgroups();
 
   const [isReady, setIsReady] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -78,6 +80,18 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   prefsRef.current = prefs;
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
+  const subgroupsRef = useRef({ categories, subgroups });
+  subgroupsRef.current = { categories, subgroups };
+
+  /** Теги строятся из актуального выбора студента и справочника подгрупп */
+  const syncTags = useCallback(() => {
+    syncOnesignalTags(
+      settingsRef.current,
+      prefsRef.current,
+      subgroupsRef.current.categories,
+      subgroupsRef.current.subgroups,
+    );
+  }, []);
 
   // ── Initialization ────────────────────────────────────────
 
@@ -109,7 +123,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         setIsSubscribed(subscribed);
 
         if (subscribed) {
-          syncOnesignalTags(settingsRef.current, prefsRef.current);
+          syncTags();
         }
 
         const subscriptionChangeHandler = (event: { current: { optedIn: boolean } }) => {
@@ -117,7 +131,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           console.log('[notifications] Subscription changed:', nowSubscribed);
           setIsSubscribed(nowSubscribed);
           if (nowSubscribed) {
-            syncOnesignalTags(settingsRef.current, prefsRef.current);
+            syncTags();
           }
         };
 
@@ -138,8 +152,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isSubscribed || !isReady) return;
-    syncOnesignalTags(settings, prefs);
-  }, [settings, prefs, isSubscribed, isReady]);
+    syncTags();
+  }, [settings, prefs, categories, subgroups, isSubscribed, isReady, syncTags]);
 
   // ── Actions ───────────────────────────────────────────────
 
@@ -151,12 +165,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       if (granted) {
         await OneSignal.User.PushSubscription.optIn();
         setIsSubscribed(true);
-        syncOnesignalTags(settingsRef.current, prefsRef.current);
+        syncTags();
       }
     } catch (err) {
       console.error('[notifications] Enable failed:', err);
     }
-  }, [isReady]);
+  }, [isReady, syncTags]);
 
   const disable = useCallback(async () => {
     if (!isReady) return;

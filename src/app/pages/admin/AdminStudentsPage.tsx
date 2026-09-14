@@ -12,16 +12,12 @@ import { useDatabase } from '../../providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { useAdminWrite } from '../../../features/admin/hooks/use-admin-write';
 import { useSortState } from '../../../features/admin/hooks/use-sort-state';
-
-const LANG_LABELS: Record<string, string> = {
-  en: 'EN',
-  de: 'DE',
-  fr: 'FR',
-  es: 'ES',
-};
+import { useSubgroups } from '../../../features/targeting/SubgroupsProvider';
+import { selectionFromIds } from '../../../shared/targeting/match';
 
 export function AdminStudentsPage() {
   const db = useDatabase();
+  const { index } = useSubgroups();
   const { data: students, loading: dataLoading } = useRxCollection(db.students);
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
@@ -31,14 +27,25 @@ export function AdminStudentsPage() {
     [students],
   );
 
+  // Колонка на каждую активную категорию подгрупп
+  const categories = index.activeCategories;
+
+  const subgroupNameOf = useMemo(
+    () => (student: StudentDoc, categoryId: string): string => {
+      const subgroupId = selectionFromIds(student.subgroup_ids, index)[categoryId];
+      return subgroupId ? index.subgroupById.get(subgroupId)?.name ?? '' : '';
+    },
+    [index],
+  );
+
   const sortAccessors = useMemo(
     () => ({
       name: (s: StudentDoc) => s.full_name,
-      language: (s: StudentDoc) => s.language,
-      eng: (s: StudentDoc) => s.eng_subgroup ?? '',
-      oit: (s: StudentDoc) => s.oit_subgroup,
-    }),
-    [],
+      ...Object.fromEntries(
+        categories.map((c) => [c.id, (s: StudentDoc) => subgroupNameOf(s, c.id)]),
+      ),
+    }) as Record<string, (s: StudentDoc) => string>,
+    [categories, subgroupNameOf],
   );
 
   const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted: sortedStudents } =
@@ -66,9 +73,7 @@ export function AdminStudentsPage() {
     try {
       const payload: Record<string, unknown> = {
         full_name: data.fullName,
-        language: data.language,
-        oit_subgroup: data.oitSubgroup,
-        eng_subgroup: data.language === 'en' && data.engSubgroup ? data.engSubgroup : null,
+        subgroup_ids: data.subgroupIds,
       };
 
       if (editStudent) {
@@ -129,9 +134,18 @@ export function AdminStudentsPage() {
                 <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
                   <th className="px-5 py-3 w-10">#</th>
                   <SortableTh column="name" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">ФИО</SortableTh>
-                  <SortableTh column="language" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">Язык</SortableTh>
-                  <SortableTh column="eng" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">EN</SortableTh>
-                  <SortableTh column="oit" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3">ОИТ</SortableTh>
+                  {categories.map((category) => (
+                    <SortableTh
+                      key={category.id}
+                      column={category.id}
+                      activeColumn={sortCol}
+                      direction={sortDir}
+                      onToggle={toggleSort}
+                      className="px-5 py-3"
+                    >
+                      {category.short_name || category.name}
+                    </SortableTh>
+                  ))}
                   <th className="px-5 py-3 w-24" />
                 </tr>
               </thead>
@@ -147,17 +161,14 @@ export function AdminStudentsPage() {
                     <td className="px-5 py-3 font-medium text-neutral-900 dark:text-neutral-100">
                       {student.full_name}
                     </td>
-                    <td className="px-5 py-3">
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
-                        {LANG_LABELS[student.language] ?? student.language}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-400">
-                      {student.eng_subgroup ? student.eng_subgroup.toUpperCase() : '—'}
-                    </td>
-                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-400">
-                      {student.oit_subgroup.toUpperCase()}
-                    </td>
+                    {categories.map((category) => (
+                      <td
+                        key={category.id}
+                        className="px-5 py-3 text-neutral-600 dark:text-neutral-400"
+                      >
+                        {subgroupNameOf(student, category.id) || '—'}
+                      </td>
+                    ))}
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1">
                         <button

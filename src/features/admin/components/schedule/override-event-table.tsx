@@ -4,6 +4,8 @@ import type { ScheduleOverrideDoc, EventDoc, SubjectDoc, TeacherDoc } from '../.
 import { OVERRIDE_TYPE_LABELS, OVERRIDE_TYPE_COLORS } from '../../../../shared/constants/admin-labels';
 import { SortableTh } from '../ui/sortable-th';
 import { useSortState } from '../../hooks/use-sort-state';
+import { useSubgroups } from '../../../targeting/SubgroupsProvider';
+import { formatTargetsCompact } from '../../../../shared/targeting/match';
 
 interface OverrideEventTableProps {
   overrides: ScheduleOverrideDoc[];
@@ -22,6 +24,7 @@ export function OverrideEventTable({
   onDeleteOverride,
   onDeleteEvent,
 }: OverrideEventTableProps) {
+  const { index } = useSubgroups();
   const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.id, s])), [subjects]);
   const teacherMap = useMemo(() => new Map(teachers.map((t) => [t.id, t])), [teachers]);
 
@@ -73,6 +76,7 @@ export function OverrideEventTable({
             <SortableTh column="subject" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-3 py-2">Предмет</SortableTh>
             <th className="px-3 py-2">Преп. / Описание</th>
             <th className="px-3 py-2">Ауд.</th>
+            <th className="px-3 py-2">Подгруппы</th>
             <th className="px-3 py-2 w-10" />
           </tr>
         </thead>
@@ -97,6 +101,9 @@ export function OverrideEventTable({
                     {o.comment && <span className="ml-1 text-neutral-400 dark:text-neutral-500">({o.comment})</span>}
                   </td>
                   <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300">{o.room ?? '—'}</td>
+                  <td className="px-3 py-2 text-neutral-500 dark:text-neutral-400 text-xs">
+                    {formatTargetsCompact(o.target_subgroup_ids, index) || 'Вся группа'}
+                  </td>
                   <td className="px-3 py-2">
                     {onDeleteOverride && (
                       <button
@@ -127,6 +134,9 @@ export function OverrideEventTable({
                 <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300">{subj?.short_name ?? subj?.name ?? '—'}</td>
                 <td className="px-3 py-2 text-neutral-500 dark:text-neutral-400">{e.title}</td>
                 <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300">{e.room ?? '—'}</td>
+                <td className="px-3 py-2 text-neutral-500 dark:text-neutral-400 text-xs">
+                  {formatTargetsCompact(e.target_subgroup_ids, index) || 'Вся группа'}
+                </td>
                 <td className="px-3 py-2">
                   {onDeleteEvent && (
                     <button

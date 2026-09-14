@@ -4,6 +4,7 @@ import { BottomSheet } from '../../../shared/ui/BottomSheet';
 import { useDeadlineForm } from '../hooks/use-deadline-form';
 import type { SubjectDoc } from '../../../database/types';
 import { toISODate } from '../../schedule/utils/week-utils';
+import { TargetPicker } from './targeting/target-picker';
 
 // ============================================================
 // Types
@@ -120,71 +121,11 @@ export function DeadlineSheet({
 
         {showAdvanced && (
           <div className="flex flex-col gap-3 pl-2 border-l-2 border-neutral-200 dark:border-neutral-700">
-            {/* Target language */}
-            <div>
-              <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">
-                Язык
-              </label>
-              <div className="flex gap-1.5 flex-wrap">
-                {(['all', 'en', 'de', 'fr', 'es'] as const).map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => setField('targetLanguage', lang)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                      fields.targetLanguage === lang
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
-                    }`}
-                  >
-                    {lang === 'all' ? 'Все' : lang.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Target eng subgroup */}
-            <div>
-              <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">
-                Англ. подгруппа
-              </label>
-              <div className="flex gap-1.5">
-                {(['all', 'a', 'b'] as const).map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => setField('targetEngSubgroup', val)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                      fields.targetEngSubgroup === val
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
-                    }`}
-                  >
-                    {val === 'all' ? 'Все' : val.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Target oit subgroup */}
-            <div>
-              <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1 block">
-                ОИТ подгруппа
-              </label>
-              <div className="flex gap-1.5">
-                {(['all', 'a', 'b'] as const).map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => setField('targetOitSubgroup', val)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
-                      fields.targetOitSubgroup === val
-                        ? 'bg-amber-500 text-white'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300'
-                    }`}
-                  >
-                    {val === 'all' ? 'Все' : val.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <TargetPicker
+              dense
+              value={fields.targetSubgroupIds}
+              onChange={(ids) => setField('targetSubgroupIds', ids)}
+            />
           </div>
         )}
       </div>

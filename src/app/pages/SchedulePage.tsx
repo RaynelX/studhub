@@ -34,6 +34,7 @@ import { HomeworkSheet } from '../../features/admin/components/homework-sheet';
 import { UndoToast } from '../../features/admin/components/undo-toast';
 import { AdminFab } from '../../features/admin/components/admin-fab';
 import { useCancelPair } from '../../features/admin/hooks/use-cancel-pair';
+import { useStudentTargeting } from '../../features/targeting/hooks/use-student-targeting';
 
 // ============================================================
 // Module-level constants (outside component to avoid lint warnings)
@@ -176,18 +177,21 @@ export function SchedulePage() {
   const { schedule, loading } = useDaySchedule(displayedDate);
   const { deadlines } = useDayDeadlines(displayedDate);
 
-  // Homeworks for the displayed date
+  // Homeworks for the displayed date.
+  // Фильтр по подгруппам обязателен: иначе студент видит ДЗ чужой подгруппы,
+  // а два задания на один слот затирают друг друга.
   const { data: allHomeworks } = useRxCollection(db.homeworks);
+  const { isForStudent } = useStudentTargeting();
   const displayedDateStr = toISODate(displayedDate);
   const homeworkMap = useMemo(() => {
     const map = new Map<number, HomeworkDoc>();
     for (const hw of allHomeworks) {
-      if (hw.date === displayedDateStr && !hw.is_deleted) {
+      if (hw.date === displayedDateStr && !hw.is_deleted && isForStudent(hw)) {
         map.set(hw.pair_number, hw);
       }
     }
     return map;
-  }, [allHomeworks, displayedDateStr]);
+  }, [allHomeworks, displayedDateStr, isForStudent]);
 
   // ============================================================
   // Admin: sheet state
@@ -219,12 +223,7 @@ export function SchedulePage() {
 
     switch (action) {
       case 'cancel': {
-        const targets = pair?.sourceTargets ?? {
-          target_language: 'all' as const,
-          target_eng_subgroup: 'all' as const,
-          target_oit_subgroup: 'all' as const,
-        };
-        cancelPair(toISODate(date), pairNumber, targets);
+        cancelPair(toISODate(date), pairNumber, pair?.sourceTargetIds ?? []);
         break;
       }
       case 'replace':
@@ -610,7 +609,7 @@ export function SchedulePage() {
             pairNumber={sheetContext.pairNumber}
             subjects={subjects}
             teachers={teachers}
-            sourceTargets={sheetContext.pair?.sourceTargets}
+            sourceTargetIds={sheetContext.pair?.sourceTargetIds}
             defaults={
               overrideMode === 'replace' && sheetContext.pair
                 ? {

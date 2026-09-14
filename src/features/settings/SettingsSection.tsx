@@ -1,102 +1,70 @@
 import { useSettings } from './SettingsProvider';
+import { useSubgroups } from '../targeting/SubgroupsProvider';
+import { subgroupsOf, visibleCategories } from '../../shared/targeting/match';
 import { useTouchRipple } from '../../shared/hooks/use-touch-ripple';
 import { Section } from '../../shared/ui/Section';
 
-type Language = 'en' | 'de' | 'fr' | 'es';
-type Subgroup = 'a' | 'b';
-
-const LANGUAGES: { value: Language; label: string }[] = [
-  { value: 'en', label: 'Англ.' },
-  { value: 'de', label: 'Нем.' },
-  { value: 'fr', label: 'Фр.' },
-  { value: 'es', label: 'Исп.' },
-];
-
 export function SettingsSection() {
   const { settings, updateSettings } = useSettings();
+  const { index } = useSubgroups();
 
-  const setLanguage = (lang: Language) => {
-    updateSettings({
-      ...settings,
-      language: lang,
-      eng_subgroup: lang === 'en' ? settings.eng_subgroup ?? 'a' : null,
-    });
+  // Условные категории показываются только при выполненном условии;
+  // сам выбор подчищается в updateSettings через pruneSelection.
+  const categories = visibleCategories(index, settings.subgroups);
+
+  /**
+   * В необязательной категории повторный тап по выбранной подгруппе снимает
+   * выбор — иначе из неё нельзя выйти, не сбрасывая все настройки.
+   * Обязательную категорию так «опустошить» нельзя.
+   */
+  const selectSubgroup = (categoryId: string, subgroupId: string, isRequired: boolean) => {
+    const next = { ...settings.subgroups };
+
+    if (!isRequired && next[categoryId] === subgroupId) {
+      delete next[categoryId];
+    } else {
+      next[categoryId] = subgroupId;
+    }
+
+    updateSettings({ subgroups: next });
   };
 
-  const setEngSubgroup = (sg: Subgroup) => {
-    updateSettings({ ...settings, eng_subgroup: sg });
-  };
-
-  const setOitSubgroup = (sg: Subgroup) => {
-    updateSettings({ ...settings, oit_subgroup: sg });
-  };
+  if (categories.length === 0) {
+    return (
+      <Section title="Подгруппы">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          Староста ещё не завёл подгруппы на этот семестр.
+        </p>
+      </Section>
+    );
+  }
 
   return (
-    <Section title="Настройки">
+    <Section title="Подгруппы">
       <div className="space-y-4">
-        {/* Язык */}
-        <div>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">
-            Иностранный язык
-          </p>
-          <div className="flex gap-2">
-            {LANGUAGES.map(({ value, label }) => (
-              <ToggleButton
-                key={value}
-                active={settings.language === value}
-                onClick={() => setLanguage(value)}
-              >
-                {label}
-              </ToggleButton>
-            ))}
-          </div>
-        </div>
+        {categories.map((category) => {
+          const subgroups = subgroupsOf(index, category.id);
+          if (subgroups.length === 0) return null;
 
-        {/* Подгруппа по англ. */}
-        <div className="grid-expandable" data-expanded={settings.language === 'en'}>
-          <div className="grid-expandable-inner">
-              <div>
-                <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">
-                  Подгруппа по англ. языку
-                </p>
-                <div className="flex gap-2">
+          return (
+            <div key={category.id}>
+              <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">
+                {category.name}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {subgroups.map((subgroup) => (
                   <ToggleButton
-                    active={settings.eng_subgroup === 'a'}
-                    onClick={() => setEngSubgroup('a')}
+                    key={subgroup.id}
+                    active={settings.subgroups[category.id] === subgroup.id}
+                    onClick={() => selectSubgroup(category.id, subgroup.id, category.is_required)}
                   >
-                    Ильюшенко
+                    {subgroup.name}
                   </ToggleButton>
-                  <ToggleButton
-                    active={settings.eng_subgroup === 'b'}
-                    onClick={() => setEngSubgroup('b')}
-                  >
-                    Гилевич
-                  </ToggleButton>
-                </div>
+                ))}
               </div>
-          </div>
-        </div>
-
-        {/* Подгруппа по ОИТ */}
-        <div>
-          <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-2">
-            Подгруппа по ОИТ
-          </p>
-          <div className="flex gap-2">
-            <ToggleButton
-              active={settings.oit_subgroup === 'a'}
-              onClick={() => setOitSubgroup('a')}
-            >
-              Войтешенко
-            </ToggleButton>
-            <ToggleButton
-              active={settings.oit_subgroup === 'b'}
-              onClick={() => setOitSubgroup('b')}
-            >
-              Левчук
-            </ToggleButton>
-          </div>
-        </div>
+            </div>
+          );
+        })}
       </div>
     </Section>
   );

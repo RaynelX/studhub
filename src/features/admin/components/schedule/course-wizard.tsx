@@ -11,6 +11,9 @@ import type { WizardStep1, WizardStep2 } from '../../hooks/use-schedule-planner'
 import { DAY_NAMES } from '../../../../shared/constants/days';
 import { BELL_SCHEDULE } from '../../../../shared/constants/bell-schedule';
 import { TeacherAutocomplete } from '../ui/teacher-autocomplete';
+import { TargetPicker } from '../targeting/target-picker';
+import { useSubgroups } from '../../../targeting/SubgroupsProvider';
+import { formatTargetsFull } from '../../../../shared/targeting/match';
 
 // ============================================================
 // Types
@@ -33,14 +36,6 @@ const ENTRY_TYPE_OPTIONS = [
   { value: 'seminar', label: 'Семинар' },
   { value: 'practice', label: 'Практика' },
   { value: 'other', label: 'Другое' },
-] as const;
-
-const LANGUAGE_OPTIONS = [
-  { value: 'all', label: 'Все языки' },
-  { value: 'en', label: 'Английский' },
-  { value: 'de', label: 'Немецкий' },
-  { value: 'fr', label: 'Французский' },
-  { value: 'es', label: 'Испанский' },
 ] as const;
 
 const PARITY_OPTIONS = [
@@ -264,44 +259,10 @@ function Step1({
       </div>
 
       {/* Subgroup targeting */}
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Язык</label>
-          <select
-            value={data.targetLanguage}
-            onChange={(e) => update('targetLanguage', e.target.value as WizardStep1['targetLanguage'])}
-            className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {LANGUAGE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">EN подгруппа</label>
-          <select
-            value={data.targetEngSubgroup}
-            onChange={(e) => update('targetEngSubgroup', e.target.value as WizardStep1['targetEngSubgroup'])}
-            className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Все</option>
-            <option value="a">A</option>
-            <option value="b">B</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">ОИТ подгруппа</label>
-          <select
-            value={data.targetOitSubgroup}
-            onChange={(e) => update('targetOitSubgroup', e.target.value as WizardStep1['targetOitSubgroup'])}
-            className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">Все</option>
-            <option value="a">A</option>
-            <option value="b">B</option>
-          </select>
-        </div>
-      </div>
+      <TargetPicker
+        value={data.targetSubgroupIds}
+        onChange={(ids) => update('targetSubgroupIds', ids)}
+      />
     </div>
   );
 }
@@ -466,6 +427,7 @@ function StepReview({
   subjects: SubjectDoc[];
   teachers: TeacherDoc[];
 }) {
+  const { index } = useSubgroups();
   const data = planner.getData();
   const subject = subjects.find((s) => s.id === data.subjectId);
   const teacher = teachers.find((t) => t.id === data.teacherId);
@@ -516,7 +478,7 @@ function StepReview({
             <SummaryRow label="Кол-во занятий" value={String(data.pairCount)} />
             <SummaryRow
               label="Подгруппы"
-              value={buildSubgroupSummary(data)}
+              value={formatTargetsFull(data.targetSubgroupIds, index) || 'Вся группа'}
             />
           </tbody>
         </table>
@@ -532,22 +494,4 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
       <td className="px-4 py-2.5 text-neutral-900 dark:text-neutral-100">{value}</td>
     </tr>
   );
-}
-
-function buildSubgroupSummary(data: {
-  targetLanguage: string;
-  targetEngSubgroup: string;
-  targetOitSubgroup: string;
-}): string {
-  const parts: string[] = [];
-  if (data.targetLanguage !== 'all') {
-    parts.push(`Язык: ${data.targetLanguage.toUpperCase()}`);
-  }
-  if (data.targetEngSubgroup !== 'all') {
-    parts.push(`EN: ${data.targetEngSubgroup.toUpperCase()}`);
-  }
-  if (data.targetOitSubgroup !== 'all') {
-    parts.push(`ОИТ: ${data.targetOitSubgroup.toUpperCase()}`);
-  }
-  return parts.length > 0 ? parts.join(', ') : 'Вся группа';
 }

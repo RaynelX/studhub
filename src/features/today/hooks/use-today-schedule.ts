@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { buildDaySchedule } from '../../schedule/utils/schedule-builder';
 import {
@@ -35,7 +35,7 @@ export interface TodayScheduleData {
 
 export function useTodaySchedule(): TodayScheduleData {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: entries, loading: l1 } = useRxCollection(db.schedule);
   const { data: overrides, loading: l2 } = useRxCollection(db.overrides);
@@ -44,7 +44,7 @@ export function useTodaySchedule(): TodayScheduleData {
   const { data: teachers, loading: l5 } = useRxCollection(db.teachers);
   const { data: semesterData, loading: l6 } = useRxCollection(db.semester);
 
-  const loading = l1 || l2 || l3 || l4 || l5 || l6;
+  const loading = targetingLoading || l1 || l2 || l3 || l4 || l5 || l6;
   const semesterConfig = semesterData[0] ?? null;
 
   return useMemo(() => {
@@ -64,14 +64,13 @@ export function useTodaySchedule(): TodayScheduleData {
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     const buildParams = {
-      settings,
+      isForStudent,
       entries,
       overrides,
       events,
       subjects,
       teachers,
       semesterConfig,
-      excludeEventTypes: [] as any,
     };
 
     // Сегодняшние пары
@@ -117,5 +116,5 @@ export function useTodaySchedule(): TodayScheduleData {
       nextDay,
       loading: false,
     };
-  }, [loading, settings, entries, overrides, events, subjects, teachers, semesterConfig]);
+  }, [loading, isForStudent, entries, overrides, events, subjects, teachers, semesterConfig]);
 }

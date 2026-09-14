@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 
@@ -18,12 +18,12 @@ export function useUpcomingEvents(): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: events, loading: l1 } = useRxCollection(db.events);
   const { data: subjects, loading: l2 } = useRxCollection(db.subjects);
 
-  const loading = l1 || l2;
+  const loading = targetingLoading || l1 || l2;
 
   return useMemo(() => {
     if (loading) return { events: [], loading: true };
@@ -32,19 +32,7 @@ export function useUpcomingEvents(): {
     const todayStr = toISODate(today);
     const subjectMap = new Map(subjects.map((s) => [s.id, s]));
 
-    const filtered = events.filter((e) => {
-      if (e.date < todayStr) return false;
-      const langOk =
-        e.target_language === 'all' || e.target_language === settings.language;
-      const engOk =
-        e.target_eng_subgroup === 'all' ||
-        settings.language !== 'en' ||
-        e.target_eng_subgroup === settings.eng_subgroup;
-      const oitOk =
-        e.target_oit_subgroup === 'all' ||
-        e.target_oit_subgroup === settings.oit_subgroup;
-      return langOk && engOk && oitOk;
-    });
+    const filtered = events.filter((e) => e.date >= todayStr && isForStudent(e));
 
     if (filtered.length === 0) return { events: [], loading: false };
 
@@ -68,7 +56,7 @@ export function useUpcomingEvents(): {
     });
 
     return { events: result, loading: false };
-  }, [loading, events, subjects, settings]);
+  }, [loading, events, subjects, isForStudent]);
 }
 
 function formatShortDate(dateStr: string, todayStr: string): string {

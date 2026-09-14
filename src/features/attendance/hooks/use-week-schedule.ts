@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { buildDaySchedule } from '../../schedule/utils/schedule-builder';
 import type { DaySlot } from '../../schedule/utils/schedule-builder';
@@ -25,7 +25,7 @@ export interface WeekScheduleData {
 
 export function useWeekSchedule(monday: Date): WeekScheduleData {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: entries, loading: l1 } = useRxCollection(db.schedule);
   const { data: overrides, loading: l2 } = useRxCollection(db.overrides);
@@ -34,7 +34,7 @@ export function useWeekSchedule(monday: Date): WeekScheduleData {
   const { data: teachers, loading: l5 } = useRxCollection(db.teachers);
   const { data: semesterData, loading: l6 } = useRxCollection(db.semester);
 
-  const loading = l1 || l2 || l3 || l4 || l5 || l6;
+  const loading = targetingLoading || l1 || l2 || l3 || l4 || l5 || l6;
 
   const mondayStr = toISODate(monday);
 
@@ -52,7 +52,7 @@ export function useWeekSchedule(monday: Date): WeekScheduleData {
 
       const { slots } = buildDaySchedule({
         date,
-        settings,
+        isForStudent,
         entries,
         overrides,
         events,
@@ -65,5 +65,5 @@ export function useWeekSchedule(monday: Date): WeekScheduleData {
     }
 
     return { weekSchedule, loading: false, semesterConfig };
-  }, [loading, mondayStr, entries, overrides, events, subjects, teachers, semesterData, settings]);
+  }, [loading, mondayStr, entries, overrides, events, subjects, teachers, semesterData, isForStudent]);
 }

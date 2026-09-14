@@ -3,13 +3,11 @@ import type {
   SubjectDoc,
   TeacherDoc,
   EventType,
-  TargetLanguage,
-  TargetEngSubgroup,
-  TargetOitSubgroup,
 } from '../../../../database/types';
 import { AdminModal } from '../ui/admin-modal';
 import { BELL_SCHEDULE } from '../../../../shared/constants/bell-schedule';
 import { TeacherAutocomplete } from '../ui/teacher-autocomplete';
+import { TargetPicker } from '../targeting/target-picker';
 
 export interface EventFormData {
   title: string;
@@ -21,9 +19,7 @@ export interface EventFormData {
   subjectId: string;
   teacherId: string;
   room: string;
-  targetLanguage: TargetLanguage;
-  targetEngSubgroup: TargetEngSubgroup;
-  targetOitSubgroup: TargetOitSubgroup;
+  targetSubgroupIds: string[];
 }
 
 interface EventFormDesktopProps {
@@ -64,9 +60,7 @@ export function EventFormDesktop({
     subjectId: '',
     teacherId: '',
     room: '',
-    targetLanguage: 'all',
-    targetEngSubgroup: 'all',
-    targetOitSubgroup: 'all',
+    targetSubgroupIds: [],
   });
 
   const [form, setForm] = useState<EventFormData>(buildInitial);
@@ -239,46 +233,10 @@ export function EventFormDesktop({
         </div>
 
         {/* Subgroups */}
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">Язык</label>
-            <select
-              value={form.targetLanguage}
-              onChange={(e) => update('targetLanguage', e.target.value as TargetLanguage)}
-              className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Все</option>
-              <option value="en">EN</option>
-              <option value="de">DE</option>
-              <option value="fr">FR</option>
-              <option value="es">ES</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">EN подгруппа</label>
-            <select
-              value={form.targetEngSubgroup}
-              onChange={(e) => update('targetEngSubgroup', e.target.value as TargetEngSubgroup)}
-              className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Все</option>
-              <option value="a">A</option>
-              <option value="b">B</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">ОИТ подгр.</label>
-            <select
-              value={form.targetOitSubgroup}
-              onChange={(e) => update('targetOitSubgroup', e.target.value as TargetOitSubgroup)}
-              className="w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="all">Все</option>
-              <option value="a">A</option>
-              <option value="b">B</option>
-            </select>
-          </div>
-        </div>
+        <TargetPicker
+          value={form.targetSubgroupIds}
+          onChange={(ids) => update('targetSubgroupIds', ids)}
+        />
       </div>
     </AdminModal>
   );

@@ -7,24 +7,15 @@ import type {
     SemesterConfigDoc,
     EntryType,
     EventType,
-    TargetEngSubgroup,
-    TargetOitSubgroup,
-    TargetLanguage,
     WeekParity,
   } from '../../../database/types';
-  import type { StudentSettings } from '../../settings/SettingsProvider';
+  import type { StudentPredicate } from '../../../shared/targeting/types';
   import { BELL_SCHEDULE } from '../../../shared/constants/bell-schedule';
   import { getDayOfWeek, toISODate, getWeekParity } from './week-utils';
-  
+
   // ============================================================
   // Типы результата
   // ============================================================
-  
-  export interface SourceTargets {
-    target_language: TargetLanguage;
-    target_eng_subgroup: TargetEngSubgroup;
-    target_oit_subgroup: TargetOitSubgroup;
-  }
 
   export interface ResolvedPair {
     pairNumber: number;
@@ -43,8 +34,8 @@ import type {
     sourceEntryId?: string;
     /** ID of the override, if any */
     sourceOverrideId?: string;
-    /** Target subgroup filters inherited from the source record */
-    sourceTargets?: SourceTargets;
+    /** Подгруппы, которым адресована исходная запись — наследуются заменой/отменой */
+    sourceTargetIds?: string[];
   }
   
   export interface DaySlot {
@@ -74,40 +65,14 @@ import type {
   
   interface BuildParams {
     date: Date;
-    settings: StudentSettings;
+    /** Фильтр подгрупп — см. useStudentTargeting() */
+    isForStudent: StudentPredicate;
     entries: ScheduleEntryDoc[];
     overrides: ScheduleOverrideDoc[];
     events: EventDoc[];
     subjects: SubjectDoc[];
     teachers: TeacherDoc[];
     semesterConfig: SemesterConfigDoc | null;
-  }
-  
-  // ============================================================
-  // Фильтрация: подгруппа + язык
-  // ============================================================
-  
-  function isForStudent(
-    item: {
-      target_language: TargetLanguage;
-      target_eng_subgroup: TargetEngSubgroup;
-      target_oit_subgroup: TargetOitSubgroup;
-    },
-    settings: StudentSettings,
-  ): boolean {
-    const languageOk =
-      item.target_language === 'all' || item.target_language === settings.language;
-  
-    const engSubgroupOk =
-      item.target_eng_subgroup === 'all' ||
-      settings.language !== 'en' ||
-      item.target_eng_subgroup === settings.eng_subgroup;
-  
-    const oitSubgroupOk =
-      item.target_oit_subgroup === 'all' ||
-      item.target_oit_subgroup === settings.oit_subgroup;
-  
-    return languageOk && engSubgroupOk && oitSubgroupOk;
   }
   
   // ============================================================
@@ -130,7 +95,7 @@ import type {
   export function buildDaySchedule(params: BuildParams): DayEvents {
     const {
       date,
-      settings,
+      isForStudent,
       entries,
       overrides,
       events,
@@ -157,18 +122,18 @@ import type {
         e.day_of_week === dayOfWeek &&
         dateStr >= e.date_from &&
         dateStr <= e.date_to &&
-        isForStudent(e, settings) &&
+        isForStudent(e) &&
         matchesParity(e.week_parity, weekParity),
     );
-  
+
     const dayOverrides = overrides.filter(
-      (o) => o.date === dateStr && isForStudent(o, settings),
+      (o) => o.date === dateStr && isForStudent(o),
     );
-  
+
     const allDayEvents = events.filter(
       (e) =>
         e.date === dateStr &&
-        isForStudent(e, settings),
+        isForStudent(e),
     );
   
     const dayEvents = allDayEvents.filter(
@@ -215,11 +180,7 @@ import type {
           eventType: event.event_type,
           description: event.description,
           sourceEntryId: entry?.id,
-          sourceTargets: {
-            target_language: event.target_language,
-            target_eng_subgroup: event.target_eng_subgroup,
-            target_oit_subgroup: event.target_oit_subgroup,
-          },
+          sourceTargetIds: event.target_subgroup_ids,
         };
       } else if (override) {
         pair = resolveOverride(override, entry, subjectMap, teacherMap, bell.pairNumber);
@@ -238,11 +199,7 @@ import type {
           room: entry.room,
           status: 'normal',
           sourceEntryId: entry.id,
-          sourceTargets: {
-            target_language: entry.target_language,
-            target_eng_subgroup: entry.target_eng_subgroup,
-            target_oit_subgroup: entry.target_oit_subgroup,
-          },
+          sourceTargetIds: entry.target_subgroup_ids,
         };
       }
   
@@ -304,11 +261,7 @@ import type {
         comment: override.comment,
         sourceEntryId: baseEntry.id,
         sourceOverrideId: override.id,
-        sourceTargets: {
-          target_language: override.target_language,
-          target_eng_subgroup: override.target_eng_subgroup,
-          target_oit_subgroup: override.target_oit_subgroup,
-        },
+        sourceTargetIds: override.target_subgroup_ids,
       };
     }
   
@@ -333,10 +286,6 @@ import type {
       comment: override.comment,
       sourceEntryId: baseEntry?.id,
       sourceOverrideId: override.id,
-      sourceTargets: {
-        target_language: override.target_language,
-        target_eng_subgroup: override.target_eng_subgroup,
-        target_oit_subgroup: override.target_oit_subgroup,
-      },
+      sourceTargetIds: override.target_subgroup_ids,
     };
   }

@@ -1,7 +1,9 @@
 import { AlertTriangle, CalendarCheck, Plus } from 'lucide-react';
 import type { GridCell } from '../../hooks/use-week-grid';
 import { getSubjectColor } from '../../hooks/use-week-grid';
-import { ENTRY_TYPE_LABELS_SHORT, formatSubgroupBadges } from '../../../../shared/constants/admin-labels';
+import { ENTRY_TYPE_LABELS_SHORT } from '../../../../shared/constants/admin-labels';
+import { useSubgroups } from '../../../targeting/SubgroupsProvider';
+import { formatTargetLabels, targetsOverlap } from '../../../../shared/targeting/match';
 
 interface WeekGridCellProps {
   cell: GridCell;
@@ -10,6 +12,7 @@ interface WeekGridCellProps {
 }
 
 export function WeekGridCell({ cell, subjectIds, onClick }: WeekGridCellProps) {
+  const { index } = useSubgroups();
   const isEmpty = cell.entries.length === 0 && cell.overrides.length === 0 && cell.events.length === 0;
   const hasCancels = cell.overrides.some((o) => o.override.override_type === 'cancel');
   const hasReplacements = cell.overrides.some((o) => o.override.override_type === 'replace');
@@ -40,11 +43,11 @@ export function WeekGridCell({ cell, subjectIds, onClick }: WeekGridCellProps) {
         const colorCls = getSubjectColor(ge.entry.subject_id, subjectIds);
         const name = ge.subject?.short_name ?? ge.subject?.name ?? '—';
         const type = ENTRY_TYPE_LABELS_SHORT[ge.entry.entry_type] ?? '';
-        const subgroups = formatSubgroupBadges(ge.entry);
+        const subgroups = formatTargetLabels(ge.entry.target_subgroup_ids, index);
         const isCancelled = hasCancels && cell.overrides.some(
           (o) =>
             o.override.override_type === 'cancel' &&
-            matchesSubgroup(o.override, ge.entry),
+            targetsOverlap(o.override.target_subgroup_ids, ge.entry.target_subgroup_ids, index),
         );
 
         return (
@@ -116,25 +119,4 @@ export function WeekGridCell({ cell, subjectIds, onClick }: WeekGridCellProps) {
       </div>
     </button>
   );
-}
-
-// ============================================================
-// Helpers
-// ============================================================
-
-function matchesSubgroup(
-  a: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },
-  b: { target_language: string; target_eng_subgroup: string; target_oit_subgroup: string },
-): boolean {
-  // "all" matches everything
-  if (a.target_language !== 'all' && b.target_language !== 'all' && a.target_language !== b.target_language) {
-    return false;
-  }
-  if (a.target_eng_subgroup !== 'all' && b.target_eng_subgroup !== 'all' && a.target_eng_subgroup !== b.target_eng_subgroup) {
-    return false;
-  }
-  if (a.target_oit_subgroup !== 'all' && b.target_oit_subgroup !== 'all' && a.target_oit_subgroup !== b.target_oit_subgroup) {
-    return false;
-  }
-  return true;
 }

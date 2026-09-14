@@ -47,7 +47,11 @@ export function AdminSchedulePage() {
   const [deadlineFormOpen, setDeadlineFormOpen] = useState(false);
 
   // Pre-fill state for override form opened from popover
-  const [overridePreFill, setOverridePreFill] = useState<{ date: string; pairNumber: number } | null>(null);
+  const [overridePreFill, setOverridePreFill] = useState<{
+    date: string;
+    pairNumber: number;
+    targetSubgroupIds: string[];
+  } | null>(null);
 
   // Confirm dialog state
   const [confirmState, setConfirmState] = useState<{
@@ -85,9 +89,7 @@ export function AdminSchedulePage() {
         entry_type: data.entryType,
         teacher_id: data.teacherId,
         room: data.room,
-        target_language: data.targetLanguage,
-        target_eng_subgroup: data.targetEngSubgroup,
-        target_oit_subgroup: data.targetOitSubgroup,
+        target_subgroup_ids: data.targetSubgroupIds,
         date_from: data.dateFrom,
         date_to: data.dateTo,
         week_parity: data.weekParity,
@@ -104,9 +106,7 @@ export function AdminSchedulePage() {
         date: data.date,
         pair_number: data.pairNumber,
         override_type: data.overrideType,
-        target_language: data.targetLanguage,
-        target_eng_subgroup: data.targetEngSubgroup,
-        target_oit_subgroup: data.targetOitSubgroup,
+        target_subgroup_ids: data.targetSubgroupIds,
         subject_id: data.subjectId || null,
         entry_type: data.entryType || null,
         teacher_id: data.teacherId || null,
@@ -131,9 +131,7 @@ export function AdminSchedulePage() {
         subject_id: data.subjectId || null,
         teacher_id: data.teacherId || null,
         room: data.room || null,
-        target_language: data.targetLanguage,
-        target_eng_subgroup: data.targetEngSubgroup,
-        target_oit_subgroup: data.targetOitSubgroup,
+        target_subgroup_ids: data.targetSubgroupIds,
       });
       showToast('success', 'Событие создано');
     } catch {
@@ -148,9 +146,7 @@ export function AdminSchedulePage() {
         date: data.date,
         time: data.time || null,
         subject_id: data.subjectId || null,
-        target_language: data.targetLanguage,
-        target_eng_subgroup: data.targetEngSubgroup,
-        target_oit_subgroup: data.targetOitSubgroup,
+        target_subgroup_ids: data.targetSubgroupIds,
       });
       showToast('success', 'Дедлайн создан');
     } catch {
@@ -206,31 +202,47 @@ export function AdminSchedulePage() {
     });
   }
 
-  // Quick actions from popover
-  function handleQuickCancel(date: string, pairNumber: number) {
-    handleCreateOverride({
+  // Quick actions from popover — наследуют подгруппы пар, стоящих в слоте.
+  // Если в слоте стоят пары разных подгрупп, объединить их в один набор нельзя
+  // (id разных категорий соединяются по И), поэтому создаём по отмене на каждую.
+  async function handleQuickCancel(date: string, pairNumber: number, targetSets: string[][]) {
+    const sets = targetSets.length > 0 ? targetSets : [[]];
+
+    for (const targetSubgroupIds of sets) {
+      await handleCreateOverride({
+        date,
+        pairNumber,
+        overrideType: 'cancel',
+        targetSubgroupIds,
+        subjectId: '',
+        entryType: 'lecture',
+        teacherId: '',
+        room: '',
+        comment: '',
+      });
+    }
+  }
+
+  /**
+   * Замена и доп. пара создаются одной записью, поэтому подставляем подгруппы
+   * только когда слот однозначен. Иначе староста выбирает их сам — иначе
+   * замена применилась бы не к той аудитории.
+   */
+  function openOverrideForm(date: string, pairNumber: number, targetSets: string[][]) {
+    setOverridePreFill({
       date,
       pairNumber,
-      overrideType: 'cancel',
-      targetLanguage: 'all',
-      targetEngSubgroup: 'all',
-      targetOitSubgroup: 'all',
-      subjectId: '',
-      entryType: 'lecture',
-      teacherId: '',
-      room: '',
-      comment: '',
+      targetSubgroupIds: targetSets.length === 1 ? targetSets[0] : [],
     });
-  }
-
-  function handleQuickReplace(date: string, pairNumber: number) {
-    setOverridePreFill({ date, pairNumber });
     setOverrideFormOpen(true);
   }
 
-  function handleQuickAdd(date: string, pairNumber: number) {
-    setOverridePreFill({ date, pairNumber });
-    setOverrideFormOpen(true);
+  function handleQuickReplace(date: string, pairNumber: number, targetSets: string[][]) {
+    openOverrideForm(date, pairNumber, targetSets);
+  }
+
+  function handleQuickAdd(date: string, pairNumber: number, targetSets: string[][]) {
+    openOverrideForm(date, pairNumber, targetSets);
   }
 
   return (
@@ -354,6 +366,7 @@ export function AdminSchedulePage() {
         onSubmit={handleCreateOverride}
         initialDate={overridePreFill?.date}
         initialPairNumber={overridePreFill?.pairNumber}
+        initialTargetSubgroupIds={overridePreFill?.targetSubgroupIds}
       />
 
       <EventFormDesktop

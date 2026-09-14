@@ -25,12 +25,16 @@ import { AdminProvider } from '../features/admin/AdminProvider';
 import { AdminToastProvider } from '../features/admin/components/ui/admin-toast';
 import { ProtectedRoute } from '../features/admin/components/protected-route';
 import { NotificationsProvider } from '../features/notifications/NotificationsProvider';
+import { SubgroupsProvider } from '../features/targeting/SubgroupsProvider';
+import { AdminSubgroupsPage } from './pages/admin/AdminSubgroupsPage';
 
 export function App() {
   return (
     <ThemeProvider>
       <DatabaseProvider>
         <SyncProvider>
+          {/* Категории подгрупп нужны и админке, и студенту, и SettingsProvider */}
+          <SubgroupsProvider>
           <AdminProvider>
             <AdminToastProvider>
             <BrowserRouter>
@@ -44,6 +48,7 @@ export function App() {
                     <Route path="subjects" element={<AdminSubjectsPage />} />
                     <Route path="teachers" element={<AdminTeachersPage />} />
                     <Route path="students" element={<AdminStudentsPage />} />
+                    <Route path="subgroups" element={<AdminSubgroupsPage />} />
                     <Route path="semester" element={<AdminSemesterPage />} />
                   </Route>
                 </Route>
@@ -73,6 +78,7 @@ export function App() {
             </BrowserRouter>
           </AdminToastProvider>
           </AdminProvider>
+          </SubgroupsProvider>
         </SyncProvider>
       </DatabaseProvider>
     </ThemeProvider>

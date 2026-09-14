@@ -36,7 +36,21 @@ const PURGE_CATEGORIES: PurgeCategory[] = [
     key: 'events',
     table: 'events',
     label: 'События',
-    description: 'Контрольные, дедлайны, экзамены',
+    description: 'Контрольные, зачёты, экзамены',
+    defaultChecked: true,
+  },
+  {
+    key: 'deadlines',
+    table: 'deadlines',
+    label: 'Дедлайны',
+    description: 'Сроки сдачи работ',
+    defaultChecked: true,
+  },
+  {
+    key: 'homeworks',
+    table: 'homeworks',
+    label: 'Домашние задания',
+    description: 'Задания к парам',
     defaultChecked: true,
   },
   {

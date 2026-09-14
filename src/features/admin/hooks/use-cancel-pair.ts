@@ -1,13 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useAdminWrite } from './use-admin-write';
-import type { SourceTargets } from '../../schedule/utils/schedule-builder';
 
 interface CancelPairResult {
   /** Cancel a pair — creates a 'cancel' override in Supabase */
   cancelPair: (
     date: string,
     pairNumber: number,
-    targets: SourceTargets,
+    targetSubgroupIds: string[],
   ) => Promise<void>;
   /** Undo the last cancel — soft-deletes the override */
   undoCancel: () => Promise<void>;
@@ -32,7 +31,7 @@ export function useCancelPair(): CancelPairResult {
   const [toastOpen, setToastOpen] = useState(false);
 
   const cancelPair = useCallback(
-    async (date: string, pairNumber: number, targets: SourceTargets) => {
+    async (date: string, pairNumber: number, targetSubgroupIds: string[]) => {
       const id = crypto.randomUUID();
 
       await insert('schedule_overrides', {
@@ -40,9 +39,9 @@ export function useCancelPair(): CancelPairResult {
         date,
         pair_number: pairNumber,
         override_type: 'cancel',
-        target_language: targets.target_language,
-        target_eng_subgroup: targets.target_eng_subgroup,
-        target_oit_subgroup: targets.target_oit_subgroup,
+        // Отмена наследует подгруппы пары: отменяя пару одной подгруппы,
+        // нельзя отменить её всей группе.
+        target_subgroup_ids: targetSubgroupIds,
         is_deleted: false,
       });
 

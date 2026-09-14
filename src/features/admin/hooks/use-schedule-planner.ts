@@ -1,9 +1,6 @@
 import { useState, useMemo } from 'react';
 import type {
   EntryType,
-  TargetLanguage,
-  TargetEngSubgroup,
-  TargetOitSubgroup,
   WeekParity,
   ScheduleEntryDoc,
   SemesterConfigDoc,
@@ -11,6 +8,8 @@ import type {
 import { calculateEndDate, countTotalPairs } from '../utils/schedule-calculator';
 import { findConflicts } from '../utils/conflict-detector';
 import type { Conflict } from '../utils/conflict-detector';
+import { MIN_PAIR_NUMBER, MAX_PAIR_NUMBER } from '../../../shared/constants/bell-schedule';
+import { useSubgroups } from '../../targeting/SubgroupsProvider';
 
 // ============================================================
 // Types
@@ -21,9 +20,7 @@ export interface WizardStep1 {
   entryType: EntryType;
   teacherId: string;
   room: string;
-  targetLanguage: TargetLanguage;
-  targetEngSubgroup: TargetEngSubgroup;
-  targetOitSubgroup: TargetOitSubgroup;
+  targetSubgroupIds: string[];
 }
 
 export interface WizardStep2 {
@@ -44,9 +41,7 @@ const EMPTY_STEP1: WizardStep1 = {
   entryType: 'lecture',
   teacherId: '',
   room: '',
-  targetLanguage: 'all',
-  targetEngSubgroup: 'all',
-  targetOitSubgroup: 'all',
+  targetSubgroupIds: [],
 };
 
 const EMPTY_STEP2: WizardStep2 = {
@@ -67,6 +62,7 @@ export function useSchedulePlanner(
   existingEntries: ScheduleEntryDoc[],
   semesterConfig: SemesterConfigDoc | null,
 ) {
+  const { index } = useSubgroups();
   const [step, setStep] = useState(0);
   const [step1, setStep1] = useState<WizardStep1>(EMPTY_STEP1);
   const [step2, setStep2] = useState<WizardStep2>(EMPTY_STEP2);
@@ -124,11 +120,9 @@ export function useSchedulePlanner(
       date_from: step2.dateFrom,
       date_to: effectiveDateTo,
       week_parity: step2.weekParity,
-      target_language: step1.targetLanguage,
-      target_eng_subgroup: step1.targetEngSubgroup,
-      target_oit_subgroup: step1.targetOitSubgroup,
-    });
-  }, [existingEntries, step1, step2, effectiveDateTo]);
+      target_subgroup_ids: step1.targetSubgroupIds,
+    }, index);
+  }, [existingEntries, step1, step2, effectiveDateTo, index]);
 
   // Validity checks
   const isStep1Valid = step1.subjectId !== '' && step1.teacherId !== '';
@@ -137,8 +131,8 @@ export function useSchedulePlanner(
     (effectiveDateTo ?? '') !== '' &&
     step2.dayOfWeek >= 1 &&
     step2.dayOfWeek <= 6 &&
-    step2.pairNumber >= 1 &&
-    step2.pairNumber <= 5;
+    step2.pairNumber >= MIN_PAIR_NUMBER &&
+    step2.pairNumber <= MAX_PAIR_NUMBER;
 
   function reset() {
     setStep(0);

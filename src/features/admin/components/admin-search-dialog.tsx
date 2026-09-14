@@ -5,6 +5,8 @@ import { useDatabase } from '../../../app/providers/DatabaseProvider';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { ENTRY_TYPE_LABELS } from '../../../shared/constants/admin-labels';
 import { DAY_NAMES_SHORT } from '../../../shared/constants/days';
+import { useSubgroups } from '../../targeting/SubgroupsProvider';
+import { formatTargetsCompact } from '../../../shared/targeting/match';
 
 // ============================================================
 // Types
@@ -30,6 +32,7 @@ export function AdminSearchDialog() {
   const navigate = useNavigate();
 
   const db = useDatabase();
+  const { index } = useSubgroups();
   const { data: subjects } = useRxCollection(db.subjects);
   const { data: teachers } = useRxCollection(db.teachers);
   const { data: students } = useRxCollection(db.students);
@@ -105,7 +108,7 @@ export function AdminSearchDialog() {
           id: s.id,
           type: 'student',
           label: s.full_name,
-          detail: `${s.language.toUpperCase()}${s.eng_subgroup ? ` / EN-${s.eng_subgroup.toUpperCase()}` : ''}`,
+          detail: formatTargetsCompact(s.subgroup_ids, index),
           route: '/admin/students',
         });
       }
@@ -128,7 +131,7 @@ export function AdminSearchDialog() {
     }
 
     return items.slice(0, 15);
-  }, [query, subjects, teachers, students, entries]);
+  }, [query, subjects, teachers, students, entries, index]);
 
   const handleSelect = useCallback(
     (result: SearchResult) => {

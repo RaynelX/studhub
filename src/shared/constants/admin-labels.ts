@@ -44,52 +44,6 @@ export const PARITY_LABELS: Record<string, string> = {
   even: 'Чёт',
 };
 
-/** Short subgroup value → display label */
-export const SUBGROUP_LABELS: Record<string, string> = {
-  en: 'EN',
-  de: 'DE',
-  fr: 'FR',
-  es: 'ES',
-  a: 'A',
-  b: 'B',
-};
-
-// ============================================================
-// Subgroup formatting helpers
-// ============================================================
-
-interface SubgroupTarget {
-  target_language: string;
-  target_eng_subgroup: string;
-  target_oit_subgroup: string;
-}
-
-/**
- * Compact text representation: "EN / EN-A / ОИТ-B"
- * Returns empty string if all subgroups are "all".
- */
-export function formatSubgroupCompact(entry: SubgroupTarget, separator = ' / '): string {
-  const parts: string[] = [];
-  if (entry.target_language !== 'all') parts.push(entry.target_language.toUpperCase());
-  if (entry.target_eng_subgroup !== 'all') parts.push(`EN-${entry.target_eng_subgroup.toUpperCase()}`);
-  if (entry.target_oit_subgroup !== 'all') parts.push(`ОИТ-${entry.target_oit_subgroup.toUpperCase()}`);
-  return parts.join(separator);
-}
-
-/**
- * Badge array: ["EN", "EN-A", "ОИТ-B"]
- * Uses SUBGROUP_LABELS for pretty display.
- */
-export function formatSubgroupBadges(entry: SubgroupTarget): string[] {
-  const badges: string[] = [];
-  if (entry.target_language !== 'all') {
-    badges.push(SUBGROUP_LABELS[entry.target_language] ?? entry.target_language);
-  }
-  if (entry.target_eng_subgroup !== 'all') {
-    badges.push(`EN-${SUBGROUP_LABELS[entry.target_eng_subgroup] ?? entry.target_eng_subgroup}`);
-  }
-  if (entry.target_oit_subgroup !== 'all') {
-    badges.push(`ОИТ-${SUBGROUP_LABELS[entry.target_oit_subgroup] ?? entry.target_oit_subgroup}`);
-  }
-  return badges;
-}
+// Подгруппы больше не захардкожены: их названия и бейджи строятся
+// из данных — см. formatTargetLabels / formatTargetsCompact
+// в shared/targeting/match.ts.

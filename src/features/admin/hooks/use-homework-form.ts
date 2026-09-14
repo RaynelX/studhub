@@ -1,12 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { TargetLanguage, TargetEngSubgroup, TargetOitSubgroup, HomeworkDoc } from '../../../database/types';
+import type { HomeworkDoc } from '../../../database/types';
 import { useAdminWrite } from './use-admin-write';
 
 interface HomeworkFormFields {
   content: string;
-  targetLanguage: TargetLanguage;
-  targetEngSubgroup: TargetEngSubgroup;
-  targetOitSubgroup: TargetOitSubgroup;
+  targetSubgroupIds: string[];
 }
 
 interface UseHomeworkFormOptions {
@@ -39,9 +37,7 @@ export function useHomeworkForm({
 
   const [fields, setFields] = useState<HomeworkFormFields>({
     content: existing?.content ?? '',
-    targetLanguage: existing?.target_language ?? 'all',
-    targetEngSubgroup: existing?.target_eng_subgroup ?? 'all',
-    targetOitSubgroup: existing?.target_oit_subgroup ?? 'all',
+    targetSubgroupIds: existing?.target_subgroup_ids ?? [],
   });
 
   const setField = useCallback(<K extends keyof HomeworkFormFields>(
@@ -64,9 +60,7 @@ export function useHomeworkForm({
       date,
       pair_number: pairNumber,
       content: fields.content.trim(),
-      target_language: fields.targetLanguage,
-      target_eng_subgroup: fields.targetEngSubgroup,
-      target_oit_subgroup: fields.targetOitSubgroup,
+      target_subgroup_ids: fields.targetSubgroupIds,
       is_deleted: false,
     };
 
