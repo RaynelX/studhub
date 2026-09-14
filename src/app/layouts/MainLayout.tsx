@@ -4,6 +4,7 @@ import { useSync } from '../../database/sync/SyncProvider';
 import { usePageHeader } from '../providers/PageHeaderProvider';
 import { useSwUpdate } from '../hooks/use-sw-update';
 import { UpdateBanner } from '../components/UpdateBanner';
+import { WhatsNewSheet } from '../../features/about/components/WhatsNewSheet';
 import { useExitTransitionWait } from '../../shared/hooks/use-exit-transition';
 
 const navItems = [
@@ -54,6 +55,9 @@ export function MainLayout() {
 
       {/* Баннер обновления */}
       <UpdateBanner sw={sw} />
+
+      {/* Шторка «Что нового?» после обновления версии */}
+      <WhatsNewSheet />
 
       {/* Bottom Navigation */}
       <nav
