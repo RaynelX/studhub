@@ -202,29 +202,47 @@ export function AdminSchedulePage() {
     });
   }
 
-  // Quick actions from popover — наследуют подгруппы пар, стоящих в слоте
-  function handleQuickCancel(date: string, pairNumber: number, targetSubgroupIds: string[]) {
-    handleCreateOverride({
+  // Quick actions from popover — наследуют подгруппы пар, стоящих в слоте.
+  // Если в слоте стоят пары разных подгрупп, объединить их в один набор нельзя
+  // (id разных категорий соединяются по И), поэтому создаём по отмене на каждую.
+  async function handleQuickCancel(date: string, pairNumber: number, targetSets: string[][]) {
+    const sets = targetSets.length > 0 ? targetSets : [[]];
+
+    for (const targetSubgroupIds of sets) {
+      await handleCreateOverride({
+        date,
+        pairNumber,
+        overrideType: 'cancel',
+        targetSubgroupIds,
+        subjectId: '',
+        entryType: 'lecture',
+        teacherId: '',
+        room: '',
+        comment: '',
+      });
+    }
+  }
+
+  /**
+   * Замена и доп. пара создаются одной записью, поэтому подставляем подгруппы
+   * только когда слот однозначен. Иначе староста выбирает их сам — иначе
+   * замена применилась бы не к той аудитории.
+   */
+  function openOverrideForm(date: string, pairNumber: number, targetSets: string[][]) {
+    setOverridePreFill({
       date,
       pairNumber,
-      overrideType: 'cancel',
-      targetSubgroupIds,
-      subjectId: '',
-      entryType: 'lecture',
-      teacherId: '',
-      room: '',
-      comment: '',
+      targetSubgroupIds: targetSets.length === 1 ? targetSets[0] : [],
     });
-  }
-
-  function handleQuickReplace(date: string, pairNumber: number, targetSubgroupIds: string[]) {
-    setOverridePreFill({ date, pairNumber, targetSubgroupIds });
     setOverrideFormOpen(true);
   }
 
-  function handleQuickAdd(date: string, pairNumber: number, targetSubgroupIds: string[]) {
-    setOverridePreFill({ date, pairNumber, targetSubgroupIds });
-    setOverrideFormOpen(true);
+  function handleQuickReplace(date: string, pairNumber: number, targetSets: string[][]) {
+    openOverrideForm(date, pairNumber, targetSets);
+  }
+
+  function handleQuickAdd(date: string, pairNumber: number, targetSets: string[][]) {
+    openOverrideForm(date, pairNumber, targetSets);
   }
 
   return (

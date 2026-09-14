@@ -37,13 +37,13 @@ const SESSION_EVENT_TYPES: EventType[] = ['exam', 'credit', 'consultation'];
 
 export function useSessionSchedule(): SessionScheduleData {
   const db = useDatabase();
-  const { isForStudent } = useStudentTargeting();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: events, loading: l1 } = useRxCollection(db.events);
   const { data: subjects, loading: l2 } = useRxCollection(db.subjects);
   const { data: teachers, loading: l3 } = useRxCollection(db.teachers);
 
-  const loading = l1 || l2 || l3;
+  const loading = targetingLoading || l1 || l2 || l3;
 
   return useMemo(() => {
     if (loading) return { events: [], byDate: new Map(), loading: true };

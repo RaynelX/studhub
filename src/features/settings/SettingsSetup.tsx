@@ -14,7 +14,7 @@ import {
   LayoutDashboard,
 } from 'lucide-react';
 import type { StudentSettings } from './SettingsProvider';
-import { subgroupsOf, visibleCategories } from '../../shared/targeting/match';
+import { hasValidSelection, subgroupsOf, visibleCategories } from '../../shared/targeting/match';
 import type {
   SubgroupIndex,
   SubgroupSelection,
@@ -138,11 +138,21 @@ export function SettingsSetup({ mode, index, initialSelection, onComplete }: Pro
   // Набор категорий пересчитывается на каждый выбор: условная категория
   // (например, подгруппа по английскому) появляется, только когда выполнено
   // её условие, и исчезает, когда студент передумал.
+  //
+  // В режиме довыбора список должен совпадать с тем, на чём гейтится
+  // SettingsProvider (missingRequiredCategories), иначе экран закроется,
+  // провайдер откроет его снова — и так по кругу. Поэтому тот же предикат,
+  // но по initialSelection: от ответов студента список не съёживается.
   const categorySteps = useMemo(() => {
     const visible = visibleCategories(index, draft);
-    return mode === 'full'
-      ? visible
-      : visible.filter((c) => c.is_required && !initialSelection[c.id]);
+    if (mode === 'full') return visible;
+
+    return visible.filter(
+      (c) =>
+        c.is_required &&
+        subgroupsOf(index, c.id).length > 0 &&
+        !hasValidSelection(index, c.id, initialSelection),
+    );
   }, [index, draft, mode, initialSelection]);
 
   const steps = useMemo<StepId[]>(() => {
@@ -188,8 +198,12 @@ export function SettingsSetup({ mode, index, initialSelection, onComplete }: Pro
     prevStepsRef.current = next;
   }, [steps, stepIndex]);
 
+  // Обязательный шаг нельзя пропустить — кроме случая, когда подгрупп в нём
+  // ещё нет: выбирать нечего, и кнопка «Далее» заперла бы вход в приложение.
   const canGoNext = currentCategory
-    ? !currentCategory.is_required || Boolean(draft[currentCategory.id])
+    ? !currentCategory.is_required ||
+      Boolean(draft[currentCategory.id]) ||
+      subgroupsOf(index, currentCategory.id).length === 0
     : true;
 
   const navigate = useCallback(

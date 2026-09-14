@@ -32,14 +32,14 @@ export function useCalendarData(year: number, month: number): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { isForStudent } = useStudentTargeting();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: events, loading: l1 } = useRxCollection(db.events);
   const { data: deadlines, loading: l2 } = useRxCollection(db.deadlines);
   const { data: subjects, loading: l3 } = useRxCollection(db.subjects);
   const { data: teachers, loading: l4 } = useRxCollection(db.teachers);
 
-  const loading = l1 || l2 || l3 || l4;
+  const loading = targetingLoading || l1 || l2 || l3 || l4;
 
   return useMemo(() => {
     if (loading) return { days: new Map(), loading: true };

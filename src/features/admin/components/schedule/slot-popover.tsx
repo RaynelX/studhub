@@ -5,7 +5,7 @@ import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
 import { getBellSlot } from '../../../../shared/constants/bell-schedule';
 import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS } from '../../../../shared/constants/admin-labels';
 import { useSubgroups } from '../../../targeting/SubgroupsProvider';
-import { formatTargetsCompact, mergeTargets } from '../../../../shared/targeting/match';
+import { distinctTargetSets, formatTargetsCompact } from '../../../../shared/targeting/match';
 
 interface SlotPopoverProps {
   cell: GridCell;
@@ -16,10 +16,14 @@ interface SlotPopoverProps {
   onDeleteEntry?: (entryId: string) => void;
   onDeleteOverride?: (overrideId: string) => void;
   onDeleteEvent?: (eventId: string) => void;
-  /** targetSubgroupIds — подгруппы пар, стоящих в этом слоте */
-  onQuickCancel?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
-  onQuickReplace?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
-  onQuickAdd?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
+  /**
+   * targetSets — выборки пар, стоящих в этом слоте, по одной на каждую
+   * различающуюся аудиторию. Объединять их в один набор нельзя: id разных
+   * категорий внутри набора соединяются по И (см. distinctTargetSets).
+   */
+  onQuickCancel?: (date: string, pairNumber: number, targetSets: string[][]) => void;
+  onQuickReplace?: (date: string, pairNumber: number, targetSets: string[][]) => void;
+  onQuickAdd?: (date: string, pairNumber: number, targetSets: string[][]) => void;
 }
 
 export function SlotPopover({
@@ -42,8 +46,12 @@ export function SlotPopover({
   const isEmpty = cell.entries.length === 0 && cell.overrides.length === 0 && cell.events.length === 0;
 
   // Быстрые действия наследуют подгруппы пар слота: отмена пары одной
-  // подгруппы не должна отменять её всей группе.
-  const slotTargets = mergeTargets(cell.entries.map((ge) => ge.entry.target_subgroup_ids));
+  // подгруппы не должна отменять её всей группе. Если в слоте стоят пары
+  // разных подгрупп, наборов будет несколько — вызывающая сторона решает,
+  // создать по записи на каждый или попросить уточнить.
+  const slotTargetSets = distinctTargetSets(
+    cell.entries.map((ge) => ge.entry.target_subgroup_ids),
+  );
 
   return (
     <div className="mt-4 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 shadow-lg p-4 relative animate-in fade-in slide-in-from-top-2 duration-200">
@@ -201,15 +209,15 @@ export function SlotPopover({
 
       {/* Quick actions */}
       <div className="flex gap-2 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-        <button onClick={() => onQuickCancel?.(cell.date, cell.pairNumber, slotTargets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+        <button onClick={() => onQuickCancel?.(cell.date, cell.pairNumber, slotTargetSets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
           <Ban className="w-3.5 h-3.5" />
           Отменить пару
         </button>
-        <button onClick={() => onQuickReplace?.(cell.date, cell.pairNumber, slotTargets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+        <button onClick={() => onQuickReplace?.(cell.date, cell.pairNumber, slotTargetSets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
           <RefreshCw className="w-3.5 h-3.5" />
           Замена
         </button>
-        <button onClick={() => onQuickAdd?.(cell.date, cell.pairNumber, slotTargets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+        <button onClick={() => onQuickAdd?.(cell.date, cell.pairNumber, slotTargetSets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
           <Plus className="w-3.5 h-3.5" />
           Доп. пара
         </button>

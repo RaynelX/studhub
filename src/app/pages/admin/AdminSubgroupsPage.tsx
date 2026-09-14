@@ -138,6 +138,7 @@ export function AdminSubgroupsPage() {
       onConfirm: async () => {
         setConfirmState(null);
         try {
+          await dropConditionsOn(children.map((c) => c.id));
           for (const child of children) {
             await remove('subgroups', child.id);
           }
@@ -148,6 +149,25 @@ export function AdminSubgroupsPage() {
         }
       },
     });
+  }
+
+  /**
+   * Убирает удаляемые подгруппы из условий показа других категорий.
+   * Иначе условие ссылается на несуществующую подгруппу: категория перестаёт
+   * показываться кому-либо, а из формы редактирования осиротевшую ссылку
+   * уже не видно, чтобы её снять.
+   */
+  async function dropConditionsOn(subgroupIds: string[]) {
+    const removed = new Set(subgroupIds);
+
+    for (const category of categories) {
+      const kept = category.visible_if_subgroup_ids.filter((id) => !removed.has(id));
+      if (kept.length !== category.visible_if_subgroup_ids.length) {
+        await update('subgroup_categories', category.id, {
+          visible_if_subgroup_ids: kept,
+        });
+      }
+    }
   }
 
   // ── Subgroups ─────────────────────────────────────────────
@@ -203,6 +223,7 @@ export function AdminSubgroupsPage() {
       onConfirm: async () => {
         setConfirmState(null);
         try {
+          await dropConditionsOn([subgroup.id]);
           await remove('subgroups', subgroup.id);
           showToast('success', 'Подгруппа удалена');
         } catch {
@@ -243,8 +264,8 @@ export function AdminSubgroupsPage() {
       ) : index.categories.length === 0 ? (
         <AdminCard>
           <div className="py-12 text-center text-neutral-400 dark:text-neutral-500 text-sm max-w-md mx-auto">
-            Подгрупп пока нет. Категория — это способ деления группы: иностранный
-            язык, ОИТ, элективный курс. Внутри категории заводятся подгруппы,
+            Подгрупп пока нет. Категория — это способ деления группы (Например, иностранный
+            язык или дисциплина по выбору студента). Внутри категории заводятся подгруппы,
             из которых студент выбирает свою.
           </div>
         </AdminCard>

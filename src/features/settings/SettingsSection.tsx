@@ -12,10 +12,21 @@ export function SettingsSection() {
   // сам выбор подчищается в updateSettings через pruneSelection.
   const categories = visibleCategories(index, settings.subgroups);
 
-  const selectSubgroup = (categoryId: string, subgroupId: string) => {
-    updateSettings({
-      subgroups: { ...settings.subgroups, [categoryId]: subgroupId },
-    });
+  /**
+   * В необязательной категории повторный тап по выбранной подгруппе снимает
+   * выбор — иначе из неё нельзя выйти, не сбрасывая все настройки.
+   * Обязательную категорию так «опустошить» нельзя.
+   */
+  const selectSubgroup = (categoryId: string, subgroupId: string, isRequired: boolean) => {
+    const next = { ...settings.subgroups };
+
+    if (!isRequired && next[categoryId] === subgroupId) {
+      delete next[categoryId];
+    } else {
+      next[categoryId] = subgroupId;
+    }
+
+    updateSettings({ subgroups: next });
   };
 
   if (categories.length === 0) {
@@ -45,7 +56,7 @@ export function SettingsSection() {
                   <ToggleButton
                     key={subgroup.id}
                     active={settings.subgroups[category.id] === subgroup.id}
-                    onClick={() => selectSubgroup(category.id, subgroup.id)}
+                    onClick={() => selectSubgroup(category.id, subgroup.id, category.is_required)}
                   >
                     {subgroup.name}
                   </ToggleButton>

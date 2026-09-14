@@ -18,12 +18,12 @@ export function useUpcomingEvents(): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { isForStudent } = useStudentTargeting();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: events, loading: l1 } = useRxCollection(db.events);
   const { data: subjects, loading: l2 } = useRxCollection(db.subjects);
 
-  const loading = l1 || l2;
+  const loading = targetingLoading || l1 || l2;
 
   return useMemo(() => {
     if (loading) return { events: [], loading: true };

@@ -8,6 +8,13 @@ interface StudentTargeting {
   /** «Эта запись предназначена текущему студенту» — единственный фильтр подгрупп в приложении */
   isForStudent: StudentPredicate;
   index: SubgroupIndex;
+  /**
+   * Справочник подгрупп ещё грузится. Пока это так, предикат прячет все
+   * адресные записи (их подгруппы ему неизвестны), поэтому вызывающий хук
+   * обязан подмешать этот флаг в свой loading — иначе на долю секунды
+   * показалось бы расписание без «своих» пар.
+   */
+  loading: boolean;
 }
 
 /**
@@ -15,7 +22,7 @@ interface StudentTargeting {
  * Заменяет собой десяток копий бывшей функции isForStudent.
  */
 export function useStudentTargeting(): StudentTargeting {
-  const { index } = useSubgroups();
+  const { index, loading } = useSubgroups();
   const { settings } = useSettings();
 
   const isForStudent = useMemo(
@@ -23,5 +30,5 @@ export function useStudentTargeting(): StudentTargeting {
     [settings.subgroups, index],
   );
 
-  return { isForStudent, index };
+  return { isForStudent, index, loading };
 }

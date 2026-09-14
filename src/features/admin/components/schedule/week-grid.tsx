@@ -15,9 +15,9 @@ interface WeekGridProps {
   onDeleteEntry?: (entryId: string) => void;
   onDeleteOverride?: (overrideId: string) => void;
   onDeleteEvent?: (eventId: string) => void;
-  onQuickCancel?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
-  onQuickReplace?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
-  onQuickAdd?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
+  onQuickCancel?: (date: string, pairNumber: number, targetSets: string[][]) => void;
+  onQuickReplace?: (date: string, pairNumber: number, targetSets: string[][]) => void;
+  onQuickAdd?: (date: string, pairNumber: number, targetSets: string[][]) => void;
 }
 
 export function WeekGrid({

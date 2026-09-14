@@ -60,6 +60,19 @@ export function subgroupsOf(
 // ============================================================
 
 /**
+ * Есть ли в наборе ссылка на подгруппу, которой больше нет в справочнике.
+ * Такую запись не видит никто, поэтому она и не конфликтует ни с чем.
+ *
+ * Пока справочник не загружен, неизвестны вообще все id — в этом случае
+ * не делаем выводов, иначе при старте приложения пропали бы все конфликты
+ * и зачёркивания.
+ */
+function hasOrphanTargets(targetIds: string[], index: SubgroupIndex): boolean {
+  if (index.subgroupById.size === 0) return false;
+  return targetIds.some((id) => !index.subgroupById.has(id));
+}
+
+/**
  * Группирует набор целевых подгрупп по категориям.
  * Подгруппа, которой нет в индексе (её жёстко удалили), получает собственный
  * несуществующий ключ — такая запись не совпадёт ни с одним студентом.
@@ -126,6 +139,12 @@ export function targetsOverlap(
   b: string[] | undefined,
   index: SubgroupIndex,
 ): boolean {
+  // Осиротевшую запись не видит никто — ни конфликтов, ни зачёркиваний.
+  // Проверяется до сокращений «пусто = вся группа», иначе такая запись
+  // пересекалась бы со всем подряд.
+  if (a && a.length > 0 && hasOrphanTargets(a, index)) return false;
+  if (b && b.length > 0 && hasOrphanTargets(b, index)) return false;
+
   if (!a || a.length === 0) return true;
   if (!b || b.length === 0) return true;
 
@@ -142,20 +161,32 @@ export function targetsOverlap(
   return true;
 }
 
+/** Канонический ключ выборки — для сравнения и дедупликации наборов. */
+export function targetSetKey(targetIds: string[] | undefined): string {
+  return [...(targetIds ?? [])].sort().join('|');
+}
+
 /**
- * Объединяет выборки нескольких записей в одну — «все, кого касается
- * хотя бы одна из них». Если хоть одна запись адресована всей группе,
- * результат тоже адресован всей группе.
+ * Различные выборки среди нескольких записей.
+ *
+ * Объединять их в один набор НЕЛЬЗЯ: внутри набора id разных категорий
+ * соединяются по И. Например, из пар, адресованных [англ-А] и [ОИТ-Б],
+ * плоское объединение [англ-А, ОИТ-Б] означало бы «тем, кто и в англ-А,
+ * и в ОИТ-Б», то есть пересечение вместо объединения аудиторий.
+ * Дизъюнкцию выражаем отдельной записью на каждый набор.
+ *
+ * Если хоть одна запись адресована всей группе, достаточно одного
+ * пустого набора — он и так покрывает всех.
  */
-export function mergeTargets(targets: (string[] | undefined)[]): string[] {
-  const merged = new Set<string>();
+export function distinctTargetSets(targets: (string[] | undefined)[]): string[][] {
+  const seen = new Map<string, string[]>();
 
   for (const ids of targets) {
-    if (!ids || ids.length === 0) return [];
-    for (const id of ids) merged.add(id);
+    if (!ids || ids.length === 0) return [[]];
+    seen.set(targetSetKey(ids), ids);
   }
 
-  return [...merged];
+  return [...seen.values()];
 }
 
 // ============================================================
@@ -209,13 +240,35 @@ export function visibleCategories(
   );
 }
 
-/** Видимые обязательные категории, в которых студент ещё не выбрал подгруппу. */
+/**
+ * Действителен ли выбор студента в категории: подгруппа существует,
+ * принадлежит этой категории и не в архиве. Архивная подгруппа считается
+ * устаревшей — её в этом семестре уже нет, значит нужно выбрать заново.
+ */
+export function hasValidSelection(
+  index: SubgroupIndex,
+  categoryId: string,
+  selection: SubgroupSelection,
+): boolean {
+  const subgroup = index.subgroupById.get(selection[categoryId]);
+  return Boolean(subgroup && subgroup.category_id === categoryId && !subgroup.is_archived);
+}
+
+/**
+ * Видимые обязательные категории, в которых студент ещё не выбрал подгруппу.
+ *
+ * Категории без подгрупп пропускаются: выбирать там нечего, и требование
+ * заблокировало бы вход в приложение до тех пор, пока староста их не заведёт.
+ */
 export function missingRequiredCategories(
   index: SubgroupIndex,
   selection: SubgroupSelection,
 ): TargetCategory[] {
   return visibleCategories(index, selection).filter(
-    (category) => category.is_required && !selection[category.id],
+    (category) =>
+      category.is_required &&
+      subgroupsOf(index, category.id).length > 0 &&
+      !hasValidSelection(index, category.id, selection),
   );
 }
 

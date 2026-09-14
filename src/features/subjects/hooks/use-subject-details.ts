@@ -33,14 +33,14 @@ export function useSubjectDetails(): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { isForStudent } = useStudentTargeting();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: subjects, loading: l1 } = useRxCollection(db.subjects);
   const { data: entries, loading: l2 } = useRxCollection(db.schedule);
   const { data: teachers, loading: l3 } = useRxCollection(db.teachers);
   const { data: semesterData, loading: l4 } = useRxCollection(db.semester);
 
-  const loading = l1 || l2 || l3 || l4;
+  const loading = targetingLoading || l1 || l2 || l3 || l4;
 
   return useMemo(() => {
     if (loading) return { subjects: [], loading: true };

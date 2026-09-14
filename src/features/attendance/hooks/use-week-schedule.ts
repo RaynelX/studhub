@@ -25,7 +25,7 @@ export interface WeekScheduleData {
 
 export function useWeekSchedule(monday: Date): WeekScheduleData {
   const db = useDatabase();
-  const { isForStudent } = useStudentTargeting();
+  const { isForStudent, loading: targetingLoading } = useStudentTargeting();
 
   const { data: entries, loading: l1 } = useRxCollection(db.schedule);
   const { data: overrides, loading: l2 } = useRxCollection(db.overrides);
@@ -34,7 +34,7 @@ export function useWeekSchedule(monday: Date): WeekScheduleData {
   const { data: teachers, loading: l5 } = useRxCollection(db.teachers);
   const { data: semesterData, loading: l6 } = useRxCollection(db.semester);
 
-  const loading = l1 || l2 || l3 || l4 || l5 || l6;
+  const loading = targetingLoading || l1 || l2 || l3 || l4 || l5 || l6;
 
   const mondayStr = toISODate(monday);
 
