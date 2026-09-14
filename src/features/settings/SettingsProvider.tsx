@@ -7,6 +7,7 @@ import {
     type ReactNode,
   } from 'react';
   import { SettingsSetup } from './SettingsSetup';
+  import { SETTINGS_STORAGE_KEY } from './storage';
   import { useSubgroups } from '../targeting/SubgroupsProvider';
   import { useSync } from '../../database/sync/SyncProvider';
   import { missingRequiredCategories, pruneSelection } from '../../shared/targeting/match';
@@ -31,7 +32,6 @@ import {
   // Константы
   // ============================================================
 
-  const STORAGE_KEY = 'student_hub_settings-02';
   /** Захардкоженная тройка язык/англ./ОИТ — подгруппы выбираются заново */
   const LEGACY_STORAGE_KEY = 'student_hub_settings-01';
   const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -44,7 +44,7 @@ import {
     try {
       localStorage.removeItem(LEGACY_STORAGE_KEY);
 
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (!raw) return null;
 
       const parsed: unknown = JSON.parse(raw);
@@ -68,7 +68,7 @@ import {
 
   function saveSettings(settings: StudentSettings): void {
     localStorage.setItem(
-      STORAGE_KEY,
+      SETTINGS_STORAGE_KEY,
       JSON.stringify({ version: 2, subgroups: settings.subgroups }),
     );
   }
@@ -100,7 +100,7 @@ import {
     );
 
     const resetSettings = useCallback(() => {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(SETTINGS_STORAGE_KEY);
       setSettings(null);
     }, []);
 

@@ -1,21 +1,9 @@
 import { useState } from 'react';
 import { Github, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { Section } from '../../shared/ui/Section';
+import { CHANGELOG } from './changelog';
 
 const GITHUB_URL = 'https://github.com/RaynelX/studhub';
-
-const CHANGELOG: { version: string; date: string; changes: string[] }[] = [
-  {
-    version: '1.0.1',
-    date: '25.03.2026',
-    changes: [
-      'Редизайн нижней шторки',
-      'Редизайн панели оценивания на вкладке Сессия',
-      'В конце дня тап по блоку расписания на вкладке Сегодня открывает расписание на завтрашний день',
-      'Исправлен бейдж УСР в тёмной теме',
-    ],
-  },
-];
 
 export function AboutSection() {
   const [changelogOpen, setChangelogOpen] = useState(false);

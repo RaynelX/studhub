@@ -1,5 +1,6 @@
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
-import { DepartmentSection } from '../../features/department/DepartmentSection';
+// Секция кафедры временно скрыта — ожидает переработки
+// import { DepartmentSection } from '../../features/department/DepartmentSection';
 import { AboutSection } from '../../features/about/AboutSection';
 import { NavButtonGroup, NavButton } from '../../shared/ui/NavButtonGroup';
 import { useState } from 'react';
@@ -24,7 +25,7 @@ export function MorePage() {
         <NavButton to="/more/settings" icon={Settings} iconBg="bg-gray-500" label="Настройки" />
       </NavButtonGroup>
 
-      <DepartmentSection />
+      {/* <DepartmentSection /> */}
 
       {/* Администрирование */}
       <AdminSection isAdmin={isAdmin} userEmail={user?.email} signOut={signOut} onLoginOpen={() => setLoginOpen(true)} />

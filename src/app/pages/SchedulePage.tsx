@@ -387,7 +387,12 @@ export function SchedulePage() {
   // ---------- Double-tap on week header → jump to today ----------
   const lastTapRef = useRef(0);
 
-  const handleWeekHeaderTap = useCallback(() => {
+  const handleWeekHeaderTap = useCallback((e: React.MouseEvent) => {
+    // Стрелки переключения недель не входят в зону жеста
+    if ((e.target as HTMLElement).closest('button')) {
+      lastTapRef.current = 0;
+      return;
+    }
     const now = Date.now();
     if (now - lastTapRef.current < DOUBLE_TAP_MS) {
       lastTapRef.current = 0;
