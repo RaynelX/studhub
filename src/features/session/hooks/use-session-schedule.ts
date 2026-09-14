@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import type { EventType } from '../../../database/types';
 import { getBellSlot, formatBellTime } from '../../../shared/constants/bell-schedule';
@@ -37,7 +37,7 @@ const SESSION_EVENT_TYPES: EventType[] = ['exam', 'credit', 'consultation'];
 
 export function useSessionSchedule(): SessionScheduleData {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent } = useStudentTargeting();
 
   const { data: events, loading: l1 } = useRxCollection(db.events);
   const { data: subjects, loading: l2 } = useRxCollection(db.subjects);
@@ -52,19 +52,9 @@ export function useSessionSchedule(): SessionScheduleData {
     const teacherMap = new Map(teachers.map((t) => [t.id, t]));
 
     // Фильтруем события сессии по типу и настройкам студента
-    const filtered = events.filter((e) => {
-      if (!SESSION_EVENT_TYPES.includes(e.event_type)) return false;
-      const langOk =
-        e.target_language === 'all' || e.target_language === settings.language;
-      const engOk =
-        e.target_eng_subgroup === 'all' ||
-        settings.language !== 'en' ||
-        e.target_eng_subgroup === settings.eng_subgroup;
-      const oitOk =
-        e.target_oit_subgroup === 'all' ||
-        e.target_oit_subgroup === settings.oit_subgroup;
-      return langOk && engOk && oitOk;
-    });
+    const filtered = events.filter(
+      (e) => SESSION_EVENT_TYPES.includes(e.event_type) && isForStudent(e),
+    );
 
     // Собираем консультации по subject_id для перекрёстных ссылок
     const consultationBySubject = new Map<string, { date: string; timeLabel: string }>();
@@ -121,7 +111,7 @@ export function useSessionSchedule(): SessionScheduleData {
     }
 
     return { events: sessionEvents, byDate, loading: false };
-  }, [loading, events, subjects, teachers, settings]);
+  }, [loading, events, subjects, teachers, isForStudent]);
 }
 
 // ============================================================

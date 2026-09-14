@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { toISODate, parseLocalDate } from '../../schedule/utils/week-utils';
 
@@ -17,7 +17,7 @@ export function useUpcomingDeadlines(): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent } = useStudentTargeting();
 
   const { data: deadlines, loading: l1 } = useRxCollection(db.deadlines);
   const { data: subjects, loading: l2 } = useRxCollection(db.subjects);
@@ -31,19 +31,7 @@ export function useUpcomingDeadlines(): {
     const todayStr = toISODate(today);
     const subjectMap = new Map(subjects.map((s) => [s.id, s]));
 
-    const filtered = deadlines.filter((d) => {
-      if (d.date < todayStr) return false;
-      const langOk =
-        d.target_language === 'all' || d.target_language === settings.language;
-      const engOk =
-        d.target_eng_subgroup === 'all' ||
-        settings.language !== 'en' ||
-        d.target_eng_subgroup === settings.eng_subgroup;
-      const oitOk =
-        d.target_oit_subgroup === 'all' ||
-        d.target_oit_subgroup === settings.oit_subgroup;
-      return langOk && engOk && oitOk;
-    });
+    const filtered = deadlines.filter((d) => d.date >= todayStr && isForStudent(d));
 
     if (filtered.length === 0) return { deadlines: [], loading: false };
 
@@ -62,7 +50,7 @@ export function useUpcomingDeadlines(): {
     });
 
     return { deadlines: result, loading: false };
-  }, [loading, deadlines, subjects, settings]);
+  }, [loading, deadlines, subjects, isForStudent]);
 }
 
 function formatShortDate(dateStr: string, todayStr: string): string {

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { toISODate, addDays, parseLocalDate } from '../../schedule/utils/week-utils';
 import { BELL_SCHEDULE } from '../../../shared/constants/bell-schedule';
@@ -22,7 +22,7 @@ export function useActiveHomework(): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent } = useStudentTargeting();
 
   const { data: homeworks, loading: l1 } = useRxCollection(db.homeworks);
   const { data: subjects, loading: l2 } = useRxCollection(db.subjects);
@@ -46,17 +46,8 @@ export function useActiveHomework(): {
       
       // Check if the pair has already ended
       if (isPairEnded(hw.date, hw.pair_number, now)) return false;
-      
-      const langOk =
-        hw.target_language === 'all' || hw.target_language === settings.language;
-      const engOk =
-        hw.target_eng_subgroup === 'all' ||
-        settings.language !== 'en' ||
-        hw.target_eng_subgroup === settings.eng_subgroup;
-      const oitOk =
-        hw.target_oit_subgroup === 'all' ||
-        hw.target_oit_subgroup === settings.oit_subgroup;
-      return langOk && engOk && oitOk;
+
+      return isForStudent(hw);
     });
 
     // Sort by date ascending (closest first), limit to 5
@@ -78,7 +69,7 @@ export function useActiveHomework(): {
     });
 
     return { homework: result, loading: false };
-  }, [loading, homeworks, subjects, settings]);
+  }, [loading, homeworks, subjects, isForStudent]);
 }
 
 /**

@@ -19,6 +19,7 @@ interface AdminWriteResult {
 const SOFT_DELETE_TABLES = new Set([
   'subjects', 'teachers', 'schedule_entries',
   'schedule_overrides', 'events', 'deadlines', 'students',
+  'homeworks', 'subgroup_categories', 'subgroups',
 ]);
 
 /**

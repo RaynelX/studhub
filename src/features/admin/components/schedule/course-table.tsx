@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ScheduleEntryDoc, SubjectDoc, TeacherDoc, SemesterConfigDoc } from '../../../../database/types';
 import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
-import { ENTRY_TYPE_LABELS, PARITY_LABELS, formatSubgroupCompact } from '../../../../shared/constants/admin-labels';
+import { ENTRY_TYPE_LABELS, PARITY_LABELS } from '../../../../shared/constants/admin-labels';
+import { useSubgroups } from '../../../targeting/SubgroupsProvider';
+import { formatTargetsCompact } from '../../../../shared/targeting/match';
 import { countTotalPairs } from '../../utils/schedule-calculator';
 import { SortableTh } from '../ui/sortable-th';
 import { useSortState } from '../../hooks/use-sort-state';
@@ -24,6 +26,7 @@ export function CourseTable({
   onEdit,
   onDelete,
 }: CourseTableProps) {
+  const { index } = useSubgroups();
   const subjectMap = useMemo(() => new Map(subjects.map((s) => [s.id, s])), [subjects]);
   const teacherMap = useMemo(() => new Map(teachers.map((t) => [t.id, t])), [teachers]);
 
@@ -83,7 +86,7 @@ export function CourseTable({
                     semesterConfig.odd_week_start,
                   )
                 : '—';
-            const subgroups = formatSubgroupCompact(entry);
+            const subgroups = formatTargetsCompact(entry.target_subgroup_ids, index);
 
             return (
               <tr

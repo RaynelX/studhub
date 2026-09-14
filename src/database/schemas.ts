@@ -2,6 +2,8 @@ import type { RxJsonSchema } from 'rxdb';
 import type {
   SubjectDoc,
   TeacherDoc,
+  SubgroupCategoryDoc,
+  SubgroupDoc,
   ScheduleEntryDoc,
   ScheduleOverrideDoc,
   EventDoc,
@@ -21,6 +23,16 @@ const pairNumberField = {
   type: 'integer',
   minimum: MIN_PAIR_NUMBER,
   maximum: MAX_PAIR_NUMBER,
+} as const;
+
+/**
+ * Набор подгрупп, которым адресована запись. Пустой массив — вся группа.
+ * Конкретные подгруппы живут в коллекции subgroups, а не в enum схемы:
+ * каждый семестр они заводятся заново.
+ */
+const subgroupIdsField = {
+  type: 'array',
+  items: { type: 'string', maxLength: 36 },
 } as const;
 
 // ============================================================
@@ -76,11 +88,66 @@ const teachersSchema: RxJsonSchema<TeacherDoc> = {
 };
 
 // ============================================================
+// SUBGROUP_CATEGORIES
+// ============================================================
+
+const subgroupCategoriesSchema: RxJsonSchema<SubgroupCategoryDoc> = {
+  version: 0,
+  primaryKey: 'id',
+  type: 'object',
+  properties: {
+    id: { type: 'string', maxLength: 36 },
+    code: { type: 'string' },
+    name: { type: 'string' },
+    short_name: { type: 'string' },
+    description: { type: 'string' },
+    sort_order: { type: 'integer' },
+    is_required: { type: 'boolean' },
+    is_archived: { type: 'boolean' },
+    visible_if_subgroup_ids: subgroupIdsField,
+    created_at: { type: 'string' },
+    updated_at: { type: 'string' },
+    is_deleted: { type: 'boolean' },
+  },
+  required: [
+    'id', 'code', 'name', 'sort_order', 'is_required', 'is_archived',
+    'visible_if_subgroup_ids', 'created_at', 'updated_at', 'is_deleted',
+  ],
+};
+
+// ============================================================
+// SUBGROUPS
+// ============================================================
+
+const subgroupsSchema: RxJsonSchema<SubgroupDoc> = {
+  version: 0,
+  primaryKey: 'id',
+  type: 'object',
+  properties: {
+    id: { type: 'string', maxLength: 36 },
+    category_id: { type: 'string', maxLength: 36 },
+    code: { type: 'string' },
+    name: { type: 'string' },
+    short_name: { type: 'string' },
+    description: { type: 'string' },
+    sort_order: { type: 'integer' },
+    is_archived: { type: 'boolean' },
+    created_at: { type: 'string' },
+    updated_at: { type: 'string' },
+    is_deleted: { type: 'boolean' },
+  },
+  required: [
+    'id', 'category_id', 'code', 'name', 'sort_order', 'is_archived',
+    'created_at', 'updated_at', 'is_deleted',
+  ],
+};
+
+// ============================================================
 // SCHEDULE (schedule_entries в Supabase)
 // ============================================================
 
 const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
-  version: 1,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -94,18 +161,7 @@ const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
     },
     teacher_id: { type: 'string' },
     room: { type: 'string' },
-    target_language: {
-      type: 'string',
-      enum: ['all', 'en', 'de', 'fr', 'es'],
-    },
-    target_eng_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
-    target_oit_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
+    target_subgroup_ids: subgroupIdsField,
     date_from: { type: 'string' },
     date_to: { type: 'string' },
     week_parity: {
@@ -118,7 +174,7 @@ const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
   },
   required: [
     'id', 'day_of_week', 'pair_number', 'subject_id', 'entry_type',
-    'teacher_id', 'room', 'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'teacher_id', 'room', 'target_subgroup_ids',
     'date_from', 'date_to', 'week_parity',
     'created_at', 'updated_at', 'is_deleted',
   ],
@@ -129,7 +185,7 @@ const scheduleSchema: RxJsonSchema<ScheduleEntryDoc> = {
 // ============================================================
 
 const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
-  version: 1,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -140,18 +196,7 @@ const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
       type: 'string',
       enum: ['cancel', 'replace', 'add'],
     },
-    target_language: {
-      type: 'string',
-      enum: ['all', 'en', 'de', 'fr', 'es'],
-    },
-    target_eng_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
-    target_oit_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
+    target_subgroup_ids: subgroupIdsField,
     subject_id: { type: 'string' },
     entry_type: {
       type: 'string',
@@ -165,8 +210,7 @@ const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
     is_deleted: { type: 'boolean' },
   },
   required: [
-    'id', 'date', 'pair_number', 'override_type',
-    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'id', 'date', 'pair_number', 'override_type', 'target_subgroup_ids',
     'created_at', 'updated_at', 'is_deleted',
   ],
 };
@@ -176,7 +220,7 @@ const overridesSchema: RxJsonSchema<ScheduleOverrideDoc> = {
 // ============================================================
 
 const eventsSchema: RxJsonSchema<EventDoc> = {
-  version: 1,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -196,25 +240,13 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
     pair_number: pairNumberField,
     event_time: { type: 'string' },
     room: { type: 'string' },
-    target_language: {
-      type: 'string',
-      enum: ['all', 'en', 'de', 'fr', 'es'],
-    },
-    target_eng_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
-    target_oit_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
+    target_subgroup_ids: subgroupIdsField,
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
     is_deleted: { type: 'boolean' },
   },
   required: [
-    'id', 'title', 'event_type', 'date',
-    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'id', 'title', 'event_type', 'date', 'target_subgroup_ids',
     'created_at', 'updated_at', 'is_deleted',
   ],
 };
@@ -224,7 +256,7 @@ const eventsSchema: RxJsonSchema<EventDoc> = {
 // ============================================================
 
 const deadlinesSchema: RxJsonSchema<DeadlineDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -233,25 +265,13 @@ const deadlinesSchema: RxJsonSchema<DeadlineDoc> = {
     date: { type: 'string' },
     time: { type: 'string' },
     description: { type: 'string' },
-    target_language: {
-      type: 'string',
-      enum: ['all', 'en', 'de', 'fr', 'es'],
-    },
-    target_eng_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
-    target_oit_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
+    target_subgroup_ids: subgroupIdsField,
     is_deleted: { type: 'boolean' },
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
   },
   required: [
-    'id', 'date',
-    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'id', 'date', 'target_subgroup_ids',
     'is_deleted', 'created_at', 'updated_at',
   ],
 };
@@ -261,29 +281,18 @@ const deadlinesSchema: RxJsonSchema<DeadlineDoc> = {
 // ============================================================
 
 const studentsSchema: RxJsonSchema<StudentDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
     id: { type: 'string', maxLength: 36 },
     full_name: { type: 'string' },
-    language: {
-      type: 'string',
-      enum: ['en', 'de', 'fr', 'es'],
-    },
-    eng_subgroup: {
-      type: 'string',
-      enum: ['a', 'b'],
-    },
-    oit_subgroup: {
-      type: 'string',
-      enum: ['a', 'b'],
-    },
+    subgroup_ids: subgroupIdsField,
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
     is_deleted: { type: 'boolean' },
   },
-  required: ['id', 'full_name', 'oit_subgroup', 'language', 'created_at', 'updated_at', 'is_deleted'],
+  required: ['id', 'full_name', 'subgroup_ids', 'created_at', 'updated_at', 'is_deleted'],
 };
 
 // ============================================================
@@ -311,7 +320,7 @@ const semesterSchema: RxJsonSchema<SemesterConfigDoc> = {
 // ============================================================
 
 const homeworksSchema: RxJsonSchema<HomeworkDoc> = {
-  version: 1,
+  version: 2,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -320,25 +329,13 @@ const homeworksSchema: RxJsonSchema<HomeworkDoc> = {
     date: { type: 'string' },
     pair_number: pairNumberField,
     content: { type: 'string' },
-    target_language: {
-      type: 'string',
-      enum: ['all', 'en', 'de', 'fr', 'es'],
-    },
-    target_eng_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
-    target_oit_subgroup: {
-      type: 'string',
-      enum: ['all', 'a', 'b'],
-    },
+    target_subgroup_ids: subgroupIdsField,
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
     is_deleted: { type: 'boolean' },
   },
   required: [
-    'id', 'subject_id', 'date', 'pair_number', 'content',
-    'target_eng_subgroup', 'target_oit_subgroup', 'target_language',
+    'id', 'subject_id', 'date', 'pair_number', 'content', 'target_subgroup_ids',
     'created_at', 'updated_at', 'is_deleted',
   ],
 };
@@ -350,6 +347,8 @@ const homeworksSchema: RxJsonSchema<HomeworkDoc> = {
 export const schemas = {
   subjects: subjectsSchema,
   teachers: teachersSchema,
+  subgroup_categories: subgroupCategoriesSchema,
+  subgroups: subgroupsSchema,
   schedule: scheduleSchema,
   overrides: overridesSchema,
   events: eventsSchema,

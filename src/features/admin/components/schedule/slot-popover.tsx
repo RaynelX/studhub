@@ -3,7 +3,9 @@ import type { GridCell } from '../../hooks/use-week-grid';
 import type { SubjectDoc, TeacherDoc } from '../../../../database/types';
 import { DAY_NAMES_SHORT } from '../../../../shared/constants/days';
 import { getBellSlot } from '../../../../shared/constants/bell-schedule';
-import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS, formatSubgroupCompact } from '../../../../shared/constants/admin-labels';
+import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS } from '../../../../shared/constants/admin-labels';
+import { useSubgroups } from '../../../targeting/SubgroupsProvider';
+import { formatTargetsCompact, mergeTargets } from '../../../../shared/targeting/match';
 
 interface SlotPopoverProps {
   cell: GridCell;
@@ -14,9 +16,10 @@ interface SlotPopoverProps {
   onDeleteEntry?: (entryId: string) => void;
   onDeleteOverride?: (overrideId: string) => void;
   onDeleteEvent?: (eventId: string) => void;
-  onQuickCancel?: (date: string, pairNumber: number) => void;
-  onQuickReplace?: (date: string, pairNumber: number) => void;
-  onQuickAdd?: (date: string, pairNumber: number) => void;
+  /** targetSubgroupIds — подгруппы пар, стоящих в этом слоте */
+  onQuickCancel?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
+  onQuickReplace?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
+  onQuickAdd?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
 }
 
 export function SlotPopover({
@@ -32,10 +35,15 @@ export function SlotPopover({
   onQuickReplace,
   onQuickAdd,
 }: SlotPopoverProps) {
+  const { index } = useSubgroups();
   const bell = getBellSlot(cell.pairNumber);
   const dayName = DAY_NAMES_SHORT[cell.dayOfWeek] ?? '';
 
   const isEmpty = cell.entries.length === 0 && cell.overrides.length === 0 && cell.events.length === 0;
+
+  // Быстрые действия наследуют подгруппы пар слота: отмена пары одной
+  // подгруппы не должна отменять её всей группе.
+  const slotTargets = mergeTargets(cell.entries.map((ge) => ge.entry.target_subgroup_ids));
 
   return (
     <div className="mt-4 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 shadow-lg p-4 relative animate-in fade-in slide-in-from-top-2 duration-200">
@@ -70,7 +78,7 @@ export function SlotPopover({
               {cell.entries.map((ge) => {
                 const subj = ge.subject;
                 const teacher = ge.teacher;
-                const subgroups = formatSubgroupCompact(ge.entry, ', ');
+                const subgroups = formatTargetsCompact(ge.entry.target_subgroup_ids, index, ', ');
                 return (
                   <div
                     key={ge.entry.id}
@@ -116,6 +124,7 @@ export function SlotPopover({
               {cell.overrides.map((go) => {
                 const subj = go.subject ?? subjects.find((s) => s.id === go.override.subject_id);
                 const teacher = go.teacher ?? teachers.find((t) => t.id === go.override.teacher_id);
+                const subgroups = formatTargetsCompact(go.override.target_subgroup_ids, index, ', ');
                 return (
                   <div
                     key={go.override.id}
@@ -147,6 +156,9 @@ export function SlotPopover({
                           {go.override.comment && ` · ${go.override.comment}`}
                         </div>
                       )}
+                      <div className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">
+                        {subgroups || 'Вся группа'}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0 ml-3">
                       <button onClick={() => onDeleteOverride?.(go.override.id)} className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-red-500 transition-colors" title="Удалить изменение">
@@ -173,6 +185,9 @@ export function SlotPopover({
                     {ge.event.description && (
                       <div className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{ge.event.description}</div>
                     )}
+                    <div className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">
+                      {formatTargetsCompact(ge.event.target_subgroup_ids, index, ', ') || 'Вся группа'}
+                    </div>
                   </div>
                   <button onClick={() => onDeleteEvent?.(ge.event.id)} className="p-1 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-red-500 transition-colors" title="Удалить событие">
                     <Trash2 className="w-3.5 h-3.5" />
@@ -186,15 +201,15 @@ export function SlotPopover({
 
       {/* Quick actions */}
       <div className="flex gap-2 mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-        <button onClick={() => onQuickCancel?.(cell.date, cell.pairNumber)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+        <button onClick={() => onQuickCancel?.(cell.date, cell.pairNumber, slotTargets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
           <Ban className="w-3.5 h-3.5" />
           Отменить пару
         </button>
-        <button onClick={() => onQuickReplace?.(cell.date, cell.pairNumber)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+        <button onClick={() => onQuickReplace?.(cell.date, cell.pairNumber, slotTargets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
           <RefreshCw className="w-3.5 h-3.5" />
           Замена
         </button>
-        <button onClick={() => onQuickAdd?.(cell.date, cell.pairNumber)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
+        <button onClick={() => onQuickAdd?.(cell.date, cell.pairNumber, slotTargets)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 transition-colors">
           <Plus className="w-3.5 h-3.5" />
           Доп. пара
         </button>

@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { TargetLanguage, TargetEngSubgroup, TargetOitSubgroup } from '../../../database/types';
 import { useAdminWrite } from './use-admin-write';
 
 interface DeadlineFormFields {
@@ -7,9 +6,7 @@ interface DeadlineFormFields {
   date: string;
   time: string;
   description: string;
-  targetLanguage: TargetLanguage;
-  targetEngSubgroup: TargetEngSubgroup;
-  targetOitSubgroup: TargetOitSubgroup;
+  targetSubgroupIds: string[];
 }
 
 interface UseDeadlineFormOptions {
@@ -38,9 +35,7 @@ export function useDeadlineForm({
     date: defaultDate,
     time: '',
     description: '',
-    targetLanguage: 'all',
-    targetEngSubgroup: 'all',
-    targetOitSubgroup: 'all',
+    targetSubgroupIds: [],
   });
 
   const setField = useCallback(<K extends keyof DeadlineFormFields>(
@@ -63,9 +58,7 @@ export function useDeadlineForm({
       date: fields.date,
       time: fields.time || undefined,
       description: fields.description.trim() || undefined,
-      target_language: fields.targetLanguage,
-      target_eng_subgroup: fields.targetEngSubgroup,
-      target_oit_subgroup: fields.targetOitSubgroup,
+      target_subgroup_ids: fields.targetSubgroupIds,
     });
 
     onSuccess?.();

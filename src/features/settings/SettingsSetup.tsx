@@ -1,8 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
-  Globe,
   Users,
-  Monitor,
   CalendarDays,
   CheckCircle2,
   Wifi,
@@ -16,24 +14,31 @@ import {
   LayoutDashboard,
 } from 'lucide-react';
 import type { StudentSettings } from './SettingsProvider';
+import { subgroupsOf, visibleCategories } from '../../shared/targeting/match';
+import type {
+  SubgroupIndex,
+  SubgroupSelection,
+  TargetCategory,
+  TargetSubgroup,
+} from '../../shared/targeting/types';
 
 /* ────────────────────────────── types ────────────────────────────── */
 
 interface Props {
+  /**
+   * full — первый запуск: приветствие, все категории, обзор возможностей.
+   * complete — староста завёл новую обязательную категорию: спрашиваем только её.
+   */
+  mode: 'full' | 'complete';
+  index: SubgroupIndex;
+  initialSelection: SubgroupSelection;
   onComplete: (settings: StudentSettings) => void;
 }
 
-type Language = 'en' | 'de' | 'fr' | 'es';
-type Subgroup = 'a' | 'b';
+/** 'welcome' | 'features' | `cat:<id категории>` */
+type StepId = string;
 
 /* ────────────────────────────── data ─────────────────────────────── */
-
-const LANGUAGES: { value: Language; label: string; emoji: string }[] = [
-  { value: 'en', label: 'Английский', emoji: '🇬🇧' },
-  { value: 'de', label: 'Немецкий', emoji: '🇩🇪' },
-  { value: 'fr', label: 'Французский', emoji: '🇫🇷' },
-  { value: 'es', label: 'Испанский', emoji: '🇪🇸' },
-];
 
 const FEATURES = [
   { icon: CalendarDays, title: 'Расписание', desc: 'Актуальные занятия на каждый день' },
@@ -124,19 +129,35 @@ function useInstallPrompt() {
 
 /* ────────────────────────────── main component ──────────────────── */
 
-export function SettingsSetup({ onComplete }: Props) {
-  const [language, setLanguage] = useState<Language | null>(null);
-  const [engSubgroup, setEngSubgroup] = useState<Subgroup | null>(null);
-  const [oitSubgroup, setOitSubgroup] = useState<Subgroup | null>(null);
+export function SettingsSetup({ mode, index, initialSelection, onComplete }: Props) {
+  const [draft, setDraft] = useState<SubgroupSelection>(initialSelection);
 
   // Install prompt — lifted to top level so modal renders outside transform
   const { canInstall, install, showIosGuide, closeIosGuide } = useInstallPrompt();
 
-  const needsEngSubgroup = language === 'en';
+  // Набор категорий пересчитывается на каждый выбор: условная категория
+  // (например, подгруппа по английскому) появляется, только когда выполнено
+  // её условие, и исчезает, когда студент передумал.
+  const categorySteps = useMemo(() => {
+    const visible = visibleCategories(index, draft);
+    return mode === 'full'
+      ? visible
+      : visible.filter((c) => c.is_required && !initialSelection[c.id]);
+  }, [index, draft, mode, initialSelection]);
 
-  const steps = buildSteps(needsEngSubgroup);
-  const [stepIndex, setStepIndex] = useState(0);
+  const steps = useMemo<StepId[]>(() => {
+    const categoryIds = categorySteps.map((c) => `cat:${c.id}`);
+    return mode === 'full' ? ['welcome', ...categoryIds, 'features'] : categoryIds;
+  }, [categorySteps, mode]);
+
+  const [rawStepIndex, setStepIndex] = useState(0);
+  // Список шагов мог укоротиться под текущим индексом — прижимаем к концу.
+  const stepIndex = Math.min(rawStepIndex, Math.max(0, steps.length - 1));
   const currentStep = steps[stepIndex];
+  const currentCategory = currentStep?.startsWith('cat:')
+    ? index.categoryById.get(currentStep.slice(4))
+    : undefined;
+  const isLastStep = stepIndex >= steps.length - 1;
 
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
   const [animating, setAnimating] = useState(false);
@@ -144,9 +165,14 @@ export function SettingsSetup({ onComplete }: Props) {
 
   const DURATION = 400;
 
+  const selectSubgroup = useCallback((categoryId: string, subgroupId: string) => {
+    setDraft((prev) => ({ ...prev, [categoryId]: subgroupId }));
+  }, []);
+
+  // Спрашивать нечего (все обязательные категории уже выбраны) — выходим сразу.
   useEffect(() => {
-    if (language !== 'en') setEngSubgroup(null);
-  }, [language]);
+    if (steps.length === 0) onComplete({ subgroups: draft });
+  }, [steps.length, draft, onComplete]);
 
   const prevStepsRef = useRef(steps);
   useEffect(() => {
@@ -162,22 +188,9 @@ export function SettingsSetup({ onComplete }: Props) {
     prevStepsRef.current = next;
   }, [steps, stepIndex]);
 
-  const canGoNext = (() => {
-    switch (currentStep) {
-      case 'welcome':
-        return true;
-      case 'language':
-        return language !== null;
-      case 'engSubgroup':
-        return engSubgroup !== null;
-      case 'oit':
-        return oitSubgroup !== null;
-      case 'features':
-        return true;
-      default:
-        return false;
-    }
-  })();
+  const canGoNext = currentCategory
+    ? !currentCategory.is_required || Boolean(draft[currentCategory.id])
+    : true;
 
   const navigate = useCallback(
     (dir: 'forward' | 'back') => {
@@ -201,13 +214,8 @@ export function SettingsSetup({ onComplete }: Props) {
 
   const handleNext = () => {
     if (!canGoNext) return;
-    if (currentStep === 'features') {
-      if (!language || !oitSubgroup) return;
-      onComplete({
-        language,
-        eng_subgroup: needsEngSubgroup ? engSubgroup : null,
-        oit_subgroup: oitSubgroup,
-      });
+    if (isLastStep) {
+      onComplete({ subgroups: draft });
       return;
     }
     navigate('forward');
@@ -254,13 +262,15 @@ export function SettingsSetup({ onComplete }: Props) {
             {currentStep === 'welcome' && (
               <StepWelcome canInstall={canInstall} onInstall={install} />
             )}
-            {currentStep === 'language' && (
-              <StepLanguage value={language} onChange={setLanguage} />
+            {currentCategory && (
+              <StepCategory
+                category={currentCategory}
+                subgroups={subgroupsOf(index, currentCategory.id)}
+                value={draft[currentCategory.id] ?? null}
+                showUpdateHint={mode === 'complete'}
+                onChange={(subgroupId) => selectSubgroup(currentCategory.id, subgroupId)}
+              />
             )}
-            {currentStep === 'engSubgroup' && (
-              <StepEngSubgroup value={engSubgroup} onChange={setEngSubgroup} />
-            )}
-            {currentStep === 'oit' && <StepOit value={oitSubgroup} onChange={setOitSubgroup} />}
             {currentStep === 'features' && <StepFeatures />}
           </div>
         </div>
@@ -276,10 +286,10 @@ export function SettingsSetup({ onComplete }: Props) {
                 : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed'
             }`}
           >
-            {currentStep === 'features' ? (
+            {isLastStep ? (
               <>
                 <Rocket size={16} />
-                Поехали!
+                {mode === 'full' ? 'Поехали!' : 'Готово'}
               </>
             ) : (
               <>
@@ -309,17 +319,6 @@ export function SettingsSetup({ onComplete }: Props) {
       {showIosGuide && <IosInstallGuide onClose={closeIosGuide} />}
     </>
   );
-}
-
-/* ────────────────────────────── steps builder ────────────────────── */
-
-type StepId = 'welcome' | 'language' | 'engSubgroup' | 'oit' | 'features';
-
-function buildSteps(needsEng: boolean): StepId[] {
-  const s: StepId[] = ['welcome', 'language'];
-  if (needsEng) s.push('engSubgroup');
-  s.push('oit', 'features');
-  return s;
 }
 
 /* ────────────────────────────── step: welcome ───────────────────── */
@@ -472,101 +471,64 @@ function IosShareIcon() {
   );
 }
 
-/* ────────────────────────────── step: language ───────────────────── */
+/* ────────────────────────────── step: category ───────────────────── */
 
-function StepLanguage({
+function StepCategory({
+  category,
+  subgroups,
   value,
+  showUpdateHint,
   onChange,
 }: {
-  value: Language | null;
-  onChange: (v: Language) => void;
+  category: TargetCategory;
+  subgroups: TargetSubgroup[];
+  value: string | null;
+  showUpdateHint: boolean;
+  onChange: (subgroupId: string) => void;
 }) {
+  // Короткие названия помещаются в два столбца, длинные — в один.
+  const twoColumns = subgroups.length > 1 && subgroups.every((s) => s.name.length <= 14);
+
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/40 mb-4">
-          <Globe className="text-blue-600 dark:text-blue-400" size={28} />
+      {showUpdateHint && (
+        <div className="text-center text-xs text-neutral-400 dark:text-neutral-500">
+          Список подгрупп обновился
         </div>
-        <h2 className="text-xl font-bold">Иностранный язык</h2>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-          Выберите язык, который вы изучаете
-        </p>
-      </div>
+      )}
 
-      <div className="grid grid-cols-2 gap-3">
-        {LANGUAGES.map(({ value: v, label, emoji }) => (
-          <OptionCard key={v} selected={value === v} onClick={() => onChange(v)}>
-            <span className="text-2xl">{emoji}</span>
-            <span className="text-sm font-medium mt-1">{label}</span>
-          </OptionCard>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ────────────────────────────── step: eng subgroup ──────────────── */
-
-function StepEngSubgroup({
-  value,
-  onChange,
-}: {
-  value: Subgroup | null;
-  onChange: (v: Subgroup) => void;
-}) {
-  return (
-    <div className="space-y-6">
       <div className="text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/40 mb-4">
           <Users className="text-blue-600 dark:text-blue-400" size={28} />
         </div>
-        <h2 className="text-xl font-bold">Подгруппа по английскому</h2>
+        <h2 className="text-xl font-bold">{category.name}</h2>
         <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-          Выберите вашего преподавателя
+          {category.description || 'Выберите свою подгруппу'}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <OptionCard selected={value === 'a'} onClick={() => onChange('a')}>
-          <span className="text-sm font-medium">Ильюшенко</span>
-        </OptionCard>
-        <OptionCard selected={value === 'b'} onClick={() => onChange('b')}>
-          <span className="text-sm font-medium">Гилевич</span>
-        </OptionCard>
-      </div>
-    </div>
-  );
-}
-
-/* ────────────────────────────── step: oit ────────────────────────── */
-
-function StepOit({
-  value,
-  onChange,
-}: {
-  value: Subgroup | null;
-  onChange: (v: Subgroup) => void;
-}) {
-  return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/40 mb-4">
-          <Monitor className="text-blue-600 dark:text-blue-400" size={28} />
+      {subgroups.length === 0 ? (
+        <p className="text-center text-sm text-neutral-400 dark:text-neutral-500">
+          Подгруппы ещё не заведены — можно продолжить без выбора
+        </p>
+      ) : (
+        <div className={`grid gap-3 ${twoColumns ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {subgroups.map((subgroup) => (
+            <OptionCard
+              key={subgroup.id}
+              selected={value === subgroup.id}
+              onClick={() => onChange(subgroup.id)}
+            >
+              <span className="text-sm font-medium">{subgroup.name}</span>
+              {subgroup.description && (
+                <span className="text-[11px] text-neutral-400 dark:text-neutral-500 leading-tight">
+                  {subgroup.description}
+                </span>
+              )}
+            </OptionCard>
+          ))}
         </div>
-        <h2 className="text-xl font-bold">Подгруппа по ОИТ</h2>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-          Основы информационных технологий
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <OptionCard selected={value === 'a'} onClick={() => onChange('a')}>
-          <span className="text-sm font-medium">Войтешенко</span>
-        </OptionCard>
-        <OptionCard selected={value === 'b'} onClick={() => onChange('b')}>
-          <span className="text-sm font-medium">Левчук</span>
-        </OptionCard>
-      </div>
+      )}
     </div>
   );
 }

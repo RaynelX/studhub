@@ -25,7 +25,11 @@ interface CollectionSyncConfig {
 // Конфигурация: маппинг коллекций на таблицы
 // ============================================================
 
+// Категории и подгруппы идут первыми: без них остальные коллекции
+// невозможно отфильтровать по подгруппе студента.
 const SYNC_CONFIGS: CollectionSyncConfig[] = [
+  { rxdbName: 'subgroup_categories', supabaseTable: 'subgroup_categories', hasIsDeleted: true },
+  { rxdbName: 'subgroups', supabaseTable: 'subgroups',          hasIsDeleted: true },
   { rxdbName: 'semester',  supabaseTable: 'semester_config',    hasIsDeleted: false },
   { rxdbName: 'subjects',  supabaseTable: 'subjects',           hasIsDeleted: true },
   { rxdbName: 'teachers',  supabaseTable: 'teachers',           hasIsDeleted: true },
@@ -37,10 +41,10 @@ const SYNC_CONFIGS: CollectionSyncConfig[] = [
   { rxdbName: 'homeworks', supabaseTable: 'homeworks',           hasIsDeleted: true },
 ];
 
-// Версия ключа поднята с -01: прошлые сборки отбрасывали записи с 6-й по 8-ю пару,
-// но всё равно двигали timestamp вперёд, поэтому инкрементальный pull их уже не вернёт.
-// Смена ключа даёт одноразовый полный pull на каждом клиенте.
-const LAST_SYNC_KEY = 'student_hub_last_sync-02';
+// Версия ключа поднята с -02: при переходе на гибкие подгруппы миграция схем
+// выбрасывает документы со старой тройкой target_*, поэтому каждому клиенту
+// нужен одноразовый полный pull, а не инкрементальный.
+const LAST_SYNC_KEY = 'student_hub_last_sync-03';
 
 // ============================================================
 // Утилиты

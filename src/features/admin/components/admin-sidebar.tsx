@@ -5,6 +5,7 @@ import {
   BookOpen,
   Users,
   GraduationCap,
+  Layers,
   Settings,
   LogOut,
   ArrowLeft,
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { to: '/admin/subjects', icon: BookOpen, label: 'Предметы', end: false },
   { to: '/admin/teachers', icon: Users, label: 'Преподаватели', end: false },
   { to: '/admin/students', icon: GraduationCap, label: 'Студенты', end: false },
+  { to: '/admin/subgroups', icon: Layers, label: 'Подгруппы', end: false },
   { to: '/admin/semester', icon: Settings, label: 'Семестр', end: false },
 ] as const;
 

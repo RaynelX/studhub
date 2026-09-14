@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { EntryType, TargetLanguage, TargetEngSubgroup, TargetOitSubgroup } from '../../../database/types';
+import type { EntryType } from '../../../database/types';
 import { useAdminWrite } from './use-admin-write';
-import type { SourceTargets } from '../../schedule/utils/schedule-builder';
 
 interface OverrideFormFields {
   subjectId: string;
@@ -9,9 +8,7 @@ interface OverrideFormFields {
   teacherId: string;
   room: string;
   comment: string;
-  targetLanguage: TargetLanguage;
-  targetEngSubgroup: TargetEngSubgroup;
-  targetOitSubgroup: TargetOitSubgroup;
+  targetSubgroupIds: string[];
 }
 
 interface UseOverrideFormOptions {
@@ -19,7 +16,7 @@ interface UseOverrideFormOptions {
   date: string;
   pairNumber: number;
   /** Defaults for targets, inherited from the base pair */
-  sourceTargets?: SourceTargets;
+  sourceTargetIds?: string[];
   /** Defaults for fields (e.g. the original subject/teacher in replace mode) */
   defaults?: Partial<Pick<OverrideFormFields, 'subjectId' | 'entryType' | 'teacherId' | 'room'>>;
   onSuccess?: () => void;
@@ -40,7 +37,7 @@ export function useOverrideForm({
   mode,
   date,
   pairNumber,
-  sourceTargets,
+  sourceTargetIds,
   defaults,
   onSuccess,
 }: UseOverrideFormOptions): UseOverrideFormResult {
@@ -52,9 +49,7 @@ export function useOverrideForm({
     teacherId: defaults?.teacherId ?? '',
     room: defaults?.room ?? '',
     comment: '',
-    targetLanguage: sourceTargets?.target_language ?? 'all',
-    targetEngSubgroup: sourceTargets?.target_eng_subgroup ?? 'all',
-    targetOitSubgroup: sourceTargets?.target_oit_subgroup ?? 'all',
+    targetSubgroupIds: sourceTargetIds ?? [],
   });
 
   const setField = useCallback(<K extends keyof OverrideFormFields>(
@@ -81,9 +76,7 @@ export function useOverrideForm({
       teacher_id: fields.teacherId,
       room: fields.room || undefined,
       comment: fields.comment || undefined,
-      target_language: fields.targetLanguage,
-      target_eng_subgroup: fields.targetEngSubgroup,
-      target_oit_subgroup: fields.targetOitSubgroup,
+      target_subgroup_ids: fields.targetSubgroupIds,
       is_deleted: false,
     });
 

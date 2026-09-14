@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { buildDaySchedule } from '../../schedule/utils/schedule-builder';
 import type { DaySlot } from '../../schedule/utils/schedule-builder';
@@ -25,7 +25,7 @@ export interface WeekScheduleData {
 
 export function useWeekSchedule(monday: Date): WeekScheduleData {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent } = useStudentTargeting();
 
   const { data: entries, loading: l1 } = useRxCollection(db.schedule);
   const { data: overrides, loading: l2 } = useRxCollection(db.overrides);
@@ -52,7 +52,7 @@ export function useWeekSchedule(monday: Date): WeekScheduleData {
 
       const { slots } = buildDaySchedule({
         date,
-        settings,
+        isForStudent,
         entries,
         overrides,
         events,
@@ -65,5 +65,5 @@ export function useWeekSchedule(monday: Date): WeekScheduleData {
     }
 
     return { weekSchedule, loading: false, semesterConfig };
-  }, [loading, mondayStr, entries, overrides, events, subjects, teachers, semesterData, settings]);
+  }, [loading, mondayStr, entries, overrides, events, subjects, teachers, semesterData, isForStudent]);
 }

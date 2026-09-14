@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { EventType, TargetLanguage, TargetEngSubgroup, TargetOitSubgroup } from '../../../database/types';
+import type { EventType } from '../../../database/types';
 import { useAdminWrite } from './use-admin-write';
 
 interface EventFormFields {
@@ -11,9 +11,7 @@ interface EventFormFields {
   pairNumber: number | null;
   eventTime: string;
   room: string;
-  targetLanguage: TargetLanguage;
-  targetEngSubgroup: TargetEngSubgroup;
-  targetOitSubgroup: TargetOitSubgroup;
+  targetSubgroupIds: string[];
 }
 
 interface UseEventFormOptions {
@@ -56,9 +54,7 @@ export function useEventForm({
     pairNumber: defaultPairNumber ?? null,
     eventTime: '',
     room: defaultRoom ?? '',
-    targetLanguage: 'all',
-    targetEngSubgroup: 'all',
-    targetOitSubgroup: 'all',
+    targetSubgroupIds: [],
   });
 
   const setField = useCallback(<K extends keyof EventFormFields>(
@@ -97,9 +93,7 @@ export function useEventForm({
       pair_number: fields.pairNumber ?? undefined,
       event_time: fields.eventTime || undefined,
       room: fields.room || undefined,
-      target_language: fields.targetLanguage,
-      target_eng_subgroup: fields.targetEngSubgroup,
-      target_oit_subgroup: fields.targetOitSubgroup,
+      target_subgroup_ids: fields.targetSubgroupIds,
       is_deleted: false,
     });
 

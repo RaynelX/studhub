@@ -1,7 +1,9 @@
 import type { GridCell } from '../hooks/use-week-grid';
-import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS, formatSubgroupCompact } from '../../../shared/constants/admin-labels';
+import { ENTRY_TYPE_LABELS, OVERRIDE_TYPE_LABELS } from '../../../shared/constants/admin-labels';
 import { DAY_NAMES } from '../../../shared/constants/days';
 import { BELL_SCHEDULE, formatBellTime } from '../../../shared/constants/bell-schedule';
+import { formatTargetsCompact } from '../../../shared/targeting/match';
+import type { SubgroupIndex } from '../../../shared/targeting/types';
 
 /**
  * Format a week's schedule grid into a plain-text string
@@ -19,8 +21,15 @@ import { BELL_SCHEDULE, formatBellTime } from '../../../shared/constants/bell-sc
 export function formatWeekScheduleText(
   cells: GridCell[][],
   mondayDate: Date,
+  index: SubgroupIndex,
 ): string {
   const lines: string[] = [];
+
+  /** « [Яз-EN]» или пустая строка для записи на всю группу */
+  const targets = (ids: string[]): string => {
+    const text = formatTargetsCompact(ids, index);
+    return text ? ` [${text}]` : '';
+  };
 
   // Header
   const sundayDate = new Date(mondayDate);
@@ -50,21 +59,24 @@ export function formatWeekScheduleText(
       // Overrides for this slot
       for (const go of cell.overrides) {
         const o = go.override;
+        const sgStr = targets(o.target_subgroup_ids);
         if (o.override_type === 'cancel') {
-          lines.push(`❌ ${cell.pairNumber} пара — ОТМЕНА${o.comment ? ` (${o.comment})` : ''}`);
+          lines.push(`❌ ${cell.pairNumber} пара — ОТМЕНА${o.comment ? ` (${o.comment})` : ''}${sgStr}`);
         } else {
           const label = OVERRIDE_TYPE_LABELS[o.override_type] ?? o.override_type;
           const subj = go.subject?.short_name ?? go.subject?.name ?? '';
           const room = o.room ? ` · ауд. ${o.room}` : '';
           const teacher = go.teacher ? ` · ${go.teacher.full_name}` : '';
-          lines.push(`🔄 ${cell.pairNumber} пара — ${label}: ${subj}${room}${teacher}`);
+          lines.push(`🔄 ${cell.pairNumber} пара — ${label}: ${subj}${room}${teacher}${sgStr}`);
         }
       }
 
       // Events
       for (const ge of cell.events) {
         const subj = ge.subject?.short_name ?? ge.subject?.name ?? '';
-        lines.push(`📣 ${cell.pairNumber} пара — ${ge.event.title}${subj ? ` (${subj})` : ''}`);
+        lines.push(
+          `📣 ${cell.pairNumber} пара — ${ge.event.title}${subj ? ` (${subj})` : ''}${targets(ge.event.target_subgroup_ids)}`,
+        );
       }
 
       // Base entries (skip if cancelled by override)
@@ -78,8 +90,7 @@ export function formatWeekScheduleText(
         const type = ENTRY_TYPE_LABELS[ge.entry.entry_type] ?? '';
         const room = ge.entry.room ? ` · ауд. ${ge.entry.room}` : '';
         const teacher = ge.teacher ? ` · ${ge.teacher.full_name}` : '';
-        const subgroups = formatSubgroupCompact(ge.entry);
-        const sgStr = subgroups ? ` [${subgroups}]` : '';
+        const sgStr = targets(ge.entry.target_subgroup_ids);
 
         lines.push(
           `${cell.pairNumber}) ${timeStr} · ${subj}${type ? ` (${type})` : ''}${room}${teacher}${sgStr}`,

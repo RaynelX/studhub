@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDatabase } from '../../../app/providers/DatabaseProvider';
-import { useSettings } from '../../settings/SettingsProvider';
+import { useStudentTargeting } from '../../targeting/hooks/use-student-targeting';
 import { useRxCollection } from '../../../database/hooks/use-rx-collection';
 import { toISODate, getDayOfWeek, getWeekParity } from '../../schedule/utils/week-utils';
 import type {
@@ -8,11 +8,7 @@ import type {
   SubjectDoc,
   SemesterConfigDoc,
   EntryType,
-  TargetLanguage,
-  TargetEngSubgroup,
-  TargetOitSubgroup,
 } from '../../../database/types';
-import type { StudentSettings } from '../../settings/SettingsProvider';
 
 export interface SubjectTeacher {
     entryTypes: EntryType[];
@@ -37,7 +33,7 @@ export function useSubjectDetails(): {
   loading: boolean;
 } {
   const db = useDatabase();
-  const { settings } = useSettings();
+  const { isForStudent } = useStudentTargeting();
 
   const { data: subjects, loading: l1 } = useRxCollection(db.subjects);
   const { data: entries, loading: l2 } = useRxCollection(db.schedule);
@@ -56,7 +52,7 @@ export function useSubjectDetails(): {
     const result: SubjectDetails[] = subjects.map((subject) => {
       // Все записи расписания для этого предмета, отфильтрованные по студенту
       const subjectEntries = entries.filter(
-        (e) => e.subject_id === subject.id && isForStudent(e, settings),
+        (e) => e.subject_id === subject.id && isForStudent(e),
       );
 
       // Преподаватели — уникальные по типу занятия
@@ -97,27 +93,7 @@ export function useSubjectDetails(): {
     const filtered = result.filter((r) => r.progress.total > 0);
 
     return { subjects: filtered, loading: false };
-  }, [loading, subjects, entries, teachers, semesterData, settings]);
-}
-
-function isForStudent(
-  item: {
-    target_language: TargetLanguage;
-    target_eng_subgroup: TargetEngSubgroup;
-    target_oit_subgroup: TargetOitSubgroup;
-  },
-  settings: StudentSettings,
-): boolean {
-  const languageOk =
-    item.target_language === 'all' || item.target_language === settings.language;
-  const engOk =
-    item.target_eng_subgroup === 'all' ||
-    settings.language !== 'en' ||
-    item.target_eng_subgroup === settings.eng_subgroup;
-  const oitOk =
-    item.target_oit_subgroup === 'all' ||
-    item.target_oit_subgroup === settings.oit_subgroup;
-  return languageOk && engOk && oitOk;
+  }, [loading, subjects, entries, teachers, semesterData, isForStudent]);
 }
 
 function calculateProgress(

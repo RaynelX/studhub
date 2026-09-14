@@ -1,13 +1,11 @@
 import type { RxCollection, RxDatabase } from 'rxdb';
+import type { TargetCategory, TargetSubgroup } from '../shared/targeting/types';
 
 // ============================================================
 // Перечисления
 // ============================================================
 
 export type EntryType = 'lecture' | 'seminar' | 'practice' | 'other';
-export type TargetLanguage = 'all' | 'en' | 'de' | 'fr' | 'es';
-export type TargetEngSubgroup = 'all' | 'a' | 'b';
-export type TargetOitSubgroup = 'all' | 'a' | 'b';
 export type WeekParity = 'all' | 'odd' | 'even';
 export type OverrideType = 'cancel' | 'replace' | 'add';
 export type EventType =
@@ -50,6 +48,27 @@ export interface TeacherDoc {
   is_deleted: boolean;
 }
 
+/**
+ * Категория деления группы («Иностранный язык», «ОИТ»).
+ * Набор категорий и подгрупп — данные, а не код: староста заводит их заново
+ * каждый семестр из админки.
+ */
+export interface SubgroupCategoryDoc extends TargetCategory {
+  /** Стабильный слаг: OneSignal-теги вида sg_<code>, отладка */
+  code: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+}
+
+/** Вариант внутри категории («Английский», «Подгруппа А»). */
+export interface SubgroupDoc extends TargetSubgroup {
+  code: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+}
+
 export interface ScheduleEntryDoc {
   id: string;
   day_of_week: number;
@@ -58,9 +77,8 @@ export interface ScheduleEntryDoc {
   entry_type: EntryType;
   teacher_id: string;
   room: string;
-  target_language: TargetLanguage;
-  target_eng_subgroup: TargetEngSubgroup;
-  target_oit_subgroup: TargetOitSubgroup;
+  /** Подгруппы, которым адресована запись. Пусто — вся группа. */
+  target_subgroup_ids: string[];
   date_from: string;
   date_to: string;
   week_parity: WeekParity;
@@ -74,9 +92,7 @@ export interface ScheduleOverrideDoc {
   date: string;
   pair_number: number;
   override_type: OverrideType;
-  target_language: TargetLanguage;
-  target_eng_subgroup: TargetEngSubgroup;
-  target_oit_subgroup: TargetOitSubgroup;
+  target_subgroup_ids: string[];
   subject_id?: string;
   entry_type?: EntryType;
   teacher_id?: string;
@@ -98,9 +114,7 @@ export interface EventDoc {
   pair_number?: number;
   event_time?: string;
   room?: string;
-  target_language: TargetLanguage;
-  target_eng_subgroup: TargetEngSubgroup;
-  target_oit_subgroup: TargetOitSubgroup;
+  target_subgroup_ids: string[];
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -112,9 +126,7 @@ export interface DeadlineDoc {
   date: string;
   time?: string;
   description?: string;
-  target_language: TargetLanguage;
-  target_eng_subgroup: TargetEngSubgroup;
-  target_oit_subgroup: TargetOitSubgroup;
+  target_subgroup_ids: string[];
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
@@ -123,9 +135,8 @@ export interface DeadlineDoc {
 export interface StudentDoc {
   id: string;
   full_name: string;
-  language: 'en' | 'de' | 'fr' | 'es';
-  eng_subgroup?: 'a' | 'b';
-  oit_subgroup: 'a' | 'b';
+  /** Подгруппы студента — по одной на каждую видимую ему категорию */
+  subgroup_ids: string[];
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -137,9 +148,7 @@ export interface HomeworkDoc {
   date: string;
   pair_number: number;
   content: string;
-  target_language: TargetLanguage;
-  target_eng_subgroup: TargetEngSubgroup;
-  target_oit_subgroup: TargetOitSubgroup;
+  target_subgroup_ids: string[];
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -162,6 +171,8 @@ export interface SemesterConfigDoc {
 export type DatabaseCollections = {
   subjects: RxCollection<SubjectDoc>;
   teachers: RxCollection<TeacherDoc>;
+  subgroup_categories: RxCollection<SubgroupCategoryDoc>;
+  subgroups: RxCollection<SubgroupDoc>;
   schedule: RxCollection<ScheduleEntryDoc>;
   overrides: RxCollection<ScheduleOverrideDoc>;
   events: RxCollection<EventDoc>;
@@ -172,14 +183,3 @@ export type DatabaseCollections = {
 };
 
 export type AppDatabase = RxDatabase<DatabaseCollections>;
-
-// ============================================================
-// Настройки студента (хранятся в localStorage)
-// ============================================================
-
-export interface StudentSettings {
-  studentId?: string;
-  language: 'en' | 'de' | 'fr' | 'es';
-  eng_subgroup: 'a' | 'b' | null;
-  oit_subgroup: 'a' | 'b';
-}

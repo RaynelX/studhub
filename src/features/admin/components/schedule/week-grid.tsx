@@ -8,15 +8,16 @@ import type { GridCell } from '../../hooks/use-week-grid';
 import { WeekGridCell } from './week-grid-cell';
 import { SlotPopover } from './slot-popover';
 import { formatWeekScheduleText } from '../../utils/format-schedule-text';
+import { useSubgroups } from '../../../targeting/SubgroupsProvider';
 
 interface WeekGridProps {
   onEditEntry?: (entryId: string) => void;
   onDeleteEntry?: (entryId: string) => void;
   onDeleteOverride?: (overrideId: string) => void;
   onDeleteEvent?: (eventId: string) => void;
-  onQuickCancel?: (date: string, pairNumber: number) => void;
-  onQuickReplace?: (date: string, pairNumber: number) => void;
-  onQuickAdd?: (date: string, pairNumber: number) => void;
+  onQuickCancel?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
+  onQuickReplace?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
+  onQuickAdd?: (date: string, pairNumber: number, targetSubgroupIds: string[]) => void;
 }
 
 export function WeekGrid({
@@ -198,10 +199,11 @@ export function WeekGrid({
 // ============================================================
 
 function CopyScheduleButton({ cells, mondayDate }: { cells: GridCell[][]; mondayDate: Date }) {
+  const { index } = useSubgroups();
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
-    const text = formatWeekScheduleText(cells, mondayDate);
+    const text = formatWeekScheduleText(cells, mondayDate, index);
     await navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

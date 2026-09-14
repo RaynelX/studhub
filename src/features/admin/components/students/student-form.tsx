@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { AdminModal } from '../ui/admin-modal';
 import type { StudentDoc } from '../../../../database/types';
+import { StudentSubgroupPicker } from '../targeting/student-subgroup-picker';
 
 export interface StudentFormData {
   fullName: string;
-  language: 'en' | 'de' | 'fr' | 'es';
-  engSubgroup: 'a' | 'b' | '';
-  oitSubgroup: 'a' | 'b';
+  subgroupIds: string[];
 }
 
 interface StudentFormProps {
@@ -16,19 +15,10 @@ interface StudentFormProps {
   editStudent?: StudentDoc | null;
 }
 
-const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'Английский' },
-  { value: 'de', label: 'Немецкий' },
-  { value: 'fr', label: 'Французский' },
-  { value: 'es', label: 'Испанский' },
-] as const;
-
 function buildInitial(student?: StudentDoc | null): StudentFormData {
   return {
     fullName: student?.full_name ?? '',
-    language: student?.language ?? 'en',
-    engSubgroup: student?.eng_subgroup ?? '',
-    oitSubgroup: student?.oit_subgroup ?? 'a',
+    subgroupIds: student?.subgroup_ids ?? [],
   };
 }
 
@@ -44,9 +34,6 @@ export function StudentForm({ open, onClose, onSubmit, editStudent }: StudentFor
   function update<K extends keyof StudentFormData>(key: K, value: StudentFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
-
-  // Show EN subgroup only when language is English
-  const showEngSubgroup = form.language === 'en';
 
   async function handleSubmit() {
     await onSubmit(form);
@@ -96,70 +83,11 @@ export function StudentForm({ open, onClose, onSubmit, editStudent }: StudentFor
           />
         </div>
 
-        {/* Language */}
-        <div>
-          <label className={labelCls}>Иностранный язык</label>
-          <div className="flex flex-wrap gap-1.5">
-            {LANGUAGE_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => {
-                  update('language', opt.value);
-                  if (opt.value !== 'en') update('engSubgroup', '');
-                }}
-                className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                  form.language === opt.value
-                    ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/40 dark:border-blue-600 dark:text-blue-300'
-                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* EN subgroup (only if language = en) */}
-        {showEngSubgroup && (
-          <div>
-            <label className={labelCls}>EN подгруппа</label>
-            <div className="flex gap-2">
-              {(['a', 'b'] as const).map((val) => (
-                <button
-                  key={val}
-                  onClick={() => update('engSubgroup', val)}
-                  className={`px-4 py-1.5 rounded-lg text-sm border transition-colors ${
-                    form.engSubgroup === val
-                      ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/40 dark:border-blue-600 dark:text-blue-300'
-                      : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
-                  }`}
-                >
-                  {val.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* OIT subgroup */}
-        <div>
-          <label className={labelCls}>ОИТ подгруппа</label>
-          <div className="flex gap-2">
-            {(['a', 'b'] as const).map((val) => (
-              <button
-                key={val}
-                onClick={() => update('oitSubgroup', val)}
-                className={`px-4 py-1.5 rounded-lg text-sm border transition-colors ${
-                  form.oitSubgroup === val
-                    ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/40 dark:border-blue-600 dark:text-blue-300'
-                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
-                }`}
-              >
-                {val.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Subgroups */}
+        <StudentSubgroupPicker
+          value={form.subgroupIds}
+          onChange={(ids) => update('subgroupIds', ids)}
+        />
       </div>
     </AdminModal>
   );
