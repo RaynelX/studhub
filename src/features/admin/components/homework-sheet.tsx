@@ -48,7 +48,7 @@ export function HomeworkSheet({
   subjectName,
   existing,
 }: HomeworkSheetProps) {
-  const { fields, setField, submit, remove, isValid, loading, isEditMode } = useHomeworkForm({
+  const { fields, setField, submit, remove, isValid, loading, isEditMode, error } = useHomeworkForm({
     subjectId,
     date: toISODate(date),
     pairNumber,
@@ -83,6 +83,11 @@ export function HomeworkSheet({
       maxHeight="92dvh"
       footer={
         <div className="flex flex-col gap-2">
+          {error && (
+            <p className="text-xs text-red-600 dark:text-red-400 leading-snug">
+              {error}
+            </p>
+          )}
           <button
             onClick={submit}
             disabled={!isValid || loading}

@@ -23,6 +23,8 @@ interface UseHomeworkFormResult {
   isValid: boolean;
   loading: boolean;
   isEditMode: boolean;
+  /** Текст ошибки последней записи; null — ошибки не было */
+  error: string | null;
 }
 
 export function useHomeworkForm({
@@ -39,6 +41,8 @@ export function useHomeworkForm({
     content: existing?.content ?? '',
     targetSubgroupIds: existing?.target_subgroup_ids ?? [],
   });
+
+  const [error, setError] = useState<string | null>(null);
 
   const setField = useCallback(<K extends keyof HomeworkFormFields>(
     key: K,
@@ -64,10 +68,20 @@ export function useHomeworkForm({
       is_deleted: false,
     };
 
-    if (isEditMode && existing) {
-      await update('homeworks', existing.id, data);
-    } else {
-      await insert('homeworks', data);
+    // Без try/catch ошибка Supabase осталась бы необработанным промисом:
+    // шит просто не закрывался бы, не объясняя, почему ничего не сохранилось.
+    try {
+      setError(null);
+      if (isEditMode && existing) {
+        await update('homeworks', existing.id, data);
+      } else {
+        await insert('homeworks', data);
+      }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Неизвестная ошибка';
+      console.error('[Homework] Не удалось сохранить задание:', e);
+      setError(`Не удалось сохранить: ${message}`);
+      return;
     }
 
     onSuccess?.();
@@ -75,9 +89,19 @@ export function useHomeworkForm({
 
   const remove = useCallback(async () => {
     if (!existing) return;
-    await softDelete('homeworks', existing.id);
+
+    try {
+      setError(null);
+      await softDelete('homeworks', existing.id);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Неизвестная ошибка';
+      console.error('[Homework] Не удалось удалить задание:', e);
+      setError(`Не удалось удалить: ${message}`);
+      return;
+    }
+
     onSuccess?.();
   }, [existing, softDelete, onSuccess]);
 
-  return { fields, setField, submit, remove, isValid, loading, isEditMode };
+  return { fields, setField, submit, remove, isValid, loading, isEditMode, error };
 }

@@ -23,6 +23,21 @@ const SOFT_DELETE_TABLES = new Set([
 ]);
 
 /**
+ * Update по `id` не считается ошибкой, если строки нет: Supabase вернёт пустой
+ * результат и запись просто не изменится. В интерфейсе это выглядит как
+ * «кнопка не работает», поэтому пустой ответ превращаем в явную ошибку.
+ * Обычная причина — документ остался в локальном кэше RxDB после того, как
+ * строку удалили в Supabase напрямую (hard delete не приходит через pull).
+ */
+function assertRowAffected(table: string, id: string, affected: unknown[] | null): void {
+  if (affected && affected.length > 0) return;
+  throw new Error(
+    `Запись не найдена в «${table}» (id ${id}). Возможно, её удалили из базы напрямую, ` +
+      'а локальная копия устарела — обновите страницу и синхронизацию.',
+  );
+}
+
+/**
  * Provides write access to Supabase for admin operations.
  *
  * After each write the sync engine is triggered so that RxDB
@@ -67,12 +82,14 @@ export function useAdminWrite(): AdminWriteResult {
       setLoading(true);
 
       try {
-        const { error: supaError } = await supabase
+        const { data: affected, error: supaError } = await supabase
           .from(table)
           .update({ is_deleted: true, updated_at: new Date().toISOString() })
-          .eq('id', id);
+          .eq('id', id)
+          .select('id');
 
         if (supaError) throw new Error(supaError.message);
+        assertRowAffected(table, id, affected);
 
         triggerSync();
       } finally {
@@ -87,12 +104,14 @@ export function useAdminWrite(): AdminWriteResult {
       setLoading(true);
 
       try {
-        const { error: supaError } = await supabase
+        const { data: affected, error: supaError } = await supabase
           .from(table)
           .update({ ...data, updated_at: new Date().toISOString() })
-          .eq('id', id);
+          .eq('id', id)
+          .select('id');
 
         if (supaError) throw new Error(supaError.message);
+        assertRowAffected(table, id, affected);
 
         triggerSync();
       } finally {

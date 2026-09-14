@@ -62,13 +62,15 @@ export function AdminActionSheet({
       <div className="flex flex-col gap-1.5">
         {pair && pair.status !== 'cancelled' ? (
           <>
-            {/* Homework */}
-            <ActionButton
-              icon={<FileText className="w-5 h-5 text-indigo-500" />}
-              label="Домашнее задание"
-              sublabel={hasHomework ? 'Редактировать задание' : 'Добавить задание к паре'}
-              onClick={() => handle('homework')}
-            />
+            {/* Homework — только для слота с предметом: задание привязано к нему */}
+            {pair.subjectId && (
+              <ActionButton
+                icon={<FileText className="w-5 h-5 text-indigo-500" />}
+                label="Домашнее задание"
+                sublabel={hasHomework ? 'Редактировать задание' : 'Добавить задание к паре'}
+                onClick={() => handle('homework')}
+              />
+            )}
             {/* Cancel */}
             <ActionButton
               icon={<X className="w-5 h-5 text-red-500" />}
