@@ -12,6 +12,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { SessionPage } from './pages/SessionPage';
 import { AttendancePage } from './pages/AttendancePage';
+import { DepartmentsPage } from './pages/DepartmentsPage';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminSchedulePage } from './pages/admin/AdminSchedulePage';
@@ -72,6 +73,7 @@ export function App() {
                   <Route path="more/settings" element={<SettingsPage />} />
                   <Route path="more/attendance" element={<AttendancePage />} />
                   <Route path="more/session" element={<SessionPage />} />
+                  <Route path="more/departments" element={<DepartmentsPage />} />
                   <Route path="more" element={<MorePage />} />
                 </Route>
               </Routes>

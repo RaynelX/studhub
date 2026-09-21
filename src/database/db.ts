@@ -27,6 +27,15 @@ const dropLegacyTargetsFromV0: MigrationStrategies = {
   1: () => null,
 };
 
+/**
+ * teachers v0 → v1: добавлено необязательное поле department_id.
+ * Документы не меняются: поле подтянется при ближайшем pull (миграция
+ * 0004_departments.sql двигает updated_at у затронутых преподавателей).
+ */
+const keepTeachers: MigrationStrategies = {
+  1: (doc) => doc,
+};
+
 let dbPromise: Promise<AppDatabase> | null = null;
 
 export function getDatabase(): Promise<AppDatabase> {
@@ -54,7 +63,8 @@ async function createDatabase(): Promise<AppDatabase> {
 
   await db.addCollections({
     subjects: { schema: schemas.subjects },
-    teachers: { schema: schemas.teachers },
+    teachers: { schema: schemas.teachers, migrationStrategies: keepTeachers },
+    departments: { schema: schemas.departments },
     subgroup_categories: { schema: schemas.subgroup_categories },
     subgroups: { schema: schemas.subgroups },
     schedule: { schema: schemas.schedule, migrationStrategies: dropLegacyTargets },

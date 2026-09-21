@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { AdminModal } from '../ui/admin-modal';
-import type { TeacherDoc } from '../../../../database/types';
+import type { TeacherDoc, DepartmentDoc } from '../../../../database/types';
 
 export interface TeacherFormData {
   fullName: string;
   position: string;
+  departmentId: string;
   email: string;
   consultationInfo: string;
 }
@@ -14,18 +15,20 @@ interface TeacherFormProps {
   onClose: () => void;
   onSubmit: (data: TeacherFormData) => Promise<void> | void;
   editTeacher?: TeacherDoc | null;
+  departments: DepartmentDoc[];
 }
 
 function buildInitial(teacher?: TeacherDoc | null): TeacherFormData {
   return {
     fullName: teacher?.full_name ?? '',
     position: teacher?.position ?? '',
+    departmentId: teacher?.department_id ?? '',
     email: teacher?.email ?? '',
     consultationInfo: teacher?.consultation_info ?? '',
   };
 }
 
-export function TeacherForm({ open, onClose, onSubmit, editTeacher }: TeacherFormProps) {
+export function TeacherForm({ open, onClose, onSubmit, editTeacher, departments }: TeacherFormProps) {
   const [form, setForm] = useState<TeacherFormData>(buildInitial(editTeacher));
   const isEdit = !!editTeacher;
 
@@ -98,18 +101,31 @@ export function TeacherForm({ open, onClose, onSubmit, editTeacher }: TeacherFor
           />
         </div>
 
+        {/* Department */}
+        <div>
+          <label className={labelCls}>Кафедра</label>
+          <select
+            value={form.departmentId}
+            onChange={(e) => update('departmentId', e.target.value)}
+            className={inputCls}
+          >
+            <option value="">—</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Email */}
         <div>
-          <div>
-            <label className={labelCls}>Email</label>
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => update('email', e.target.value)}
-              placeholder="teacher@bsu.by"
-              className={inputCls}
-            />
-          </div>
+          <label className={labelCls}>Email</label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => update('email', e.target.value)}
+            placeholder="teacher@bsu.by"
+            className={inputCls}
+          />
         </div>
 
         {/* Consultation info */}

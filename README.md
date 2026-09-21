@@ -65,6 +65,9 @@ src/
 
 - `subjects`
 - `teachers`
+- `departments`
+- `subgroup_categories`
+- `subgroups`
 - `schedule`
 - `overrides`
 - `events`

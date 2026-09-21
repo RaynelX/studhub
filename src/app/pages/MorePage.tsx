@@ -1,12 +1,10 @@
 import { useSetPageHeader } from '../providers/PageHeaderProvider';
-// Секция кафедры временно скрыта — ожидает переработки
-// import { DepartmentSection } from '../../features/department/DepartmentSection';
 import { AboutSection } from '../../features/about/AboutSection';
 import { NavButtonGroup, NavButton } from '../../shared/ui/NavButtonGroup';
 import { useState } from 'react';
 import { useAdmin} from '../../features/admin/AdminProvider';
 import { AdminLoginSheet } from '../../features/admin/components/AdminLoginSheet';
-import { Shield, LogOut, Settings, CalendarDays, GraduationCap, ClipboardCheck } from 'lucide-react';
+import { Shield, LogOut, Settings, CalendarDays, GraduationCap, ClipboardCheck, Landmark } from 'lucide-react';
 import { Section } from '../../shared/ui/Section';
 import { useExitTransitionWait } from '../../shared/hooks/use-exit-transition';
 
@@ -22,10 +20,9 @@ export function MorePage() {
         <NavButton to="/more/session" icon={GraduationCap} iconBg="bg-violet-500" label="Сессия" />
         <NavButton to="/more/attendance" icon={ClipboardCheck} iconBg="bg-orange-500" label="Посещаемость" />
         <NavButton to="/more/calendar" icon={CalendarDays} iconBg="bg-blue-500" label="Календарь" />
+        <NavButton to="/more/departments" icon={Landmark} iconBg="bg-teal-500" label="Кафедры" />
         <NavButton to="/more/settings" icon={Settings} iconBg="bg-gray-500" label="Настройки" />
       </NavButtonGroup>
-
-      {/* <DepartmentSection /> */}
 
       {/* Администрирование */}
       <AdminSection isAdmin={isAdmin} userEmail={user?.email} signOut={signOut} onLoginOpen={() => setLoginOpen(true)} />

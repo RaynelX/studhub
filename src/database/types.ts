@@ -43,6 +43,28 @@ export interface TeacherDoc {
   position?: string;
   email?: string;
   consultation_info?: string;
+  /** Кафедра, на которой работает преподаватель */
+  department_id?: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+}
+
+/**
+ * Кафедра факультета. Справочник: в течение семестра не меняется,
+ * поэтому синхронизируется по собственному интервалу (см. sync-engine).
+ */
+export interface DepartmentDoc {
+  id: string;
+  name: string;
+  /** Заведующий кафедрой — ссылка на преподавателя */
+  head_teacher_id?: string;
+  room?: string;
+  phone?: string;
+  email?: string;
+  /** Кафедра своей группы: именно её студент видит на вкладке «Кафедры» */
+  is_primary: boolean;
+  sort_order: number;
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -171,6 +193,7 @@ export interface SemesterConfigDoc {
 export type DatabaseCollections = {
   subjects: RxCollection<SubjectDoc>;
   teachers: RxCollection<TeacherDoc>;
+  departments: RxCollection<DepartmentDoc>;
   subgroup_categories: RxCollection<SubgroupCategoryDoc>;
   subgroups: RxCollection<SubgroupDoc>;
   schedule: RxCollection<ScheduleEntryDoc>;

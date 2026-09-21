@@ -16,6 +16,7 @@ import { useSortState } from '../../../features/admin/hooks/use-sort-state';
 export function AdminTeachersPage() {
   const db = useDatabase();
   const { data: teachers, loading: dataLoading } = useRxCollection(db.teachers);
+  const { data: departments } = useRxCollection(db.departments);
   const { insert, update, remove, loading: writeLoading } = useAdminWrite();
   const { showToast } = useAdminToast();
 
@@ -24,13 +25,25 @@ export function AdminTeachersPage() {
     [teachers],
   );
 
+  const activeDepartments = useMemo(
+    () => departments.filter((d) => !d.is_deleted).sort((a, b) => a.sort_order - b.sort_order),
+    [departments],
+  );
+
+  const departmentNames = useMemo(
+    () => new Map(activeDepartments.map((d) => [d.id, d.name])),
+    [activeDepartments],
+  );
+
   const sortAccessors = useMemo(
     () => ({
       name: (t: TeacherDoc) => t.full_name,
       position: (t: TeacherDoc) => t.position ?? '',
+      department: (t: TeacherDoc) =>
+        (t.department_id && departmentNames.get(t.department_id)) ?? '',
       email: (t: TeacherDoc) => t.email ?? '',
     }),
-    [],
+    [departmentNames],
   );
 
   const { column: sortCol, direction: sortDir, toggle: toggleSort, sorted: sortedTeachers } =
@@ -59,6 +72,7 @@ export function AdminTeachersPage() {
       const payload = {
         full_name: data.fullName,
         position: data.position || null,
+        department_id: data.departmentId || null,
         email: data.email || null,
         consultation_info: data.consultationInfo || null,
       };
@@ -121,6 +135,7 @@ export function AdminTeachersPage() {
                 <tr className="text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
                   <SortableTh column="name" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">ФИО</SortableTh>
                   <SortableTh column="position" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Должность</SortableTh>
+                  <SortableTh column="department" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Кафедра</SortableTh>
                   <SortableTh column="email" activeColumn={sortCol} direction={sortDir} onToggle={toggleSort} className="px-5 py-3 whitespace-nowrap">Email</SortableTh>
                   <th className="px-5 py-3 whitespace-nowrap">Консультации</th>
                   <th className="px-5 py-3 w-24" />
@@ -137,6 +152,9 @@ export function AdminTeachersPage() {
                     </td>
                     <td className="px-5 py-3 text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
                       {teacher.position || '—'}
+                    </td>
+                    <td className="px-5 py-3 text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
+                      {(teacher.department_id && departmentNames.get(teacher.department_id)) || '—'}
                     </td>
                     <td className="px-5 py-3 text-neutral-600 dark:text-neutral-400 whitespace-nowrap">
                       {teacher.email ? (
@@ -179,6 +197,7 @@ export function AdminTeachersPage() {
         onClose={() => { setFormOpen(false); setEditTeacher(null); }}
         onSubmit={handleSubmit}
         editTeacher={editTeacher}
+        departments={activeDepartments}
       />
 
       <AdminConfirmDialog
