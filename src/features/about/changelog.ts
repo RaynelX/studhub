@@ -6,6 +6,14 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.0.3',
+    date: '21.09.2026',
+    changes: [
+      'Новая вкладка «Кафедра».',
+      'Обновлена информация о времени консультаций и составе кафедры социальной коммуникации.',
+    ],
+  },
+  {
     version: '1.0.2',
     date: '14.09.2026',
     changes: [

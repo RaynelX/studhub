@@ -2,6 +2,7 @@ import type { RxJsonSchema } from 'rxdb';
 import type {
   SubjectDoc,
   TeacherDoc,
+  DepartmentDoc,
   SubgroupCategoryDoc,
   SubgroupDoc,
   ScheduleEntryDoc,
@@ -71,7 +72,7 @@ const subjectsSchema: RxJsonSchema<SubjectDoc> = {
 // ============================================================
 
 const teachersSchema: RxJsonSchema<TeacherDoc> = {
-  version: 0,
+  version: 1,
   primaryKey: 'id',
   type: 'object',
   properties: {
@@ -80,11 +81,36 @@ const teachersSchema: RxJsonSchema<TeacherDoc> = {
     position: { type: 'string' },
     email: { type: 'string' },
     consultation_info: { type: 'string' },
+    department_id: { type: 'string', maxLength: 36 },
     created_at: { type: 'string' },
     updated_at: { type: 'string' },
     is_deleted: { type: 'boolean' },
   },
   required: ['id', 'full_name', 'created_at', 'updated_at', 'is_deleted'],
+};
+
+// ============================================================
+// DEPARTMENTS
+// ============================================================
+
+const departmentsSchema: RxJsonSchema<DepartmentDoc> = {
+  version: 0,
+  primaryKey: 'id',
+  type: 'object',
+  properties: {
+    id: { type: 'string', maxLength: 36 },
+    name: { type: 'string' },
+    head_teacher_id: { type: 'string', maxLength: 36 },
+    room: { type: 'string' },
+    phone: { type: 'string' },
+    email: { type: 'string' },
+    is_primary: { type: 'boolean' },
+    sort_order: { type: 'integer' },
+    created_at: { type: 'string' },
+    updated_at: { type: 'string' },
+    is_deleted: { type: 'boolean' },
+  },
+  required: ['id', 'name', 'is_primary', 'created_at', 'updated_at', 'is_deleted'],
 };
 
 // ============================================================
@@ -347,6 +373,7 @@ const homeworksSchema: RxJsonSchema<HomeworkDoc> = {
 export const schemas = {
   subjects: subjectsSchema,
   teachers: teachersSchema,
+  departments: departmentsSchema,
   subgroup_categories: subgroupCategoriesSchema,
   subgroups: subgroupsSchema,
   schedule: scheduleSchema,

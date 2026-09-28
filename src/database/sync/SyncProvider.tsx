@@ -87,7 +87,9 @@ import {
     }, [db]);
   
     const triggerSync = useCallback(() => {
-      engineRef.current?.sync();
+      // Ручной триггер (запись из админки) обходит собственные интервалы
+      // справочников: иначе правка кафедры доехала бы до экрана только через сутки.
+      engineRef.current?.sync({ force: true });
     }, []);
   
     return (

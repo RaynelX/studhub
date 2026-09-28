@@ -19,7 +19,19 @@ interface CollectionSyncConfig {
   supabaseTable: string;
   /** Есть ли поле is_deleted */
   hasIsDeleted: boolean;
+  /**
+   * Справочник, который не меняется неделями: тянется не чаще, чем раз в N мс,
+   * и ведёт собственную отметку времени. Глобальную использовать нельзя —
+   * она двигается на каждой синхронизации, и пропущенные из-за интервала
+   * изменения навсегда остались бы за её границей.
+   *
+   * Ручной триггер (админка после записи) обходит интервал: sync({ force: true }).
+   */
+  syncIntervalMs?: number;
 }
+
+/** Сутки — интервал для справочников, статичных в течение семестра. */
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // ============================================================
 // Конфигурация: маппинг коллекций на таблицы
@@ -32,6 +44,8 @@ const SYNC_CONFIGS: CollectionSyncConfig[] = [
   { rxdbName: 'subgroups', supabaseTable: 'subgroups',          hasIsDeleted: true },
   { rxdbName: 'semester',  supabaseTable: 'semester_config',    hasIsDeleted: false },
   { rxdbName: 'subjects',  supabaseTable: 'subjects',           hasIsDeleted: true },
+  // Кафедры — раньше преподавателей: преподаватели на них ссылаются.
+  { rxdbName: 'departments', supabaseTable: 'departments',      hasIsDeleted: true, syncIntervalMs: ONE_DAY_MS },
   { rxdbName: 'teachers',  supabaseTable: 'teachers',           hasIsDeleted: true },
   { rxdbName: 'students',  supabaseTable: 'students',           hasIsDeleted: true },
   { rxdbName: 'schedule',  supabaseTable: 'schedule_entries',   hasIsDeleted: true },
@@ -45,6 +59,11 @@ const SYNC_CONFIGS: CollectionSyncConfig[] = [
 // выбрасывает документы со старой тройкой target_*, поэтому каждому клиенту
 // нужен одноразовый полный pull, а не инкрементальный.
 const LAST_SYNC_KEY = 'student_hub_last_sync-03';
+
+/** Собственная отметка коллекции с syncIntervalMs. */
+function collectionSyncKey(rxdbName: string): string {
+  return `student_hub_sync_${rxdbName}-01`;
+}
 
 // ============================================================
 // Утилиты
@@ -86,7 +105,13 @@ export class SyncEngine {
   // Публичный метод: запуск синхронизации
   // ----------------------------------------------------------
 
-  async sync(): Promise<void> {
+  /**
+   * @param options.force — тянуть и те справочники, у которых ещё не истёк
+   * собственный интервал (ручной триггер из админки после записи).
+   */
+  async sync(options?: { force?: boolean }): Promise<void> {
+    const force = options?.force ?? false;
+
     if (this.isSyncing) {
       console.log('[Sync] Already syncing, skipping');
       return;
@@ -121,7 +146,7 @@ export class SyncEngine {
         console.log('[Sync] Initial sync (first launch)');
       }
 
-      const allOk = await Promise.race([this.syncAllCollections(since), timeout]);
+      const allOk = await Promise.race([this.syncAllCollections(since, force), timeout]);
 
       // Timestamp двигаем только при полном успехе: иначе изменения, пропущенные
       // упавшей коллекцией, навсегда останутся за границей инкрементального pull.
@@ -155,11 +180,20 @@ export class SyncEngine {
   // Синхронизация всех коллекций
   // ----------------------------------------------------------
 
-  /** @returns true, если все коллекции синхронизировались без ошибок */
-  private async syncAllCollections(since: string | null): Promise<boolean> {
+  /** @returns true, если все коллекции с общей отметкой синхронизировались без ошибок */
+  private async syncAllCollections(since: string | null, force: boolean): Promise<boolean> {
     const errors: string[] = [];
+    // Коллекции с собственным интервалом считаются отдельно: они не влияют
+    // на глобальную отметку времени.
+    let sharedCount = 0;
 
     for (const config of SYNC_CONFIGS) {
+      if (config.syncIntervalMs !== undefined) {
+        await this.syncThrottledCollection(config, force);
+        continue;
+      }
+
+      sharedCount++;
       try {
         await this.syncCollection(config, since);
       } catch (error) {
@@ -170,7 +204,7 @@ export class SyncEngine {
     }
 
     // Если ВСЕ коллекции упали — это критическая ошибка
-    if (errors.length === SYNC_CONFIGS.length) {
+    if (errors.length === sharedCount) {
       throw new Error(`All collections failed to sync`);
     }
 
@@ -181,6 +215,39 @@ export class SyncEngine {
     }
 
     return true;
+  }
+
+  // ----------------------------------------------------------
+  // Справочник с собственным интервалом
+  // ----------------------------------------------------------
+
+  /**
+   * Тянет коллекцию не чаще раза в syncIntervalMs, по собственной отметке.
+   * Ни пропуск, ни ошибка не трогают глобальный watermark: у коллекции свой,
+   * и при неудаче она просто повторит попытку в следующий раз.
+   */
+  private async syncThrottledCollection(
+    config: CollectionSyncConfig,
+    force: boolean,
+  ): Promise<void> {
+    const key = collectionSyncKey(config.rxdbName);
+    const stored = localStorage.getItem(key);
+    const lastSyncedAt = stored && !Number.isNaN(Date.parse(stored)) ? stored : null;
+
+    if (!force && lastSyncedAt && Date.now() - Date.parse(lastSyncedAt) < config.syncIntervalMs!) {
+      console.log(`[Sync] ${config.rxdbName}: skipped (throttled)`);
+      return;
+    }
+
+    const syncTimestamp = new Date().toISOString();
+
+    try {
+      await this.syncCollection(config, lastSyncedAt);
+      localStorage.setItem(key, syncTimestamp);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[Sync] Error syncing ${config.rxdbName}:`, message);
+    }
   }
 
   // ----------------------------------------------------------
