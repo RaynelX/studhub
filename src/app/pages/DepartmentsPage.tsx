@@ -3,7 +3,7 @@ import { usePrimaryDepartments } from '../../features/departments/hooks/use-prim
 import { DepartmentView } from '../../features/departments/components/department-view';
 
 export function DepartmentsPage() {
-  useSetPageHeader({ title: 'Кафедры', backTo: '/more' });
+  useSetPageHeader({ title: 'Кафедра', backTo: '/more' });
 
   const { data, loading } = usePrimaryDepartments();
 

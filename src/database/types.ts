@@ -62,7 +62,7 @@ export interface DepartmentDoc {
   room?: string;
   phone?: string;
   email?: string;
-  /** Кафедра своей группы: именно её студент видит на вкладке «Кафедры» */
+  /** Кафедра своей группы: именно её студент видит на вкладке «Кафедра» */
   is_primary: boolean;
   sort_order: number;
   created_at: string;

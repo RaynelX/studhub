@@ -20,7 +20,7 @@ export function MorePage() {
         <NavButton to="/more/session" icon={GraduationCap} iconBg="bg-violet-500" label="Сессия" />
         <NavButton to="/more/attendance" icon={ClipboardCheck} iconBg="bg-orange-500" label="Посещаемость" />
         <NavButton to="/more/calendar" icon={CalendarDays} iconBg="bg-blue-500" label="Календарь" />
-        <NavButton to="/more/departments" icon={Landmark} iconBg="bg-teal-500" label="Кафедры" />
+        <NavButton to="/more/departments" icon={Landmark} iconBg="bg-teal-500" label="Кафедра" />
         <NavButton to="/more/settings" icon={Settings} iconBg="bg-gray-500" label="Настройки" />
       </NavButtonGroup>
 

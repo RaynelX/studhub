@@ -20,7 +20,7 @@ create table if not exists public.departments (
   room            text,
   phone           text,
   email           text,
-  -- Кафедра своей группы: именно её студент видит на вкладке «Кафедры».
+  -- Кафедра своей группы: именно её студент видит на вкладке «Кафедра».
   -- Сейчас ровно одна — кафедра социальной коммуникации.
   is_primary      boolean not null default false,
   sort_order      integer not null default 0,
